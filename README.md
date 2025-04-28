@@ -1,4 +1,4 @@
-# Pak Skin Care - Dermatology Clinic Management System
+# Pak Skin Care - Dermatology Hospital Dashboard
 
 A comprehensive management system for dermatology clinics, featuring appointment scheduling, prescription management, billing, and analytics.
 
@@ -38,8 +38,8 @@ JWT_SECRET=your_jwt_secret_here
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
-   cd pak-skin-care
+   git clone https://github.com/Alimaster30/Pak-Skin-Care.git
+   cd Pak-Skin-Care
    ```
 
 2. Install dependencies for client, server, and root:
@@ -80,7 +80,7 @@ npm run seed
 ## Project Structure
 
 ```
-pak-skin-care/
+Pak-Skin-Care/
 ├── client/               # Frontend React application
 │   ├── src/
 │   ├── public/
