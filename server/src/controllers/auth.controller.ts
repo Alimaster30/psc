@@ -61,8 +61,44 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       return next(new AppError('Please provide email and password', 400));
     }
 
-    // Check if user exists
-    const user = await User.findOne({ email });
+    // For development/demo purposes, use mock data
+    // In production, this would use the database query
+    // const user = await User.findOne({ email });
+
+    // Mock user data for demonstration
+    const mockUsers = [
+      {
+        _id: '1',
+        firstName: 'Admin',
+        lastName: 'User',
+        email: 'admin@psc.com',
+        password: 'Admin123!',
+        role: UserRole.ADMIN,
+        isActive: true
+      },
+      {
+        _id: '2',
+        firstName: 'Dr',
+        lastName: 'Dermatologist',
+        email: 'doctor@psc.com',
+        password: 'Doctor123!',
+        role: UserRole.DERMATOLOGIST,
+        isActive: true
+      },
+      {
+        _id: '3',
+        firstName: 'Front',
+        lastName: 'Desk',
+        email: 'receptionist@psc.com',
+        password: 'Reception123!',
+        role: UserRole.RECEPTIONIST,
+        isActive: true
+      }
+    ];
+
+    // Find user by email
+    const user = mockUsers.find(u => u.email === email);
+
     if (!user) {
       return next(new AppError('Invalid credentials', 401));
     }
@@ -73,14 +109,13 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     }
 
     // Check if password matches
-    const isMatch = await user.comparePassword(password);
+    // In a real app, we would use bcrypt.compare
+    // const isMatch = await user.comparePassword(password);
+    const isMatch = user.password === password;
+
     if (!isMatch) {
       return next(new AppError('Invalid credentials', 401));
     }
-
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save();
 
     // Generate token
     const token = generateToken({ id: user._id });
@@ -108,7 +143,50 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
  */
 export const getMe = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    // For development/demo purposes, use mock data
+    // In production, this would use the database query
+    // const user = await User.findById(req.user.id).select('-password');
+
+    // Mock user data for demonstration
+    const mockUsers = [
+      {
+        _id: '1',
+        firstName: 'Admin',
+        lastName: 'User',
+        email: 'admin@psc.com',
+        role: UserRole.ADMIN,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        _id: '2',
+        firstName: 'Dr',
+        lastName: 'Dermatologist',
+        email: 'doctor@psc.com',
+        role: UserRole.DERMATOLOGIST,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        _id: '3',
+        firstName: 'Front',
+        lastName: 'Desk',
+        email: 'receptionist@psc.com',
+        role: UserRole.RECEPTIONIST,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ];
+
+    // Find user by ID
+    const user = mockUsers.find(u => u._id === req.user.id);
+
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
 
     res.status(200).json({
       success: true,
