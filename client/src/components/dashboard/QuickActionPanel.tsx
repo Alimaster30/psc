@@ -26,7 +26,7 @@ const QuickActionPanel: React.FC<QuickActionProps> = ({ role }) => {
   };
 
   return (
-    <div className="bg-gray-900 dark:bg-gray-800 text-white py-4 px-6 rounded-lg shadow-md mb-6">
+    <div className="bg-gray-900 dark:bg-gray-900 text-white py-4 px-6 rounded-lg shadow-md mb-6">
       <h2 className="text-lg font-medium mb-4">Quick Actions</h2>
 
       <motion.div

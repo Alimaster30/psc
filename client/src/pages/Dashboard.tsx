@@ -295,13 +295,14 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
+          className="w-full"
         >
-          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white h-full">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-blue-100">Total Patients</p>
@@ -324,8 +325,9 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
+          className="w-full"
         >
-          <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+          <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white h-full">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-green-100">Total Appointments</p>
@@ -348,8 +350,9 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.3 }}
+          className="w-full"
         >
-          <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
+          <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white h-full">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-yellow-100">Today's Appointments</p>
@@ -373,8 +376,9 @@ const Dashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.4 }}
+            className="w-full"
           >
-            <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+            <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white h-full">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-purple-100">Monthly Revenue</p>
