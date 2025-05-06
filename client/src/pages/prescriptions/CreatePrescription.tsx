@@ -6,6 +6,7 @@ import axios from 'axios';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Breadcrumb from '../../components/common/Breadcrumb';
+import MultiStepForm from '../../components/common/MultiStepForm';
 import { useAuth } from '../../context/AuthContext';
 
 interface Patient {
@@ -59,6 +60,7 @@ const CreatePrescription: React.FC = () => {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [showPrescriptionHistory, setShowPrescriptionHistory] = useState(false);
   const [showMedicationTemplates, setShowMedicationTemplates] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
 
   // Common medication templates
   const medicationTemplates = [
