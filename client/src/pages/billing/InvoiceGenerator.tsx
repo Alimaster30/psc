@@ -108,18 +108,18 @@ const InvoiceGenerator: React.FC = () => {
     try {
       setIsGenerating(true);
       toast.loading('Generating PDF...');
-      
+
       // In a real implementation, we would call the API to generate the PDF
       // const response = await axios.get(`/api/billing/${id}/invoice?type=${invoiceType}&letterhead=${includeLetterhead}&logo=${includeLogo}`, {
       //   responseType: 'blob',
       // });
-      
+
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       toast.dismiss();
       toast.success('PDF generated successfully');
-      
+
       // In a real implementation, we would download the file
       // const url = window.URL.createObjectURL(new Blob([response.data]));
       // const link = document.createElement('a');
@@ -141,17 +141,17 @@ const InvoiceGenerator: React.FC = () => {
     try {
       setIsGenerating(true);
       toast.loading('Sending invoice via email...');
-      
+
       // In a real implementation, we would call the API to send the email
       // await axios.post(`/api/billing/${id}/send-invoice`, {
       //   type: invoiceType,
       //   letterhead: includeLetterhead,
       //   logo: includeLogo,
       // });
-      
+
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       toast.dismiss();
       toast.success('Invoice sent via email successfully');
     } catch (error) {
@@ -235,7 +235,7 @@ const InvoiceGenerator: React.FC = () => {
         <div className="lg:col-span-1">
           <Card>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Invoice Options</h2>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -270,7 +270,7 @@ const InvoiceGenerator: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div>
                 <div className="flex items-center">
                   <input
@@ -286,7 +286,7 @@ const InvoiceGenerator: React.FC = () => {
                   </label>
                 </div>
               </div>
-              
+
               <div>
                 <div className="flex items-center">
                   <input
@@ -302,7 +302,7 @@ const InvoiceGenerator: React.FC = () => {
                   </label>
                 </div>
               </div>
-              
+
               <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                 <Button
                   variant="outline"
@@ -317,7 +317,7 @@ const InvoiceGenerator: React.FC = () => {
                 >
                   Download PDF
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   onClick={handleSendEmail}
@@ -335,7 +335,7 @@ const InvoiceGenerator: React.FC = () => {
             </div>
           </Card>
         </div>
-        
+
         <div className="lg:col-span-2">
           <Card className="bg-white dark:bg-gray-800 print:shadow-none print:border-none">
             <div ref={invoiceRef} className="p-4 print:p-0">
@@ -359,13 +359,13 @@ const InvoiceGenerator: React.FC = () => {
                       <div className="text-right">
                         <p className="text-sm text-gray-600 dark:text-gray-400 print:text-gray-700">123 Medical Plaza, Islamabad</p>
                         <p className="text-sm text-gray-600 dark:text-gray-400 print:text-gray-700">+92 51 1234567</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 print:text-gray-700">info@pakskincare.com</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 print:text-gray-700">www.pakskincare.com</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 print:text-gray-700">info@psc.com</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 print:text-gray-700">www.psc.com</p>
                       </div>
                     </div>
                   </div>
                 )}
-                
+
                 {/* Invoice Header */}
                 <div className="flex justify-between items-start mb-8">
                   <div>
@@ -382,9 +382,9 @@ const InvoiceGenerator: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                      billing.paymentStatus === 'paid' 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 print:bg-green-100 print:text-green-800' 
-                        : billing.paymentStatus === 'partial' 
+                      billing.paymentStatus === 'paid'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 print:bg-green-100 print:text-green-800'
+                        : billing.paymentStatus === 'partial'
                         ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 print:bg-yellow-100 print:text-yellow-800'
                         : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 print:bg-red-100 print:text-red-800'
                     }`}>
@@ -392,7 +392,7 @@ const InvoiceGenerator: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Bill To */}
                 <div className="mb-8">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white print:text-black mb-2">Bill To:</h3>
@@ -407,7 +407,7 @@ const InvoiceGenerator: React.FC = () => {
                   <p className="text-gray-600 dark:text-gray-400 print:text-gray-700">{billing.patient.phoneNumber}</p>
                   <p className="text-gray-600 dark:text-gray-400 print:text-gray-700">{billing.patient.email}</p>
                 </div>
-                
+
                 {/* Services Table */}
                 <div className="mb-8">
                   <table className="w-full border-collapse">
@@ -443,7 +443,7 @@ const InvoiceGenerator: React.FC = () => {
                     </tbody>
                   </table>
                 </div>
-                
+
                 {/* Summary */}
                 <div className="flex justify-end mb-8">
                   <div className="w-full md:w-1/2">
@@ -477,7 +477,7 @@ const InvoiceGenerator: React.FC = () => {
                     )}
                   </div>
                 </div>
-                
+
                 {/* Payment Information */}
                 <div className="mb-8">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white print:text-black mb-2">Payment Information</h3>
@@ -488,7 +488,7 @@ const InvoiceGenerator: React.FC = () => {
                     <span className="font-medium">Status:</span> {billing.paymentStatus.charAt(0).toUpperCase() + billing.paymentStatus.slice(1)}
                   </p>
                 </div>
-                
+
                 {/* Notes */}
                 {billing.notes && (
                   <div className="mb-8">
@@ -496,7 +496,7 @@ const InvoiceGenerator: React.FC = () => {
                     <p className="text-gray-600 dark:text-gray-400 print:text-gray-700">{billing.notes}</p>
                   </div>
                 )}
-                
+
                 {/* Footer */}
                 <div className="text-center text-sm text-gray-500 dark:text-gray-400 print:text-gray-600 border-t border-gray-200 dark:border-gray-700 print:border-gray-300 pt-4">
                   <p>Thank you for choosing Pak Skin Care for your dermatology needs.</p>

@@ -25,7 +25,7 @@ const seedUsers = async () => {
       {
         firstName: 'Admin',
         lastName: 'User',
-        email: 'admin@pakskincare.com',
+        email: 'admin@psc.com',
         password: 'Admin123!',
         role: UserRole.ADMIN,
         isActive: true,
@@ -33,7 +33,7 @@ const seedUsers = async () => {
       {
         firstName: 'Dr',
         lastName: 'Dermatologist',
-        email: 'doctor@pakskincare.com',
+        email: 'doctor@psc.com',
         password: 'Doctor123!',
         role: UserRole.DERMATOLOGIST,
         isActive: true,
@@ -41,7 +41,7 @@ const seedUsers = async () => {
       {
         firstName: 'Front',
         lastName: 'Desk',
-        email: 'receptionist@pakskincare.com',
+        email: 'receptionist@psc.com',
         password: 'Reception123!',
         role: UserRole.RECEPTIONIST,
         isActive: true,

@@ -142,8 +142,8 @@ const SystemSettings: React.FC = () => {
               clinicName: 'Pak Skin Care',
               address: '123 Medical Plaza, Islamabad, Pakistan',
               phoneNumber: '+92 51 1234567',
-              email: 'info@pakskincare.com',
-              website: 'www.pakskincare.com',
+              email: 'info@psc.com',
+              website: 'www.psc.com',
               workingHours: {
                 monday: { start: '09:00', end: '17:00' },
                 tuesday: { start: '09:00', end: '17:00' },
@@ -185,8 +185,8 @@ const SystemSettings: React.FC = () => {
             clinicName: 'Pak Skin Care',
             address: '123 Medical Plaza, Islamabad, Pakistan',
             phoneNumber: '+92 51 1234567',
-            email: 'info@pakskincare.com',
-            website: 'www.pakskincare.com',
+            email: 'info@psc.com',
+            website: 'www.psc.com',
             workingHours: {
               monday: { start: '09:00', end: '17:00' },
               tuesday: { start: '09:00', end: '17:00' },

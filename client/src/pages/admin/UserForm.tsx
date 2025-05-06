@@ -22,7 +22,7 @@ const UserForm: React.FC = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const isEditMode = !!id;
-  
+
   const [formData, setFormData] = useState<UserFormData>({
     firstName: '',
     lastName: '',
@@ -31,7 +31,7 @@ const UserForm: React.FC = () => {
     phoneNumber: '',
     isActive: true,
   });
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(isEditMode);
   const [errors, setErrors] = useState<Partial<UserFormData>>({});
@@ -39,10 +39,10 @@ const UserForm: React.FC = () => {
   useEffect(() => {
     const fetchUser = async () => {
       if (!isEditMode) return;
-      
+
       try {
         setIsFetching(true);
-        
+
         // Try to fetch from API
         try {
           const response = await axios.get(`/api/users/${id}`);
@@ -80,7 +80,7 @@ const UserForm: React.FC = () => {
           _id: '1',
           firstName: 'Admin',
           lastName: 'User',
-          email: 'admin@pakskincare.com',
+          email: 'admin@psc.com',
           role: 'admin',
           isActive: true,
           phoneNumber: '+92 300 1234567',
@@ -92,7 +92,7 @@ const UserForm: React.FC = () => {
           _id: '2',
           firstName: 'Dr',
           lastName: 'Dermatologist',
-          email: 'doctor@pakskincare.com',
+          email: 'doctor@psc.com',
           role: 'dermatologist',
           isActive: true,
           phoneNumber: '+92 300 7654321',
@@ -104,7 +104,7 @@ const UserForm: React.FC = () => {
           _id: '3',
           firstName: 'Front',
           lastName: 'Desk',
-          email: 'receptionist@pakskincare.com',
+          email: 'receptionist@psc.com',
           role: 'receptionist',
           isActive: true,
           phoneNumber: '+92 300 9876543',
@@ -113,7 +113,7 @@ const UserForm: React.FC = () => {
           updatedAt: new Date().toISOString()
         }
       ];
-      
+
       const foundUser = mockUsers.find(u => u._id === id);
       if (foundUser) {
         setFormData({
@@ -135,14 +135,14 @@ const UserForm: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as HTMLInputElement;
-    
+
     if (type === 'checkbox') {
       const { checked } = e.target as HTMLInputElement;
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
-    
+
     // Clear error when field is edited
     if (errors[name as keyof UserFormData]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
@@ -151,28 +151,28 @@ const UserForm: React.FC = () => {
 
   const validateForm = (): boolean => {
     const newErrors: Partial<UserFormData> = {};
-    
+
     if (!formData.firstName.trim()) {
       newErrors.firstName = 'First name is required';
     }
-    
+
     if (!formData.lastName.trim()) {
       newErrors.lastName = 'Last name is required';
     }
-    
+
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
       newErrors.email = 'Invalid email format';
     }
-    
+
     if (!isEditMode) {
       if (!formData.password) {
         newErrors.password = 'Password is required';
       } else if (formData.password.length < 8) {
         newErrors.password = 'Password must be at least 8 characters';
       }
-      
+
       if (formData.password !== formData.confirmPassword) {
         newErrors.confirmPassword = 'Passwords do not match';
       }
@@ -181,37 +181,37 @@ const UserForm: React.FC = () => {
     } else if (formData.password && formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.error('Please fix the errors in the form');
       return;
     }
-    
+
     try {
       setIsLoading(true);
-      
+
       // Remove confirmPassword before sending to API
       const { confirmPassword, ...dataToSend } = formData;
-      
+
       // If password is empty in edit mode, remove it from the data to send
       if (isEditMode && !dataToSend.password) {
         delete dataToSend.password;
       }
-      
+
       try {
         if (isEditMode) {
           await axios.put(`/api/users/${id}`, dataToSend);
         } else {
           await axios.post('/api/auth/register', dataToSend);
         }
-        
+
         toast.success(`User ${isEditMode ? 'updated' : 'created'} successfully`);
         navigate('/users');
       } catch (apiError) {
@@ -243,8 +243,8 @@ const UserForm: React.FC = () => {
           {isEditMode ? 'Edit User' : 'Add New Staff Member'}
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
-          {isEditMode 
-            ? 'Update user information in the system' 
+          {isEditMode
+            ? 'Update user information in the system'
             : 'Add a new staff member to the dermatology clinic system'}
         </p>
       </div>

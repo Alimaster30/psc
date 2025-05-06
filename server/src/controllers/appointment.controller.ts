@@ -261,7 +261,7 @@ export const getAppointment = async (req: Request, res: Response, next: NextFunc
           _id: '2',
           firstName: 'Fatima',
           lastName: 'Ali',
-          email: 'doctor@pakskincare.com'
+          email: 'doctor@psc.com'
         },
         date: new Date().toISOString().split('T')[0], // Today
         startTime: '09:00',
@@ -291,7 +291,7 @@ export const getAppointment = async (req: Request, res: Response, next: NextFunc
           _id: '2',
           firstName: 'Fatima',
           lastName: 'Ali',
-          email: 'doctor@pakskincare.com'
+          email: 'doctor@psc.com'
         },
         date: new Date().toISOString().split('T')[0], // Today
         startTime: '10:00',

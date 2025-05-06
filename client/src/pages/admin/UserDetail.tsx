@@ -32,7 +32,7 @@ const UserDetail: React.FC = () => {
     const fetchUser = async () => {
       try {
         setIsLoading(true);
-        
+
         // Try to fetch from API
         try {
           const response = await axios.get(`/api/users/${id}`);
@@ -62,7 +62,7 @@ const UserDetail: React.FC = () => {
           _id: '1',
           firstName: 'Admin',
           lastName: 'User',
-          email: 'admin@pakskincare.com',
+          email: 'admin@psc.com',
           role: 'admin',
           isActive: true,
           phoneNumber: '+92 300 1234567',
@@ -74,7 +74,7 @@ const UserDetail: React.FC = () => {
           _id: '2',
           firstName: 'Dr',
           lastName: 'Dermatologist',
-          email: 'doctor@pakskincare.com',
+          email: 'doctor@psc.com',
           role: 'dermatologist',
           isActive: true,
           phoneNumber: '+92 300 7654321',
@@ -86,7 +86,7 @@ const UserDetail: React.FC = () => {
           _id: '3',
           firstName: 'Front',
           lastName: 'Desk',
-          email: 'receptionist@pakskincare.com',
+          email: 'receptionist@psc.com',
           role: 'receptionist',
           isActive: true,
           phoneNumber: '+92 300 9876543',
@@ -95,7 +95,7 @@ const UserDetail: React.FC = () => {
           updatedAt: new Date().toISOString()
         }
       ];
-      
+
       const foundUser = mockUsers.find(u => u._id === id);
       setUser(foundUser || null);
     };
@@ -105,7 +105,7 @@ const UserDetail: React.FC = () => {
 
   const handleToggleStatus = async () => {
     if (!user) return;
-    
+
     try {
       try {
         // Try to update via API
@@ -279,9 +279,9 @@ const UserDetail: React.FC = () => {
                         user.role === 'dermatologist' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
                         'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'}`}>
                       <div className="flex items-center">
-                        <span className={`w-1.5 h-1.5 rounded-full mr-1.5 
-                          ${user.role === 'admin' ? 'bg-purple-500 dark:bg-purple-400' : 
-                            user.role === 'dermatologist' ? 'bg-green-500 dark:bg-green-400' : 
+                        <span className={`w-1.5 h-1.5 rounded-full mr-1.5
+                          ${user.role === 'admin' ? 'bg-purple-500 dark:bg-purple-400' :
+                            user.role === 'dermatologist' ? 'bg-green-500 dark:bg-green-400' :
                             'bg-blue-500 dark:bg-blue-400'}`}>
                         </span>
                         {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
