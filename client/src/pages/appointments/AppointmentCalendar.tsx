@@ -209,10 +209,10 @@ const AppointmentCalendar: React.FC = () => {
         ? mockAppointments.filter(appointment => appointment.dermatologist._id === selectedDoctor)
         : mockAppointments;
 
-      setAppointments(filteredAppointments);
+      setAppointments(filteredAppointments as Appointment[]);
 
       // Generate calendar days
-      generateCalendarDays(startDate, endDate, filteredAppointments);
+      generateCalendarDays(startDate, endDate, filteredAppointments as Appointment[]);
     } catch (error) {
       console.error('Error fetching appointments:', error);
       toast.error('Failed to load appointments');
