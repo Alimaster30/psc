@@ -16,13 +16,16 @@ interface Patient {
 interface Service {
   name: string;
   description: string;
-  amount: number;
+  amount?: number;
+  unitPrice?: number;
+  totalPrice?: number;
 }
 
 interface Billing {
   _id: string;
   invoiceNumber: string;
-  date: string;
+  date?: string;
+  createdAt?: string;
   dueDate: string;
   patient: Patient;
   services: Service[];
