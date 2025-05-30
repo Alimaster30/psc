@@ -697,7 +697,7 @@ const UserForm: React.FC = () => {
     }
 
     if (!hasErrors) {
-      handleSubmit(new Event('submit') as React.FormEvent);
+      handleSubmit({} as React.FormEvent);
     } else {
       // Navigate to the first step with errors
       setCurrentStep(firstErrorStep);
@@ -721,7 +721,7 @@ const UserForm: React.FC = () => {
       {/* Draft Recovery Dialog */}
       {showDraftDialog && savedDraftTime && (
         <FormDraftRecovery
-          timestamp={savedDraftTime}
+          timestamp={savedDraftTime.toISOString()}
           onRecover={handleRecoverDraft}
           onDiscard={handleDiscardDraft}
         />
@@ -743,8 +743,8 @@ const UserForm: React.FC = () => {
         isOpen={showExitDialog}
         title="Unsaved Changes"
         message="You have unsaved changes. Are you sure you want to leave this page? All unsaved changes will be lost."
-        confirmText="Leave Page"
-        cancelText="Stay"
+        confirmLabel="Leave Page"
+        cancelLabel="Stay"
         onConfirm={confirmExit}
         onCancel={() => setShowExitDialog(false)}
         type="warning"
