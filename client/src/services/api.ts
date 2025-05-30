@@ -50,8 +50,8 @@ api.interceptors.response.use(
       // Clear local storage and redirect to login
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      // Use absolute URL to preserve protocol
-      window.location.href = `${window.location.protocol}//${window.location.host}/login`;
+      // Use window.location.replace to avoid protocol issues
+      window.location.replace('/login');
     }
 
     return Promise.reject(error);
