@@ -37,7 +37,7 @@ const clearCache = (pattern?: string) => {
 
 // Create axios instance with environment variable for base URL
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://prime-skin-clinic-api.onrender.com/api',
   timeout: 15000, // 15 second timeout
   headers: {
     'Content-Type': 'application/json',

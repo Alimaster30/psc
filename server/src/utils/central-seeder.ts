@@ -80,6 +80,15 @@ const seedUsers = async () => {
         isActive: true,
       },
       {
+        firstName: 'Tahir',
+        lastName: 'Ali',
+        email: 'tahir@psc.com',
+        password: 'Tahir123!',
+        role: UserRole.ADMIN,
+        phoneNumber: '+92 300 1234568',
+        isActive: true,
+      },
+      {
         firstName: 'Dr. Sarah',
         lastName: 'Ahmed',
         email: 'doctor@psc.com',

@@ -172,7 +172,11 @@ const CreateAppointment: React.FC = () => {
         setIsLoadingPatients(true);
 
         // Fetch patients from the API
-        const response = await axios.get('/api/patients');
+        const response = await axios.get('https://prime-skin-clinic-api.onrender.com/api/patients', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
         setPatients(response.data.data);
         setIsLoadingPatients(false);
       } catch (error) {
@@ -187,7 +191,11 @@ const CreateAppointment: React.FC = () => {
         setIsLoadingDoctors(true);
 
         // Fetch doctors from the API
-        const response = await axios.get('/api/users?role=dermatologist');
+        const response = await axios.get('https://prime-skin-clinic-api.onrender.com/api/users?role=dermatologist', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
         setDoctors(response.data.data);
         setIsLoadingDoctors(false);
       } catch (error) {
@@ -202,7 +210,11 @@ const CreateAppointment: React.FC = () => {
         setIsLoadingServices(true);
 
         // Fetch services from the API
-        const response = await axios.get('/api/services');
+        const response = await axios.get('https://prime-skin-clinic-api.onrender.com/api/services', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
         setServices(response.data.data);
         setIsLoadingServices(false);
       } catch (error) {
@@ -219,7 +231,11 @@ const CreateAppointment: React.FC = () => {
         setIsFetching(true);
 
         // Fetch appointment from the API
-        const response = await axios.get(`/api/appointments/${id}`);
+        const response = await axios.get(`https://prime-skin-clinic-api.onrender.com/api/appointments/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
         const appointmentData = response.data.data;
 
         setFormData({
@@ -253,7 +269,11 @@ const CreateAppointment: React.FC = () => {
       if (formData.date && formData.doctorId) {
         try {
           // Fetch available times from the API
-          const response = await axios.get(`/api/appointments/available-times?date=${formData.date}&doctorId=${formData.doctorId}`);
+          const response = await axios.get(`https://prime-skin-clinic-api.onrender.com/api/appointments/available-times?date=${formData.date}&doctorId=${formData.doctorId}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
           setAvailableTimes(response.data.data);
         } catch (error) {
           console.error('Error fetching available times:', error);
@@ -347,11 +367,16 @@ const CreateAppointment: React.FC = () => {
       // Call the API
       let response;
       if (isEditMode) {
-        response = await axios.put(`/api/appointments/${id}`, appointmentData);
+        response = await axios.put(`https://prime-skin-clinic-api.onrender.com/api/appointments/${id}`, appointmentData, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
       } else {
         // Add authentication token to the request
         const token = localStorage.getItem('token');
-        response = await axios.post('/api/appointments', appointmentData, {
+        response = await axios.post('https://prime-skin-clinic-api.onrender.com/api/appointments', appointmentData, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
