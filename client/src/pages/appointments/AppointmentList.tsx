@@ -16,18 +16,26 @@ interface Patient {
   _id: string;
   firstName: string;
   lastName: string;
+  email?: string;
+  phoneNumber?: string;
 }
 
 interface Appointment {
   _id: string;
   patient: Patient;
-  doctor: Doctor;
+  dermatologist: Doctor; // API uses 'dermatologist' instead of 'doctor'
   date: string;
-  time: string;
+  startTime: string; // API uses 'startTime' instead of 'time'
+  endTime: string;
   status: 'scheduled' | 'completed' | 'cancelled' | 'no-show';
   reason: string;
   notes: string;
   createdAt: string;
+  createdBy?: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+  };
 }
 
 const AppointmentList: React.FC = () => {
@@ -46,153 +54,39 @@ const AppointmentList: React.FC = () => {
       try {
         setIsLoading(true);
 
-        // In a real implementation, we would fetch from the API with pagination and filtering
-        // const response = await api.get(`/api/appointments?page=${currentPage}&search=${searchTerm}&filter=${filter}&date=${dateFilter}`);
-        // setAppointments(response.data.data);
-        // setTotalPages(response.data.totalPages);
+        // Build query parameters
+        const queryParams = new URLSearchParams();
+        if (searchTerm) queryParams.append('search', searchTerm);
+        if (filter !== 'all') queryParams.append('status', filter);
+        if (dateFilter) queryParams.append('date', dateFilter);
+        queryParams.append('page', currentPage.toString());
 
-        // For now, we'll use mock data
-        const mockAppointments = [
-          {
-            _id: '1',
-            patient: {
-              _id: '1',
-              firstName: 'Ahmed',
-              lastName: 'Khan'
-            },
-            doctor: {
-              _id: '1',
-              firstName: 'Dr. Fatima',
-              lastName: 'Ali'
-            },
-            date: '2023-08-15',
-            time: '10:30 AM',
-            status: 'completed' as const,
-            reason: 'Skin rash on arms',
-            notes: 'Patient presented with rash on both arms. Prescribed topical cream.',
-            createdAt: '2023-08-01T10:30:00.000Z'
-          },
-          {
-            _id: '2',
-            patient: {
-              _id: '2',
-              firstName: 'Fatima',
-              lastName: 'Ali'
-            },
-            doctor: {
-              _id: '2',
-              firstName: 'Dr. Imran',
-              lastName: 'Ahmed'
-            },
-            date: '2023-08-16',
-            time: '11:00 AM',
-            status: 'scheduled' as const,
-            reason: 'Follow-up for acne treatment',
-            notes: '',
-            createdAt: '2023-08-05T14:15:00.000Z'
-          },
-          {
-            _id: '3',
-            patient: {
-              _id: '3',
-              firstName: 'Muhammad',
-              lastName: 'Raza'
-            },
-            doctor: {
-              _id: '1',
-              firstName: 'Dr. Fatima',
-              lastName: 'Ali'
-            },
-            date: '2023-08-14',
-            time: '09:15 AM',
-            status: 'no-show' as const,
-            reason: 'Initial consultation for psoriasis',
-            notes: 'Patient did not show up for appointment.',
-            createdAt: '2023-08-10T09:45:00.000Z'
-          },
-          {
-            _id: '4',
-            patient: {
-              _id: '4',
-              firstName: 'Ayesha',
-              lastName: 'Malik'
-            },
-            doctor: {
-              _id: '2',
-              firstName: 'Dr. Imran',
-              lastName: 'Ahmed'
-            },
-            date: '2023-08-17',
-            time: '02:30 PM',
-            status: 'scheduled' as const,
-            reason: 'Eczema flare-up',
-            notes: '',
-            createdAt: '2023-08-12T16:20:00.000Z'
-          },
-          {
-            _id: '5',
-            patient: {
-              _id: '5',
-              firstName: 'Imran',
-              lastName: 'Ahmed'
-            },
-            doctor: {
-              _id: '1',
-              firstName: 'Dr. Fatima',
-              lastName: 'Ali'
-            },
-            date: '2023-08-13',
-            time: '03:45 PM',
-            status: 'cancelled' as const,
-            reason: 'Skin tag removal',
-            notes: 'Appointment cancelled by patient due to personal emergency.',
-            createdAt: '2023-08-08T11:30:00.000Z'
-          }
-        ];
-
-        // Filter appointments based on search term, status filter, and date filter
-        let filteredAppointments = mockAppointments;
-
-        // Filter by search term (patient name, doctor name, or reason)
-        if (searchTerm) {
-          filteredAppointments = filteredAppointments.filter(appointment => {
-            const patientName = `${appointment.patient.firstName} ${appointment.patient.lastName}`.toLowerCase();
-            const doctorName = `${appointment.doctor.firstName} ${appointment.doctor.lastName}`.toLowerCase();
-            const reasonLower = appointment.reason.toLowerCase();
-
-            return patientName.includes(searchTerm.toLowerCase()) ||
-                   doctorName.includes(searchTerm.toLowerCase()) ||
-                   reasonLower.includes(searchTerm.toLowerCase());
-          });
-        }
-
-        // Filter by status
-        if (filter !== 'all') {
-          filteredAppointments = filteredAppointments.filter(appointment =>
-            appointment.status === filter
-          );
-        }
-
-        // Filter by date
-        if (dateFilter) {
-          filteredAppointments = filteredAppointments.filter(appointment =>
-            appointment.date === dateFilter
-          );
-        }
-
-        // Filter by doctor if user is a dermatologist
+        // If user is a dermatologist, only show their appointments
         if (user?.role === 'dermatologist') {
-          filteredAppointments = filteredAppointments.filter(appointment =>
-            appointment.doctor._id === user._id
-          );
+          queryParams.append('dermatologist', user._id);
         }
 
-        setAppointments(filteredAppointments);
-        setTotalPages(Math.ceil(filteredAppointments.length / 10)); // Assuming 10 appointments per page
+        // Fetch appointments from the real API
+        const response = await api.get(`/appointments?${queryParams.toString()}`);
+
+        // Map the API response to our interface
+        const appointmentsData = response.data.data.map((appointment: any) => ({
+          ...appointment,
+          // Add any transformations needed to match our interface
+        }));
+
+        setAppointments(appointmentsData);
+        setTotalPages(response.data.totalPages || Math.ceil(response.data.count / 10));
         setIsLoading(false);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching appointments:', error);
-        toast.error('Failed to load appointments');
+
+        if (error.response?.status === 429) {
+          toast.error('Too many requests. Please wait a moment before trying again.');
+        } else {
+          toast.error('Failed to load appointments. Please try refreshing the page.');
+        }
+
         setIsLoading(false);
       }
     };
@@ -241,10 +135,10 @@ const AppointmentList: React.FC = () => {
 
   const handleUpdateStatus = async (appointmentId: string, newStatus: string) => {
     try {
-      // In a real implementation, we would call the API
-      // await api.patch(`/api/appointments/${appointmentId}`, { status: newStatus });
+      // Call the real API to update the appointment status
+      await api.patch(`/appointments/${appointmentId}/status`, { status: newStatus });
 
-      // For now, we'll just update the local state
+      // Update the local state to reflect the change
       setAppointments(prevAppointments =>
         prevAppointments.map(appointment =>
           appointment._id === appointmentId
@@ -256,7 +150,7 @@ const AppointmentList: React.FC = () => {
       toast.success(`Appointment status updated to ${newStatus}`);
     } catch (error) {
       console.error('Error updating appointment status:', error);
-      toast.error('Failed to update appointment status');
+      toast.error('Failed to update appointment status. Please try again.');
     }
   };
 
@@ -377,13 +271,13 @@ const AppointmentList: React.FC = () => {
                   >
                     <td className="px-6 py-4">
                       <div className="font-medium">{formatDate(appointment.date)}</div>
-                      <div className="text-gray-500 dark:text-gray-400">{appointment.time}</div>
+                      <div className="text-gray-500 dark:text-gray-400">{appointment.startTime}</div>
                     </td>
                     <td className="px-6 py-4 font-medium">
                       {appointment.patient.firstName} {appointment.patient.lastName}
                     </td>
                     <td className="px-6 py-4">
-                      {appointment.doctor.firstName} {appointment.doctor.lastName}
+                      {appointment.dermatologist.firstName} {appointment.dermatologist.lastName}
                     </td>
                     <td className="px-6 py-4">
                       {appointment.reason.length > 30

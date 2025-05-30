@@ -1,5 +1,5 @@
 {
-  "name": "pak-skin-care",
+  "name": "prime-skin-clinic",
   "version": "1.0.0",
   "description": "Dermatology Clinic Management System",
   "scripts": {
@@ -9,7 +9,9 @@
     "install-all": "npm install && cd ./client && npm install && cd ../server && npm install",
     "build": "cd ./client && npm run build && cd ../server && npm run build",
     "start": "cd ./server && npm start",
-    "seed": "cd ./server && npm run seed"
+    "seed": "cd ./server && npm run seed",
+    "seed:all": "cd ./server && npm run seed:all",
+    "seed:central": "cd ./server && npm run seed:central"
   },
   "keywords": [
     "dermatology",

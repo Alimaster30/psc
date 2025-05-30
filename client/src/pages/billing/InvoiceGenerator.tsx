@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
 import { useReactToPrint } from 'react-to-print';
+import { getBillingById } from '../../services/mockData';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import { useAuth } from '../../context/AuthContext';
@@ -68,8 +68,17 @@ const InvoiceGenerator: React.FC = () => {
     const fetchBilling = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(`/api/billing/${id}`);
-        setBilling(response.data.data);
+
+        // Get billing data by ID from mock data
+        const mockBilling = getBillingById(id || '1');
+
+        if (!mockBilling) {
+          toast.error('Billing record not found');
+          navigate('/billing');
+          return;
+        }
+
+        setBilling(mockBilling);
       } catch (error) {
         console.error('Error fetching billing:', error);
         toast.error('Failed to load billing information');
@@ -347,13 +356,11 @@ const InvoiceGenerator: React.FC = () => {
                     <div className="flex justify-between items-center">
                       {includeLogo && (
                         <div className="flex items-center">
-                          <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold text-xl">
-                            PSC
-                          </div>
-                          <div className="ml-4">
-                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white print:text-black">Pak Skin Care</h1>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 print:text-gray-700">Excellence in Dermatology</p>
-                          </div>
+                          <img
+                            src="/logo.png"
+                            alt="Pak Skin Care"
+                            className="w-20 h-20 object-contain"
+                          />
                         </div>
                       )}
                       <div className="text-right">

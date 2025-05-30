@@ -152,7 +152,9 @@ const PrescriptionDetail: React.FC = () => {
         // Clinic Header
         printWindow.document.write(`
           <div class="header">
-            <div class="clinic-name">Pak Skin Care</div>
+            <div style="text-align: center; margin-bottom: 10px;">
+              <img src="/logo.png" alt="Pak Skin Care" style="width: 100px; height: 100px; object-fit: contain; margin: 0 auto; display: block;" />
+            </div>
             <div class="clinic-info">Pakistan's Premier Dermatology Solution</div>
             <div class="clinic-info">123 Medical Plaza, Islamabad, Pakistan</div>
             <div class="clinic-info">Phone: +92 51 1234567 | Email: info@pakskincare.com</div>

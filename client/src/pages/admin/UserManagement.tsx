@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
+import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
@@ -25,74 +25,63 @@ const UserManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
 
-  // Fetch users
-  useEffect(() => {
-    const fetchUsers = async () => {
+  // Sorting state
+  type SortField = 'name' | 'role' | 'lastLogin';
+  type SortDirection = 'asc' | 'desc';
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+  // Function to fetch users
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+
       try {
-        setIsLoading(true);
+        // Make API request using configured api instance (includes auth header automatically)
+        const response = await api.get('/users');
 
-        // Try to fetch from API first
-        try {
-          const response = await axios.get('/api/users');
-          if (response.data && response.data.data) {
-            setUsers(response.data.data);
-          } else {
-            // If API response doesn't have the expected format, use mock data
-            useMockData();
-          }
-        } catch (apiError) {
-          console.log('API endpoint not available, using mock data');
-          useMockData();
+        if (response.data && response.data.data) {
+          setUsers(response.data.data);
+        } else {
+          console.error('API response does not have the expected format');
+          toast.error('Failed to load users: Invalid response format');
         }
-      } catch (error) {
-        console.error('Error in user management logic:', error);
-        toast.error('Failed to load users');
-      } finally {
-        setIsLoading(false);
+      } catch (apiError: any) {
+        console.error('Error fetching users from API:', apiError);
+        if (apiError.response?.status === 401) {
+          toast.error('Please log in to view users');
+        } else if (apiError.response?.status === 403) {
+          toast.error('Access denied: Admin role required');
+        } else {
+          toast.error('Failed to load users from the server');
+        }
       }
-    };
+    } catch (error) {
+      console.error('Error in user management logic:', error);
+      toast.error('Failed to load users');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    // Function to set mock data
-    const useMockData = () => {
-      // Create mock data with the 3 required user types
-      const mockUsers: User[] = [
-        {
-          _id: '1',
-          firstName: 'Admin',
-          lastName: 'User',
-          email: 'admin@psc.com',
-          role: 'admin',
-          isActive: true,
-          lastLogin: new Date().toISOString(),
-          createdAt: new Date().toISOString()
-        },
-        {
-          _id: '2',
-          firstName: 'Dr',
-          lastName: 'Dermatologist',
-          email: 'doctor@psc.com',
-          role: 'dermatologist',
-          isActive: true,
-          lastLogin: new Date().toISOString(),
-          createdAt: new Date().toISOString()
-        },
-        {
-          _id: '3',
-          firstName: 'Front',
-          lastName: 'Desk',
-          email: 'receptionist@psc.com',
-          role: 'receptionist',
-          isActive: true,
-          lastLogin: new Date().toISOString(),
-          createdAt: new Date().toISOString()
-        }
-      ];
-
-      setUsers(mockUsers);
-    };
-
+  // Fetch users when component mounts
+  useEffect(() => {
     fetchUsers();
   }, []);
+
+  // Removed window focus event listener as it was causing issues with undefined user IDs
+
+  // Handle sorting
+  const handleSort = (field: SortField) => {
+    // If clicking the same field, toggle direction
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // If clicking a new field, set it as the sort field and default to ascending
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
   // Filter users based on search term and role
   const filteredUsers = users.filter((user) => {
@@ -106,17 +95,56 @@ const UserManagement: React.FC = () => {
     return matchesSearch && matchesRole;
   });
 
+  // Sort filtered users
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    if (!sortField) return 0;
+
+    let comparison = 0;
+
+    switch (sortField) {
+      case 'name':
+        const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
+        const nameB = `${b.firstName} ${b.lastName}`.toLowerCase();
+        comparison = nameA.localeCompare(nameB);
+        break;
+      case 'role':
+        comparison = a.role.localeCompare(b.role);
+        break;
+      case 'lastLogin':
+        // Handle cases where lastLogin might be null/undefined
+        if (!a.lastLogin && !b.lastLogin) comparison = 0;
+        else if (!a.lastLogin) comparison = 1; // Null values go last
+        else if (!b.lastLogin) comparison = -1;
+        else comparison = new Date(a.lastLogin).getTime() - new Date(b.lastLogin).getTime();
+        break;
+      default:
+        return 0;
+    }
+
+    // Reverse comparison if sorting in descending order
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
+
   // Toggle user active status
   const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
     try {
       try {
-        // Try to update via API
-        await axios.patch(`/api/users/${userId}/status`, {
+        // Try to update via API using configured api instance
+        await api.patch(`/users/${userId}/status`, {
           isActive: !currentStatus,
         });
-      } catch (apiError) {
-        console.log('API endpoint not available, updating UI only');
-        // Continue with UI update even if API fails
+      } catch (apiError: any) {
+        console.error('API Error:', apiError);
+        if (apiError.response?.status === 401) {
+          toast.error('Please log in to update user status');
+          return;
+        } else if (apiError.response?.status === 403) {
+          toast.error('Access denied: Admin role required');
+          return;
+        } else {
+          toast.error('Failed to update user status');
+          return;
+        }
       }
 
       // Update local state
@@ -141,6 +169,17 @@ const UserManagement: React.FC = () => {
           </p>
         </div>
         <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            onClick={fetchUsers}
+            icon={
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+            }
+          >
+            Refresh
+          </Button>
           <Link to="/users/permissions">
             <Button
               variant="outline"
@@ -210,7 +249,7 @@ const UserManagement: React.FC = () => {
             <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
             <p className="text-gray-500 dark:text-gray-400">Loading users...</p>
           </div>
-        ) : filteredUsers.length === 0 ? (
+        ) : sortedUsers.length === 0 ? (
           <div className="text-center py-8">
             <svg className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
@@ -223,12 +262,36 @@ const UserManagement: React.FC = () => {
               <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
                   <th scope="col" className="px-6 py-3.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    <div className="flex items-center">
+                    <button
+                      className="flex items-center focus:outline-none group"
+                      onClick={() => handleSort('name')}
+                    >
                       <span>Name</span>
-                      <svg className="w-4 h-4 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
-                      </svg>
-                    </div>
+                      <div className="ml-1 flex flex-col">
+                        <svg
+                          className={`w-3 h-3 ${sortField === 'name' && sortDirection === 'asc'
+                            ? 'text-primary-500'
+                            : 'text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300'}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"></path>
+                        </svg>
+                        <svg
+                          className={`w-3 h-3 -mt-1 ${sortField === 'name' && sortDirection === 'desc'
+                            ? 'text-primary-500'
+                            : 'text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300'}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                      </div>
+                    </button>
                   </th>
                   <th scope="col" className="px-6 py-3.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     <div className="flex items-center">
@@ -236,12 +299,36 @@ const UserManagement: React.FC = () => {
                     </div>
                   </th>
                   <th scope="col" className="px-6 py-3.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    <div className="flex items-center">
+                    <button
+                      className="flex items-center focus:outline-none group"
+                      onClick={() => handleSort('role')}
+                    >
                       <span>Role</span>
-                      <svg className="w-4 h-4 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
-                      </svg>
-                    </div>
+                      <div className="ml-1 flex flex-col">
+                        <svg
+                          className={`w-3 h-3 ${sortField === 'role' && sortDirection === 'asc'
+                            ? 'text-primary-500'
+                            : 'text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300'}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"></path>
+                        </svg>
+                        <svg
+                          className={`w-3 h-3 -mt-1 ${sortField === 'role' && sortDirection === 'desc'
+                            ? 'text-primary-500'
+                            : 'text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300'}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                      </div>
+                    </button>
                   </th>
                   <th scope="col" className="px-6 py-3.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     <div className="flex items-center">
@@ -249,12 +336,36 @@ const UserManagement: React.FC = () => {
                     </div>
                   </th>
                   <th scope="col" className="px-6 py-3.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    <div className="flex items-center">
+                    <button
+                      className="flex items-center focus:outline-none group"
+                      onClick={() => handleSort('lastLogin')}
+                    >
                       <span>Last Login</span>
-                      <svg className="w-4 h-4 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
-                      </svg>
-                    </div>
+                      <div className="ml-1 flex flex-col">
+                        <svg
+                          className={`w-3 h-3 ${sortField === 'lastLogin' && sortDirection === 'asc'
+                            ? 'text-primary-500'
+                            : 'text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300'}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"></path>
+                        </svg>
+                        <svg
+                          className={`w-3 h-3 -mt-1 ${sortField === 'lastLogin' && sortDirection === 'desc'
+                            ? 'text-primary-500'
+                            : 'text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300'}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                      </div>
+                    </button>
                   </th>
                   <th scope="col" className="px-6 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     <div className="flex items-center justify-end">
@@ -264,7 +375,7 @@ const UserManagement: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
-                {filteredUsers.map((user) => (
+                {sortedUsers.map((user) => (
                   <tr key={user._id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">

@@ -18,16 +18,17 @@ import Dashboard from './pages/Dashboard';
 
 // Admin Pages
 import UserManagement from './pages/admin/UserManagement';
-import AddStaff from './pages/admin/AddStaff';
 import UserDetail from './pages/admin/UserDetail';
 import UserForm from './pages/admin/UserForm';
 import SystemSettings from './pages/admin/SystemSettings';
 import BackupManagement from './pages/admin/BackupManagement';
 import RolePermissions from './pages/admin/RolePermissions';
+import UserSettings from './pages/UserSettings';
 
 // Patient Pages
 import PatientRegistration from './pages/patients/PatientRegistration';
 import PatientImageUpload from './pages/patients/PatientImageUpload';
+import PatientImageSelector from './pages/patients/PatientImageSelector';
 import PatientList from './pages/patients/PatientList';
 import PatientDetail from './pages/patients/PatientDetail';
 import PatientForm from './pages/patients/PatientForm';
@@ -36,9 +37,11 @@ import PatientForm from './pages/patients/PatientForm';
 import CreatePrescription from './pages/prescriptions/CreatePrescription';
 import PrescriptionList from './pages/prescriptions/PrescriptionList';
 import PrescriptionDetail from './pages/prescriptions/PrescriptionDetail';
+import EditPrescription from './pages/prescriptions/EditPrescription';
 
 // Billing Pages
 import CreateBilling from './pages/billing/CreateBilling';
+import EditBilling from './pages/billing/EditBilling';
 import ReceiptPrinting from './pages/billing/ReceiptPrinting';
 import BillingList from './pages/billing/BillingList';
 import BillingDetail from './pages/billing/BillingDetail';
@@ -156,7 +159,7 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute requiredRoles={['admin']}>
               <Layout>
-                <AddStaff />
+                <UserForm />
               </Layout>
             </ProtectedRoute>
           }
@@ -196,7 +199,7 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute requiredRoles={['admin', 'dermatologist', 'receptionist']}>
               <Layout>
-                <SystemSettings />
+                {({ user }) => user?.role === 'admin' ? <SystemSettings /> : <UserSettings />}
               </Layout>
             </ProtectedRoute>
           }
@@ -421,7 +424,7 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute requiredRoles={['admin', 'dermatologist']}>
               <Layout>
-                <CreatePrescription />
+                <EditPrescription />
               </Layout>
             </ProtectedRoute>
           }
@@ -454,6 +457,16 @@ const AppRoutes: React.FC = () => {
             <ProtectedRoute requiredRoles={['admin', 'receptionist']}>
               <Layout>
                 <BillingDetail />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/billing/:id/edit"
+          element={
+            <ProtectedRoute requiredRoles={['admin', 'receptionist']}>
+              <Layout>
+                <EditBilling />
               </Layout>
             </ProtectedRoute>
           }
@@ -493,7 +506,7 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute requiredRoles={['admin', 'dermatologist']}>
               <Layout>
-                <PatientImageUpload />
+                <PatientImageSelector />
               </Layout>
             </ProtectedRoute>
           }

@@ -11,6 +11,7 @@ export enum AppointmentStatus {
 export interface IAppointment extends Document {
   patient: mongoose.Types.ObjectId;
   dermatologist: mongoose.Types.ObjectId;
+  service: mongoose.Types.ObjectId;
   date: Date;
   startTime: string;
   endTime: string;
@@ -33,6 +34,11 @@ const appointmentSchema = new Schema<IAppointment>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: [true, 'Dermatologist is required'],
+    },
+    service: {
+      type: Schema.Types.ObjectId,
+      ref: 'Service',
+      required: [true, 'Service is required'],
     },
     date: {
       type: Date,

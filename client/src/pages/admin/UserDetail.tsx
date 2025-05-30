@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
+import api from '../../services/api';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import { useAuth } from '../../context/AuthContext';
@@ -29,22 +29,42 @@ const UserDetail: React.FC = () => {
   const [activeTab, setActiveTab] = useState('info');
 
   useEffect(() => {
+    console.log('UserDetail useEffect triggered with ID:', id);
+
+    // Don't fetch if ID is undefined or empty
+    if (!id || id === 'undefined') {
+      console.log('Skipping fetch due to invalid ID:', id);
+      setIsLoading(false);
+      return;
+    }
+
     const fetchUser = async () => {
       try {
         setIsLoading(true);
+        console.log('Fetching user with ID:', id);
 
         // Try to fetch from API
         try {
-          const response = await axios.get(`/api/users/${id}`);
+          const response = await api.get(`/users/${id}`);
           if (response.data && response.data.data) {
             setUser(response.data.data);
           } else {
             // If API response doesn't have the expected format, use mock data
             useMockData();
           }
-        } catch (apiError) {
-          console.log('API endpoint not available, using mock data');
-          useMockData();
+        } catch (apiError: any) {
+          console.error('API Error:', apiError);
+          if (apiError.response?.status === 404) {
+            // User not found
+            setUser(null);
+          } else if (apiError.response?.status === 401) {
+            toast.error('Please log in to view user details');
+          } else if (apiError.response?.status === 403) {
+            toast.error('Access denied');
+          } else {
+            console.log('API endpoint not available, using mock data');
+            useMockData();
+          }
         }
       } catch (error) {
         console.error('Error fetching user:', error);
@@ -109,7 +129,7 @@ const UserDetail: React.FC = () => {
     try {
       try {
         // Try to update via API
-        await axios.patch(`/api/users/${id}/status`, {
+        await api.patch(`/users/${id}/status`, {
           isActive: !user.isActive,
         });
       } catch (apiError) {

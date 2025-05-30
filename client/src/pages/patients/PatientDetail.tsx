@@ -33,10 +33,21 @@ interface Patient {
 interface Appointment {
   _id: string;
   date: string;
-  time: string;
+  startTime: string;
+  endTime: string;
   status: string;
   reason: string;
   notes: string;
+  patient?: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+  };
+  dermatologist?: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+  };
 }
 
 interface Prescription {
@@ -67,11 +78,78 @@ const PatientDetail: React.FC = () => {
       try {
         setIsLoading(true);
 
-        // In a real implementation, we would fetch from the API
-        // const response = await api.get(`/api/patients/${id}`);
-        // setPatient(response.data);
+        console.log('Fetching patient data for ID:', id);
 
-        // For now, we'll use mock data
+        // Don't fetch if ID is undefined or empty
+        if (!id || id === 'undefined') {
+          console.log('Skipping fetch due to invalid ID:', id);
+          setIsLoading(false);
+          return;
+        }
+
+        try {
+          // Fetch patient data from API
+          const response = await api.get(`/patients/${id}`);
+          console.log('Patient API response:', response.data);
+
+          if (response.data && response.data.data) {
+            setPatient(response.data.data);
+
+            // Fetch appointments for this patient
+            try {
+              const appointmentsResponse = await api.get(`/appointments?patient=${id}`);
+              console.log('Appointments API response:', appointmentsResponse.data);
+              if (appointmentsResponse.data && appointmentsResponse.data.data) {
+                setAppointments(appointmentsResponse.data.data);
+              } else {
+                setAppointments([]);
+              }
+            } catch (appointmentError) {
+              console.error('Error fetching appointments:', appointmentError);
+              setAppointments([]);
+            }
+
+            // Fetch prescriptions for this patient
+            try {
+              const prescriptionsResponse = await api.get(`/prescriptions?patient=${id}`);
+              console.log('Prescriptions API response:', prescriptionsResponse.data);
+              if (prescriptionsResponse.data && prescriptionsResponse.data.data) {
+                setPrescriptions(prescriptionsResponse.data.data);
+              } else {
+                setPrescriptions([]);
+              }
+            } catch (prescriptionError) {
+              console.error('Error fetching prescriptions:', prescriptionError);
+              setPrescriptions([]);
+            }
+
+            setIsLoading(false);
+            return;
+          } else {
+            // If API response doesn't have the expected format, use mock data
+            console.log('API response format unexpected, using mock data');
+          }
+        } catch (apiError: any) {
+          console.error('API Error:', apiError);
+          if (apiError.response?.status === 404) {
+            // Patient not found
+            setPatient(null);
+            setIsLoading(false);
+            return;
+          } else if (apiError.response?.status === 401) {
+            toast.error('Please log in to view patient details');
+            setIsLoading(false);
+            return;
+          } else if (apiError.response?.status === 403) {
+            toast.error('Access denied');
+            setIsLoading(false);
+            return;
+          } else {
+            console.log('API endpoint not available, using mock data');
+          }
+        }
+
+        // Fallback to mock data if API fails
         const mockPatient = {
           _id: id || '1',
           firstName: 'Ahmed',
@@ -95,24 +173,27 @@ const PatientDetail: React.FC = () => {
         const mockAppointments = [
           {
             _id: 'a1',
-            date: '2023-06-10',
-            time: '10:30 AM',
+            date: '2023-06-10T10:30:00.000Z',
+            startTime: '10:30 AM',
+            endTime: '11:00 AM',
             status: 'completed',
             reason: 'Skin rash on arms',
             notes: 'Patient presented with rash on both arms. Prescribed topical cream.'
           },
           {
             _id: 'a2',
-            date: '2023-07-15',
-            time: '11:00 AM',
+            date: '2023-07-15T11:00:00.000Z',
+            startTime: '11:00 AM',
+            endTime: '11:30 AM',
             status: 'completed',
             reason: 'Follow-up for skin rash',
             notes: 'Rash has improved significantly. Continuing treatment for another week.'
           },
           {
             _id: 'a3',
-            date: '2023-08-20',
-            time: '09:15 AM',
+            date: '2023-08-20T09:15:00.000Z',
+            startTime: '09:15 AM',
+            endTime: '09:45 AM',
             status: 'scheduled',
             reason: 'Final follow-up',
             notes: ''
@@ -442,7 +523,8 @@ const PatientDetail: React.FC = () => {
       </div>
 
       {/* Tab content */}
-      {activeTab === 'info' && (
+      <div className="mt-6">
+        {activeTab === 'info' && (
         <Card>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -541,8 +623,8 @@ const PatientDetail: React.FC = () => {
                       className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                       <td className="px-6 py-4">
-                        {appointment.date} <br />
-                        <span className="text-gray-500 dark:text-gray-400">{appointment.time}</span>
+                        <div className="font-medium">{formatDate(appointment.date)}</div>
+                        <div className="text-gray-500 dark:text-gray-400">{appointment.startTime} - {appointment.endTime}</div>
                       </td>
                       <td className="px-6 py-4">{appointment.reason}</td>
                       <td className="px-6 py-4">
@@ -715,7 +797,8 @@ const PatientDetail: React.FC = () => {
           </div>
         </Card>
       )}
-        </div>
+      </div>
+      </div>
       </div>
     </div>
   );

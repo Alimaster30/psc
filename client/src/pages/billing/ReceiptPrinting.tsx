@@ -168,7 +168,9 @@ const ReceiptPrinting: React.FC = () => {
         // Clinic Header
         printWindow.document.write(`
           <div class="header">
-            <div class="clinic-name">Pak Skin Care</div>
+            <div style="text-align: center; margin-bottom: 10px;">
+              <img src="/logo.png" alt="Prime Skin Clinic" style="width: 100px; height: 100px; object-fit: contain; margin: 0 auto; display: block;" />
+            </div>
             <div class="clinic-info">Pakistan's Premier Dermatology Solution</div>
             <div class="clinic-info">123 Medical Plaza, Islamabad, Pakistan</div>
             <div class="clinic-info">Phone: +92 51 1234567 | Email: info@pakskincare.com</div>
@@ -314,7 +316,7 @@ const ReceiptPrinting: React.FC = () => {
           // Footer with signature
           printWindow.document.write(`
             <div class="footer">
-              <p>Thank you for choosing Pak Skin Care for your dermatology needs.</p>
+              <p>Thank you for choosing us for your dermatology needs.</p>
               <p>For any queries regarding this receipt, please contact our billing department.</p>
               <div class="signature">
                 ${billing.createdBy.firstName} ${billing.createdBy.lastName}<br>
@@ -393,7 +395,13 @@ const ReceiptPrinting: React.FC = () => {
         <div className="bg-white p-8" ref={receiptRef}>
           {/* Receipt Header */}
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-primary-600">Pak Skin Care</h1>
+            <div className="flex items-center justify-center mb-4">
+              <img
+                src="/logo.png"
+                alt="Prime Skin Clinic"
+                className="w-20 h-20 object-contain"
+              />
+            </div>
             <p className="text-gray-600">Pakistan's Premier Dermatology Solution</p>
             <p className="text-gray-600">123 Medical Plaza, Islamabad, Pakistan</p>
             <p className="text-gray-600">Phone: +92 51 1234567 | Email: info@pakskincare.com</p>
@@ -528,7 +536,7 @@ const ReceiptPrinting: React.FC = () => {
           {/* Footer */}
           <div className="mt-16">
             <div className="text-center text-gray-600 text-sm">
-              <p>Thank you for choosing Pak Skin Care for your dermatology needs.</p>
+              <p>Thank you for choosing Prime Skin Clinic for your dermatology needs.</p>
               <p className="mt-1">For any queries regarding this receipt, please contact our billing department.</p>
             </div>
             <div className="flex justify-end mt-8">

@@ -13,7 +13,7 @@ interface Prescription {
     firstName: string;
     lastName: string;
   };
-  doctor: {
+  dermatologist: {
     _id: string;
     firstName: string;
     lastName: string;
@@ -24,7 +24,9 @@ interface Prescription {
     dosage: string;
     frequency: string;
     duration: string;
+    instructions?: string;
   }[];
+  date: string;
   createdAt: string;
 }
 
@@ -43,174 +45,63 @@ const PrescriptionList: React.FC = () => {
       try {
         setIsLoading(true);
 
-        // In a real implementation, we would fetch from the API with pagination and filtering
-        // const response = await api.get(`/api/prescriptions?page=${currentPage}&search=${searchTerm}&filter=${filter}`);
-        // setPrescriptions(response.data.data);
-        // setTotalPages(response.data.totalPages);
+        // Build query parameters
+        let queryParams = new URLSearchParams();
 
-        // For now, we'll use mock data
-        const mockPrescriptions = [
-          {
-            _id: '1',
-            patient: {
-              _id: '1',
-              firstName: 'Ahmed',
-              lastName: 'Khan'
-            },
-            doctor: {
-              _id: '1',
-              firstName: 'Dr. Fatima',
-              lastName: 'Ali'
-            },
-            diagnosis: 'Contact dermatitis',
-            medications: [
-              {
-                name: 'Hydrocortisone Cream 1%',
-                dosage: 'Apply thin layer',
-                frequency: 'Twice daily',
-                duration: '2 weeks'
-              },
-              {
-                name: 'Cetirizine 10mg',
-                dosage: '1 tablet',
-                frequency: 'Once daily',
-                duration: '1 week'
-              }
-            ],
-            createdAt: '2023-08-01T10:30:00.000Z'
-          },
-          {
-            _id: '2',
-            patient: {
-              _id: '2',
-              firstName: 'Fatima',
-              lastName: 'Ali'
-            },
-            doctor: {
-              _id: '1',
-              firstName: 'Dr. Fatima',
-              lastName: 'Ali'
-            },
-            diagnosis: 'Psoriasis',
-            medications: [
-              {
-                name: 'Calcipotriol Ointment',
-                dosage: 'Apply thin layer',
-                frequency: 'Once daily',
-                duration: '4 weeks'
-              },
-              {
-                name: 'Coal Tar Shampoo',
-                dosage: 'Apply to scalp',
-                frequency: 'Twice weekly',
-                duration: '4 weeks'
-              }
-            ],
-            createdAt: '2023-08-05T14:15:00.000Z'
-          },
-          {
-            _id: '3',
-            patient: {
-              _id: '3',
-              firstName: 'Muhammad',
-              lastName: 'Raza'
-            },
-            doctor: {
-              _id: '2',
-              firstName: 'Dr. Imran',
-              lastName: 'Ahmed'
-            },
-            diagnosis: 'Acne vulgaris',
-            medications: [
-              {
-                name: 'Benzoyl Peroxide 5% Gel',
-                dosage: 'Apply thin layer',
-                frequency: 'Once daily',
-                duration: '8 weeks'
-              },
-              {
-                name: 'Doxycycline 100mg',
-                dosage: '1 capsule',
-                frequency: 'Twice daily',
-                duration: '4 weeks'
-              }
-            ],
-            createdAt: '2023-08-10T09:45:00.000Z'
-          },
-          {
-            _id: '4',
-            patient: {
-              _id: '4',
-              firstName: 'Ayesha',
-              lastName: 'Malik'
-            },
-            doctor: {
-              _id: '1',
-              firstName: 'Dr. Fatima',
-              lastName: 'Ali'
-            },
-            diagnosis: 'Eczema',
-            medications: [
-              {
-                name: 'Tacrolimus Ointment 0.1%',
-                dosage: 'Apply thin layer',
-                frequency: 'Twice daily',
-                duration: '2 weeks'
-              }
-            ],
-            createdAt: new Date().toISOString() // Today
-          }
-        ];
-
-        // First apply filter
-        let filteredByCategory = [...mockPrescriptions];
-
-        if (filter === 'recent') {
-          // Sort by creation date (newest first) and take only the most recent ones (last 7 days)
-          const sevenDaysAgo = new Date();
-          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-          filteredByCategory = mockPrescriptions
-            .filter(prescription => new Date(prescription.createdAt) >= sevenDaysAgo)
-            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        } else if (filter === 'my-patients') {
-          // In a real app, this would filter prescriptions for patients of the current doctor
-          // For mock data, we'll just filter for prescriptions by Dr. Fatima Ali (ID: 1)
-          filteredByCategory = mockPrescriptions.filter(prescription =>
-            prescription.doctor._id === '1'
-          );
+        // Apply filter logic
+        if (filter === 'my-patients' && user?.role === 'dermatologist') {
+          queryParams.append('dermatologist', user.id);
         }
 
-        // Then apply search term
-        const filteredPrescriptions = filteredByCategory.filter(prescription => {
-          const patientName = `${prescription.patient.firstName} ${prescription.patient.lastName}`.toLowerCase();
-          const doctorName = `${prescription.doctor.firstName} ${prescription.doctor.lastName}`.toLowerCase();
-          const diagnosisLower = prescription.diagnosis.toLowerCase();
-          const medicationNames = prescription.medications.map(med => med.name.toLowerCase()).join(' ');
+        // Fetch prescriptions from the real API
+        const response = await api.get(`/prescriptions?${queryParams.toString()}`);
+        let fetchedPrescriptions = response.data.data || [];
 
-          return patientName.includes(searchTerm.toLowerCase()) ||
-                 doctorName.includes(searchTerm.toLowerCase()) ||
-                 diagnosisLower.includes(searchTerm.toLowerCase()) ||
-                 medicationNames.includes(searchTerm.toLowerCase());
-        });
+        // Apply client-side filtering for search and recent filter
+        if (searchTerm) {
+          fetchedPrescriptions = fetchedPrescriptions.filter((prescription: Prescription) => {
+            const patientName = `${prescription.patient.firstName} ${prescription.patient.lastName}`.toLowerCase();
+            const doctorName = `${prescription.dermatologist.firstName} ${prescription.dermatologist.lastName}`.toLowerCase();
+            const diagnosisLower = prescription.diagnosis.toLowerCase();
+            const medicationNames = prescription.medications.map(med => med.name.toLowerCase()).join(' ');
 
-        // Apply pagination (for mock data, we'll just simulate it)
+            return patientName.includes(searchTerm.toLowerCase()) ||
+                   doctorName.includes(searchTerm.toLowerCase()) ||
+                   diagnosisLower.includes(searchTerm.toLowerCase()) ||
+                   medicationNames.includes(searchTerm.toLowerCase());
+          });
+        }
+
+        if (filter === 'recent') {
+          // Sort by most recently created (using createdAt field for accurate creation time)
+          fetchedPrescriptions = fetchedPrescriptions
+            .sort((a: Prescription, b: Prescription) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+        }
+
+        // Apply pagination
         const prescriptionsPerPage = 10;
         const startIndex = (currentPage - 1) * prescriptionsPerPage;
-        const paginatedPrescriptions = filteredPrescriptions.slice(startIndex, startIndex + prescriptionsPerPage);
+        const paginatedPrescriptions = fetchedPrescriptions.slice(startIndex, startIndex + prescriptionsPerPage);
 
         setPrescriptions(paginatedPrescriptions);
-        setTotalPages(Math.ceil(filteredPrescriptions.length / prescriptionsPerPage));
+        setTotalPages(Math.ceil(fetchedPrescriptions.length / prescriptionsPerPage));
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching prescriptions:', error);
-        toast.error('Failed to load prescriptions');
+        toast.error('Failed to load prescriptions from server. Please try refreshing the page.');
         setIsLoading(false);
       }
     };
 
-    fetchPrescriptions();
-  }, [searchTerm, currentPage, filter]);
+    // Debounce API calls to avoid excessive requests
+    const timeoutId = setTimeout(() => {
+      fetchPrescriptions();
+    }, searchTerm ? 500 : 0); // 500ms delay for search, immediate for other changes
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, currentPage, filter, user]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -281,7 +172,7 @@ const PrescriptionList: React.FC = () => {
               onChange={handleFilterChange}
             >
               <option value="all">All Prescriptions</option>
-              <option value="recent">Recently Created</option>
+              <option value="recent">Most Recent First</option>
               <option value="my-patients">My Patients</option>
             </select>
           </div>
@@ -323,13 +214,13 @@ const PrescriptionList: React.FC = () => {
                     className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     <td className="px-6 py-4">
-                      {formatDate(prescription.createdAt)}
+                      {formatDate(prescription.date || prescription.createdAt)}
                     </td>
                     <td className="px-6 py-4 font-medium">
                       {prescription.patient.firstName} {prescription.patient.lastName}
                     </td>
                     <td className="px-6 py-4">
-                      {prescription.doctor.firstName} {prescription.doctor.lastName}
+                      {prescription.dermatologist.firstName} {prescription.dermatologist.lastName}
                     </td>
                     <td className="px-6 py-4">
                       {prescription.diagnosis.length > 30

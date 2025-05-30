@@ -387,7 +387,7 @@ const AppointmentCalendar: React.FC = () => {
                 <span className={`text-sm font-medium ${day.isCurrentMonth ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-600'}`}>
                   {day.date.getDate()}
                 </span>
-                {day.isCurrentMonth && (
+                {day.isCurrentMonth && user?.role !== 'dermatologist' && (
                   <button
                     onClick={() => navigate(`/appointments/new?date=${day.date.toISOString().split('T')[0]}&doctor=${selectedDoctor}`)}
                     className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-xs"
@@ -491,12 +491,14 @@ const AppointmentCalendar: React.FC = () => {
                       </div>
                     ))}
 
-                    <button
-                      onClick={() => navigate(`/appointments/new?date=${dateStr}&time=${hour}:00&doctor=${selectedDoctor}`)}
-                      className="absolute bottom-0 right-0 p-1 text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-xs"
-                    >
-                      +
-                    </button>
+                    {user?.role !== 'dermatologist' && (
+                      <button
+                        onClick={() => navigate(`/appointments/new?date=${dateStr}&time=${hour}:00&doctor=${selectedDoctor}`)}
+                        className="absolute bottom-0 right-0 p-1 text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-xs"
+                      >
+                        +
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -564,12 +566,14 @@ const AppointmentCalendar: React.FC = () => {
                     </div>
                   ))}
 
-                  <button
-                    onClick={() => navigate(`/appointments/new?date=${currentDate.toISOString().split('T')[0]}&time=${hour}:00&doctor=${selectedDoctor}`)}
-                    className="absolute bottom-2 right-2 p-1 text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-sm"
-                  >
-                    + Add
-                  </button>
+                  {user?.role !== 'dermatologist' && (
+                    <button
+                      onClick={() => navigate(`/appointments/new?date=${currentDate.toISOString().split('T')[0]}&time=${hour}:00&doctor=${selectedDoctor}`)}
+                      className="absolute bottom-2 right-2 p-1 text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-sm"
+                    >
+                      + Add
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -595,17 +599,19 @@ const AppointmentCalendar: React.FC = () => {
           >
             List View
           </Button>
-          <Button
-            variant="primary"
-            onClick={() => navigate('/appointments/new')}
-            icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-              </svg>
-            }
-          >
-            New Appointment
-          </Button>
+          {user?.role !== 'dermatologist' && (
+            <Button
+              variant="primary"
+              onClick={() => navigate('/appointments/new')}
+              icon={
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+              }
+            >
+              New Appointment
+            </Button>
+          )}
         </div>
       </div>
 

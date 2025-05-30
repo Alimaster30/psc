@@ -4,7 +4,6 @@ import { toast } from 'react-hot-toast';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import { useAuth } from '../../context/AuthContext';
-import api from '../../services/api';
 
 interface Patient {
   _id: string;
@@ -18,31 +17,35 @@ interface Patient {
 interface Service {
   name: string;
   description?: string;
-  price: number;
   quantity: number;
-}
-
-interface Payment {
-  _id: string;
-  amount: number;
-  method: string;
-  date: string;
-  reference?: string;
-  notes?: string;
+  unitPrice: number;
+  totalPrice: number;
 }
 
 interface Invoice {
   _id: string;
   invoiceNumber: string;
   patient: Patient;
+  appointment?: {
+    _id: string;
+    date: string;
+    time: string;
+  };
   services: Service[];
-  totalAmount: number;
-  paidAmount: number;
-  status: 'paid' | 'partial' | 'unpaid';
-  payments: Payment[];
+  subtotal: number;
+  tax: number;
+  discount: number;
+  total: number;
+  amountPaid: number;
+  balance: number;
+  paymentStatus: 'pending' | 'paid' | 'partially_paid' | 'overdue' | 'cancelled';
+  paymentMethod?: string;
+  paymentDate?: string;
   notes?: string;
-  createdAt: string;
+  date: string;
   dueDate: string;
+  createdAt: string;
+  updatedAt: string;
   createdBy: {
     _id: string;
     firstName: string;
@@ -84,60 +87,44 @@ const BillingDetail: React.FC = () => {
       try {
         setIsLoading(true);
 
-        // In a real implementation, we would fetch from the API
-        // const response = await api.get(`/api/invoices/${id}`);
-        // setInvoice(response.data);
-
-        // For now, we'll use mock data
-        const mockInvoice: Invoice = {
-          _id: id || '1',
-          invoiceNumber: 'INV-2023-001',
-          patient: {
-            _id: '1',
-            firstName: 'Ahmed',
-            lastName: 'Khan',
-            email: 'ahmed.khan@example.com',
-            phoneNumber: '+92 300 1234567',
-            address: '123 Main Street, Islamabad, Pakistan'
+        // Fetch from API
+        const response = await fetch(`/api/billing/${id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
           },
-          services: [
-            {
-              name: 'Dermatology Consultation',
-              description: 'Initial consultation with dermatologist',
-              price: 2500,
-              quantity: 1
-            },
-            {
-              name: 'Skin Biopsy',
-              description: 'Procedure to remove a small sample of skin for testing',
-              price: 5000,
-              quantity: 1
-            }
-          ],
-          totalAmount: 7500,
-          paidAmount: 5000,
-          status: 'partial' as const,
-          payments: [
-            {
-              _id: 'p1',
-              amount: 5000,
-              method: 'Cash',
-              date: '2023-08-01T10:30:00.000Z',
-              notes: 'Initial payment'
-            }
-          ],
-          notes: 'Patient will pay remaining amount on next visit',
-          createdAt: '2023-08-01T10:30:00.000Z',
-          dueDate: '2023-08-15T00:00:00.000Z',
-          createdBy: {
-            _id: '5',
-            firstName: 'Sara',
-            lastName: 'Malik'
-          }
-        };
+        });
 
-        setInvoice(mockInvoice);
-        setPaymentAmount(mockInvoice.totalAmount - mockInvoice.paidAmount);
+        if (response.status === 429) {
+          toast.error('Too many requests. Please wait a moment and try again.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            setInvoice(null);
+            setIsLoading(false);
+            return;
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Billing API response:', data);
+        const fetchedInvoice = data.data || data; // Handle both data.data and direct data response
+
+        if (!fetchedInvoice) {
+          console.log('No invoice found in response');
+          setInvoice(null);
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('Invoice loaded successfully:', fetchedInvoice);
+        setInvoice(fetchedInvoice);
+        setPaymentAmount(fetchedInvoice.balance || (fetchedInvoice.total - fetchedInvoice.amountPaid));
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching invoice:', error);
@@ -179,12 +166,33 @@ const BillingDetail: React.FC = () => {
     switch (status) {
       case 'paid':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'partial':
+      case 'partially_paid':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'unpaid':
+      case 'pending':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      case 'overdue':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+    }
+  };
+
+  const getStatusDisplayText = (status: string) => {
+    switch (status) {
+      case 'paid':
+        return 'Paid';
+      case 'partially_paid':
+        return 'Partially Paid';
+      case 'pending':
+        return 'Pending';
+      case 'overdue':
+        return 'Overdue';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status;
     }
   };
 
@@ -198,7 +206,7 @@ const BillingDetail: React.FC = () => {
       return;
     }
 
-    if (paymentAmount > (invoice.totalAmount - invoice.paidAmount)) {
+    if (paymentAmount > (invoice.total - invoice.amountPaid)) {
       toast.error('Payment amount cannot exceed the remaining balance');
       return;
     }
@@ -218,23 +226,16 @@ const BillingDetail: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Update local state
-      const newPayment: Payment = {
-        _id: `p${Date.now()}`,
-        amount: paymentAmount,
-        method: paymentMethod,
-        date: new Date().toISOString(),
-        reference: paymentReference,
-        notes: paymentNotes
-      };
-
-      const newPaidAmount = invoice.paidAmount + paymentAmount;
-      const newStatus = newPaidAmount >= invoice.totalAmount ? 'paid' : 'partial';
+      const newPaidAmount = invoice.amountPaid + paymentAmount;
+      const newStatus = newPaidAmount >= invoice.total ? 'paid' : 'partially_paid';
 
       setInvoice({
         ...invoice,
-        paidAmount: newPaidAmount,
-        status: newStatus as 'paid' | 'partial' | 'unpaid',
-        payments: [...invoice.payments, newPayment]
+        amountPaid: newPaidAmount,
+        paymentStatus: newStatus as 'pending' | 'paid' | 'partially_paid' | 'overdue' | 'cancelled',
+        balance: invoice.total - newPaidAmount,
+        paymentMethod: paymentMethod,
+        paymentDate: new Date().toISOString(),
       });
 
       setIsPaymentModalOpen(false);
@@ -309,7 +310,7 @@ const BillingDetail: React.FC = () => {
           >
             Generate Invoice
           </Button>
-          {invoice.status !== 'paid' && (
+          {invoice.paymentStatus !== 'paid' && (
             <Button
               variant="primary"
               onClick={() => setIsPaymentModalOpen(true)}
@@ -346,9 +347,8 @@ const BillingDetail: React.FC = () => {
                 {invoice.invoiceNumber}
               </p>
             </div>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClass(invoice.status)}`}>
-              {invoice.status === 'paid' ? 'Paid' :
-               invoice.status === 'partial' ? 'Partially Paid' : 'Unpaid'}
+            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClass(invoice.paymentStatus)}`}>
+              {getStatusDisplayText(invoice.paymentStatus)}
             </span>
           </div>
 
@@ -437,13 +437,13 @@ const BillingDetail: React.FC = () => {
                     {service.description || '-'}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    {formatCurrency(service.price)}
+                    {formatCurrency(service.unitPrice)}
                   </td>
                   <td className="px-6 py-4 text-center">
                     {service.quantity}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    {formatCurrency(service.price * service.quantity)}
+                    {formatCurrency(service.totalPrice)}
                   </td>
                 </tr>
               ))}
@@ -454,7 +454,35 @@ const BillingDetail: React.FC = () => {
                   Subtotal
                 </td>
                 <td className="px-6 py-4 text-right font-medium">
-                  {formatCurrency(invoice.totalAmount)}
+                  {formatCurrency(invoice.subtotal)}
+                </td>
+              </tr>
+              {invoice.tax > 0 && (
+                <tr className="bg-gray-50 dark:bg-gray-700">
+                  <td colSpan={4} className="px-6 py-4 text-right font-medium">
+                    Tax
+                  </td>
+                  <td className="px-6 py-4 text-right font-medium">
+                    {formatCurrency(invoice.tax)}
+                  </td>
+                </tr>
+              )}
+              {invoice.discount > 0 && (
+                <tr className="bg-gray-50 dark:bg-gray-700">
+                  <td colSpan={4} className="px-6 py-4 text-right font-medium">
+                    Discount
+                  </td>
+                  <td className="px-6 py-4 text-right font-medium text-green-600 dark:text-green-400">
+                    -{formatCurrency(invoice.discount)}
+                  </td>
+                </tr>
+              )}
+              <tr className="bg-gray-50 dark:bg-gray-700">
+                <td colSpan={4} className="px-6 py-4 text-right font-medium">
+                  Total
+                </td>
+                <td className="px-6 py-4 text-right font-medium">
+                  {formatCurrency(invoice.total)}
                 </td>
               </tr>
               <tr className="bg-gray-50 dark:bg-gray-700">
@@ -462,7 +490,7 @@ const BillingDetail: React.FC = () => {
                   Paid Amount
                 </td>
                 <td className="px-6 py-4 text-right font-medium text-green-600 dark:text-green-400">
-                  {formatCurrency(invoice.paidAmount)}
+                  {formatCurrency(invoice.amountPaid)}
                 </td>
               </tr>
               <tr className="bg-gray-50 dark:bg-gray-700">
@@ -470,7 +498,7 @@ const BillingDetail: React.FC = () => {
                   Balance Due
                 </td>
                 <td className="px-6 py-4 text-right font-medium text-red-600 dark:text-red-400">
-                  {formatCurrency(invoice.totalAmount - invoice.paidAmount)}
+                  {formatCurrency(invoice.balance || (invoice.total - invoice.amountPaid))}
                 </td>
               </tr>
             </tfoot>
@@ -478,57 +506,27 @@ const BillingDetail: React.FC = () => {
         </div>
       </Card>
 
-      {/* Payment History */}
-      <Card>
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Payment History</h2>
+      {/* Payment Information */}
+      {(invoice.paymentMethod || invoice.paymentDate) && (
+        <Card>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Payment Information</h2>
 
-        {invoice.payments.length === 0 ? (
-          <div className="text-center py-8">
-            <svg className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <p className="text-gray-500 dark:text-gray-400">No payments recorded yet</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {invoice.paymentMethod && (
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Payment Method</p>
+                <p className="text-gray-900 dark:text-white capitalize">{invoice.paymentMethod.replace('_', ' ')}</p>
+              </div>
+            )}
+            {invoice.paymentDate && (
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Payment Date</p>
+                <p className="text-gray-900 dark:text-white">{formatDateTime(invoice.paymentDate)}</p>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-gray-700 dark:text-gray-300">
-              <thead className="text-xs text-gray-600 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                <tr>
-                  <th scope="col" className="px-6 py-3">Date</th>
-                  <th scope="col" className="px-6 py-3">Amount</th>
-                  <th scope="col" className="px-6 py-3">Method</th>
-                  <th scope="col" className="px-6 py-3">Reference</th>
-                  <th scope="col" className="px-6 py-3">Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoice.payments.map((payment) => (
-                  <tr
-                    key={payment._id}
-                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
-                  >
-                    <td className="px-6 py-4">
-                      {formatDateTime(payment.date)}
-                    </td>
-                    <td className="px-6 py-4 font-medium">
-                      {formatCurrency(payment.amount)}
-                    </td>
-                    <td className="px-6 py-4">
-                      {payment.method}
-                    </td>
-                    <td className="px-6 py-4">
-                      {payment.reference || '-'}
-                    </td>
-                    <td className="px-6 py-4">
-                      {payment.notes || '-'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
+        </Card>
+      )}
 
       {/* Payment Modal */}
       {isPaymentModalOpen && (
@@ -562,14 +560,14 @@ const BillingDetail: React.FC = () => {
                               value={paymentAmount}
                               onChange={(e) => setPaymentAmount(Number(e.target.value))}
                               min={1}
-                              max={invoice.totalAmount - invoice.paidAmount}
+                              max={invoice.total - invoice.amountPaid}
                               step={1}
                               required
                               className="pl-12 w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-800 dark:text-white"
                             />
                           </div>
                           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Remaining balance: {formatCurrency(invoice.totalAmount - invoice.paidAmount)}
+                            Remaining balance: {formatCurrency(invoice.balance || (invoice.total - invoice.amountPaid))}
                           </p>
                         </div>
 
@@ -629,7 +627,7 @@ const BillingDetail: React.FC = () => {
                     type="submit"
                     variant="primary"
                     isLoading={isSubmitting}
-                    disabled={paymentAmount <= 0 || paymentAmount > (invoice.totalAmount - invoice.paidAmount)}
+                    disabled={paymentAmount <= 0 || paymentAmount > (invoice.total - invoice.amountPaid)}
                     className="ml-3"
                   >
                     Record Payment

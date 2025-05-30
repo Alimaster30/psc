@@ -10,166 +10,15 @@ import { AppError } from '../middlewares/error.middleware';
  */
 export const getAppointments = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { status, date, startDate, endDate, dermatologist, patient } = req.query;
+    const { status, date, startDate, endDate, dermatologist, patient, search } = req.query;
+    console.log('getAppointments called with query:', req.query);
 
-    // For development/demo purposes, use mock data
-    // In production, this would use the database query with filters
-
-    // Mock data for demonstration
-    const mockAppointments = [
-      {
-        _id: '1',
-        patient: {
-          _id: '1',
-          firstName: 'Ahmed',
-          lastName: 'Khan',
-          email: 'ahmed@example.com',
-          phoneNumber: '+92 300 1234567'
-        },
-        dermatologist: {
-          _id: '2',
-          firstName: 'Fatima',
-          lastName: 'Ali'
-        },
-        date: new Date().toISOString().split('T')[0], // Today
-        startTime: '09:00',
-        endTime: '09:30',
-        status: AppointmentStatus.CONFIRMED,
-        reason: 'Acne consultation',
-        notes: 'Patient has been experiencing severe acne for 3 months',
-        createdBy: {
-          _id: '4',
-          firstName: 'Front',
-          lastName: 'Desk'
-        },
-        createdAt: new Date().toISOString()
-      },
-      {
-        _id: '2',
-        patient: {
-          _id: '2',
-          firstName: 'Fatima',
-          lastName: 'Malik',
-          email: 'fatima@example.com',
-          phoneNumber: '+92 300 7654321'
-        },
-        dermatologist: {
-          _id: '2',
-          firstName: 'Fatima',
-          lastName: 'Ali'
-        },
-        date: new Date().toISOString().split('T')[0], // Today
-        startTime: '10:00',
-        endTime: '10:30',
-        status: AppointmentStatus.SCHEDULED,
-        reason: 'Eczema follow-up',
-        notes: 'Check progress with prescribed treatment',
-        createdBy: {
-          _id: '4',
-          firstName: 'Front',
-          lastName: 'Desk'
-        },
-        createdAt: new Date().toISOString()
-      },
-      {
-        _id: '3',
-        patient: {
-          _id: '3',
-          firstName: 'Muhammad',
-          lastName: 'Raza',
-          email: 'muhammad@example.com',
-          phoneNumber: '+92 300 9876543'
-        },
-        dermatologist: {
-          _id: '3',
-          firstName: 'Imran',
-          lastName: 'Ahmed'
-        },
-        date: new Date().toISOString().split('T')[0], // Today
-        startTime: '11:00',
-        endTime: '11:30',
-        status: AppointmentStatus.COMPLETED,
-        reason: 'Psoriasis treatment',
-        notes: 'Patient responding well to treatment',
-        createdBy: {
-          _id: '4',
-          firstName: 'Front',
-          lastName: 'Desk'
-        },
-        createdAt: new Date().toISOString()
-      },
-      {
-        _id: '4',
-        patient: {
-          _id: '4',
-          firstName: 'Ayesha',
-          lastName: 'Siddiqui',
-          email: 'ayesha@example.com',
-          phoneNumber: '+92 300 1122334'
-        },
-        dermatologist: {
-          _id: '2',
-          firstName: 'Fatima',
-          lastName: 'Ali'
-        },
-        date: (() => {
-          const tomorrow = new Date();
-          tomorrow.setDate(tomorrow.getDate() + 1);
-          return tomorrow.toISOString().split('T')[0];
-        })(), // Tomorrow
-        startTime: '09:00',
-        endTime: '09:30',
-        status: AppointmentStatus.SCHEDULED,
-        reason: 'Skin allergy',
-        notes: 'First consultation for skin rash',
-        createdBy: {
-          _id: '4',
-          firstName: 'Front',
-          lastName: 'Desk'
-        },
-        createdAt: new Date().toISOString()
-      },
-      {
-        _id: '5',
-        patient: {
-          _id: '5',
-          firstName: 'Zainab',
-          lastName: 'Qureshi',
-          email: 'zainab@example.com',
-          phoneNumber: '+92 300 5566778'
-        },
-        dermatologist: {
-          _id: '3',
-          firstName: 'Imran',
-          lastName: 'Ahmed'
-        },
-        date: (() => {
-          const tomorrow = new Date();
-          tomorrow.setDate(tomorrow.getDate() + 1);
-          return tomorrow.toISOString().split('T')[0];
-        })(), // Tomorrow
-        startTime: '10:00',
-        endTime: '10:30',
-        status: AppointmentStatus.CONFIRMED,
-        reason: 'Hair loss consultation',
-        notes: 'Patient experiencing hair thinning',
-        createdBy: {
-          _id: '4',
-          firstName: 'Front',
-          lastName: 'Desk'
-        },
-        createdAt: new Date().toISOString()
-      }
-    ];
-
-    // Apply filters to mock data
-    let filteredAppointments = [...mockAppointments];
+    // Build query
+    const query: any = {};
 
     // Filter by status
     if (status) {
-      filteredAppointments = filteredAppointments.filter(
-        appointment => appointment.status === status
-      );
+      query.status = status;
     }
 
     // Filter by date range
@@ -180,49 +29,67 @@ export const getAppointments = async (req: Request, res: Response, next: NextFun
       const end = new Date(endDate as string);
       end.setHours(23, 59, 59, 999);
 
-      filteredAppointments = filteredAppointments.filter(appointment => {
-        const appointmentDate = new Date(appointment.date);
-        return appointmentDate >= start && appointmentDate <= end;
-      });
+      query.date = { $gte: start, $lte: end };
     } else if (date) {
       // Filter by single date
-      filteredAppointments = filteredAppointments.filter(
-        appointment => appointment.date === date
-      );
+      const selectedDate = new Date(date as string);
+      selectedDate.setHours(0, 0, 0, 0);
+      const nextDay = new Date(selectedDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+
+      query.date = { $gte: selectedDate, $lt: nextDay };
     }
 
     // Filter by dermatologist
     if (dermatologist) {
-      filteredAppointments = filteredAppointments.filter(
-        appointment => appointment.dermatologist._id === dermatologist
-      );
+      query.dermatologist = dermatologist;
     }
 
     // Filter by patient
     if (patient) {
-      filteredAppointments = filteredAppointments.filter(
-        appointment => appointment.patient._id === patient
-      );
+      query.patient = patient;
     }
 
     // If user is a dermatologist, only show their appointments
     if (req.user && req.user.role === UserRole.DERMATOLOGIST) {
-      filteredAppointments = filteredAppointments.filter(
-        appointment => appointment.dermatologist._id === req.user.id
-      );
+      query.dermatologist = req.user.id;
     }
 
-    // Sort appointments by date and time
-    filteredAppointments.sort((a, b) => {
-      // First compare dates
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      if (dateA < dateB) return -1;
-      if (dateA > dateB) return 1;
+    console.log('Query before search:', query);
 
-      // If dates are the same, compare start times
-      return a.startTime.localeCompare(b.startTime);
-    });
+    // Find appointments with populated references
+    let appointmentsQuery = Appointment.find(query)
+      .populate('patient', 'firstName lastName email phoneNumber')
+      .populate('dermatologist', 'firstName lastName')
+      .populate('service', 'name price category')
+      .populate('createdBy', 'firstName lastName')
+      .sort({ date: 1, startTime: 1 });
+
+    const appointments = await appointmentsQuery;
+
+    // Apply search filter after population (since we need to search in populated fields)
+    let filteredAppointments = appointments;
+    if (search) {
+      const searchTerm = (search as string).toLowerCase();
+      console.log('Applying search filter:', searchTerm);
+
+      filteredAppointments = appointments.filter(appointment => {
+        const patient = appointment.patient as any;
+        const dermatologist = appointment.dermatologist as any;
+
+        const patientName = `${patient?.firstName || ''} ${patient?.lastName || ''}`.toLowerCase();
+        const doctorName = `${dermatologist?.firstName || ''} ${dermatologist?.lastName || ''}`.toLowerCase();
+        const reason = (appointment.reason || '').toLowerCase();
+        const notes = (appointment.notes || '').toLowerCase();
+
+        return patientName.includes(searchTerm) ||
+               doctorName.includes(searchTerm) ||
+               reason.includes(searchTerm) ||
+               notes.includes(searchTerm);
+      });
+    }
+
+    console.log(`Found ${filteredAppointments.length} appointments`);
 
     res.status(200).json({
       success: true,
@@ -230,6 +97,7 @@ export const getAppointments = async (req: Request, res: Response, next: NextFun
       data: filteredAppointments,
     });
   } catch (error) {
+    console.error('Error fetching appointments:', error);
     next(error);
   }
 };
@@ -241,75 +109,12 @@ export const getAppointments = async (req: Request, res: Response, next: NextFun
  */
 export const getAppointment = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // For development/demo purposes, use mock data
-    // In production, this would fetch from the database
-
-    // Mock appointments (same as in getAppointments)
-    const mockAppointments = [
-      {
-        _id: '1',
-        patient: {
-          _id: '1',
-          firstName: 'Ahmed',
-          lastName: 'Khan',
-          email: 'ahmed@example.com',
-          phoneNumber: '+92 300 1234567',
-          dateOfBirth: '1990-05-15',
-          gender: 'male'
-        },
-        dermatologist: {
-          _id: '2',
-          firstName: 'Fatima',
-          lastName: 'Ali',
-          email: 'doctor@psc.com'
-        },
-        date: new Date().toISOString().split('T')[0], // Today
-        startTime: '09:00',
-        endTime: '09:30',
-        status: AppointmentStatus.CONFIRMED,
-        reason: 'Acne consultation',
-        notes: 'Patient has been experiencing severe acne for 3 months',
-        createdBy: {
-          _id: '4',
-          firstName: 'Front',
-          lastName: 'Desk'
-        },
-        createdAt: new Date().toISOString()
-      },
-      {
-        _id: '2',
-        patient: {
-          _id: '2',
-          firstName: 'Fatima',
-          lastName: 'Malik',
-          email: 'fatima@example.com',
-          phoneNumber: '+92 300 7654321',
-          dateOfBirth: '1985-08-20',
-          gender: 'female'
-        },
-        dermatologist: {
-          _id: '2',
-          firstName: 'Fatima',
-          lastName: 'Ali',
-          email: 'doctor@psc.com'
-        },
-        date: new Date().toISOString().split('T')[0], // Today
-        startTime: '10:00',
-        endTime: '10:30',
-        status: AppointmentStatus.SCHEDULED,
-        reason: 'Eczema follow-up',
-        notes: 'Check progress with prescribed treatment',
-        createdBy: {
-          _id: '4',
-          firstName: 'Front',
-          lastName: 'Desk'
-        },
-        createdAt: new Date().toISOString()
-      }
-    ];
-
-    // Find the appointment by ID
-    const appointment = mockAppointments.find(a => a._id === req.params.id);
+    // Find appointment by ID with populated references
+    const appointment = await Appointment.findById(req.params.id)
+      .populate('patient', 'firstName lastName email phoneNumber dateOfBirth gender')
+      .populate('dermatologist', 'firstName lastName email')
+      .populate('service', 'name price category description')
+      .populate('createdBy', 'firstName lastName');
 
     if (!appointment) {
       return next(new AppError('Appointment not found', 404));
@@ -319,7 +124,7 @@ export const getAppointment = async (req: Request, res: Response, next: NextFunc
     if (
       req.user &&
       req.user.role === UserRole.DERMATOLOGIST &&
-      appointment.dermatologist._id !== req.user.id
+      appointment.dermatologist._id.toString() !== req.user.id
     ) {
       return next(new AppError('Not authorized to access this appointment', 403));
     }
@@ -329,6 +134,7 @@ export const getAppointment = async (req: Request, res: Response, next: NextFunc
       data: appointment,
     });
   } catch (error) {
+    console.error('Error fetching appointment:', error);
     next(error);
   }
 };
@@ -340,12 +146,29 @@ export const getAppointment = async (req: Request, res: Response, next: NextFunc
  */
 export const createAppointment = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { patient, dermatologist, date, startTime, endTime, reason, notes, status } = req.body;
+    const { patient, dermatologist, service, date, startTime, endTime, reason, notes, status } = req.body;
+
+    console.log('Creating appointment with data:', {
+      patient,
+      dermatologist,
+      service,
+      date,
+      startTime,
+      endTime,
+      reason,
+      notes,
+      status,
+      createdBy: req.user?.id
+    });
 
     // Check if dermatologist exists and is a dermatologist
     const dermatologistUser = await User.findById(dermatologist);
-    if (!dermatologistUser || dermatologistUser.role !== UserRole.DERMATOLOGIST) {
-      return next(new AppError('Invalid dermatologist', 400));
+    if (!dermatologistUser) {
+      return next(new AppError('Dermatologist not found', 400));
+    }
+
+    if (dermatologistUser.role !== UserRole.DERMATOLOGIST) {
+      return next(new AppError('Selected user is not a dermatologist', 400));
     }
 
     // Check for scheduling conflicts
@@ -370,21 +193,45 @@ export const createAppointment = async (req: Request, res: Response, next: NextF
     const appointment = await Appointment.create({
       patient,
       dermatologist,
+      service,
       date: appointmentDate,
       startTime,
       endTime,
       reason,
       notes,
       status: status || AppointmentStatus.SCHEDULED,
-      createdBy: req.user.id,
+      createdBy: req.user?.id || dermatologist, // Use authenticated user or fallback to the dermatologist
     });
+
+    // Populate the appointment with patient, dermatologist, and service details
+    await appointment.populate([
+      { path: 'patient', select: 'firstName lastName email phoneNumber' },
+      { path: 'dermatologist', select: 'firstName lastName' },
+      { path: 'service', select: 'name price category' },
+      { path: 'createdBy', select: 'firstName lastName' }
+    ]);
 
     res.status(201).json({
       success: true,
       data: appointment,
     });
-  } catch (error) {
-    next(error);
+  } catch (error: any) {
+    console.error('Error creating appointment:', error);
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
+
+    if (error.name === 'ValidationError') {
+      console.error('Validation errors:', JSON.stringify(error.errors, null, 2));
+      return next(new AppError(`Validation error: ${Object.values(error.errors).map((err: any) => err.message).join(', ')}`, 400));
+    }
+
+    // Return a more detailed error message
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+      error: error.toString(),
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 
@@ -518,6 +365,59 @@ export const updateAppointmentStatus = async (req: Request, res: Response, next:
       data: appointment,
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get available appointment times for a specific date and doctor
+ * @route GET /api/appointments/available-times
+ * @access Private
+ */
+export const getAvailableTimes = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { date, doctorId } = req.query;
+
+    if (!date || !doctorId) {
+      return next(new AppError('Date and doctor ID are required', 400));
+    }
+
+    // Check if doctor exists
+    const doctor = await User.findById(doctorId);
+    if (!doctor || doctor.role !== UserRole.DERMATOLOGIST) {
+      return next(new AppError('Invalid doctor', 400));
+    }
+
+    // Define all possible time slots (30-minute intervals from 9 AM to 5 PM)
+    const allTimeSlots = [
+      '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
+      '12:00 PM', '12:30 PM', '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM',
+      '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM'
+    ];
+
+    // Convert date string to Date object
+    const appointmentDate = new Date(date as string);
+    appointmentDate.setHours(0, 0, 0, 0);
+
+    // Find existing appointments for the doctor on the specified date
+    const existingAppointments = await Appointment.find({
+      dermatologist: doctorId,
+      date: appointmentDate,
+      status: { $ne: AppointmentStatus.CANCELLED } // Exclude cancelled appointments
+    });
+
+    // Get booked time slots
+    const bookedTimeSlots = existingAppointments.map(appointment => appointment.startTime);
+
+    // Filter out booked time slots
+    const availableTimeSlots = allTimeSlots.filter(timeSlot => !bookedTimeSlots.includes(timeSlot));
+
+    res.status(200).json({
+      success: true,
+      data: availableTimeSlots,
+    });
+  } catch (error) {
+    console.error('Error getting available times:', error);
     next(error);
   }
 };

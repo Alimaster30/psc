@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import axios from 'axios';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import QuickActionButton from '../../components/common/QuickActionButton';
@@ -29,130 +30,75 @@ const PatientList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState('all');
+  const [retryCount, setRetryCount] = useState(0);
+  const [hasError, setHasError] = useState(false);
+  const requestInProgress = useRef(false);
 
-  const fetchPatients = async () => {
+  const fetchPatients = async (isRetry = false) => {
+    // Prevent multiple simultaneous requests
+    if (requestInProgress.current && !isRetry) {
+      console.log('Request already in progress, skipping...');
+      return;
+    }
+
     try {
+      requestInProgress.current = true;
       setIsLoading(true);
-      // In a real implementation, we would use pagination and filtering
-      // const response = await api.get(`/api/patients?page=${currentPage}&search=${searchTerm}&filter=${filter}`);
+      setHasError(false);
 
-      // For now, we'll use mock data
-      const mockPatients = [
-        {
-          _id: '1',
-          firstName: 'Ahmed',
-          lastName: 'Khan',
-          email: 'ahmed.khan@example.com',
-          phoneNumber: '+92 300 1234567',
-          dateOfBirth: '1985-05-15',
-          gender: 'male',
-          address: 'House 123, Street 4, Islamabad, Pakistan',
-          createdAt: '2023-01-15T10:30:00.000Z'
-        },
-        {
-          _id: '2',
-          firstName: 'Fatima',
-          lastName: 'Ali',
-          email: 'fatima.ali@example.com',
-          phoneNumber: '+92 321 9876543',
-          dateOfBirth: '1990-08-22',
-          gender: 'female',
-          address: 'Apartment 45, Block B, Lahore, Pakistan',
-          createdAt: '2023-02-20T14:15:00.000Z'
-        },
-        {
-          _id: '3',
-          firstName: 'Muhammad',
-          lastName: 'Raza',
-          email: 'muhammad.raza@example.com',
-          phoneNumber: '+92 333 5556666',
-          dateOfBirth: '1978-11-10',
-          gender: 'male',
-          address: 'Plot 78, Sector F, Karachi, Pakistan',
-          createdAt: '2023-03-05T09:45:00.000Z'
-        },
-        {
-          _id: '4',
-          firstName: 'Ayesha',
-          lastName: 'Malik',
-          email: 'ayesha.malik@example.com',
-          phoneNumber: '+92 345 1112222',
-          dateOfBirth: '1995-04-30',
-          gender: 'female',
-          address: 'House 56, Street 12, Peshawar, Pakistan',
-          createdAt: '2023-04-10T11:20:00.000Z'
-        },
-        {
-          _id: '5',
-          firstName: 'Imran',
-          lastName: 'Ahmed',
-          email: 'imran.ahmed@example.com',
-          phoneNumber: '+92 312 3334444',
-          dateOfBirth: '1982-09-18',
-          gender: 'male',
-          address: 'Flat 23, Building C, Faisalabad, Pakistan',
-          createdAt: '2023-05-22T16:30:00.000Z'
-        },
-        {
-          _id: '6',
-          firstName: 'Sana',
-          lastName: 'Mahmood',
-          email: 'sana.mahmood@example.com',
-          phoneNumber: '+92 333 7778888',
-          dateOfBirth: '1992-07-12',
-          gender: 'female',
-          address: 'House 89, Block D, Multan, Pakistan',
-          createdAt: new Date().toISOString() // Today
-        }
-      ];
+      // Build query parameters
+      let queryParams = new URLSearchParams();
+      if (searchTerm) queryParams.append('search', searchTerm);
+      if (filter !== 'all') queryParams.append('filter', filter);
+      queryParams.append('page', currentPage.toString());
 
-      // First apply filter
-      let filteredByCategory = [...mockPatients];
+      console.log('Fetching patients with params:', queryParams.toString());
 
-      if (filter === 'male') {
-        filteredByCategory = mockPatients.filter(patient => patient.gender === 'male');
-      } else if (filter === 'female') {
-        filteredByCategory = mockPatients.filter(patient => patient.gender === 'female');
-      } else if (filter === 'recent') {
-        // Sort by creation date (newest first) and take only the most recent ones (last 30 days)
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      // Fetch patients from the real API
+      const response = await api.get(`/patients?${queryParams.toString()}`);
+      const data = response.data;
 
-        filteredByCategory = mockPatients
-          .filter(patient => new Date(patient.createdAt) >= thirtyDaysAgo)
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      }
-
-      // Then apply search term
-      const filteredPatients = filteredByCategory.filter(patient => {
-        const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
-        return fullName.includes(searchTerm.toLowerCase()) ||
-               patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               patient.phoneNumber.includes(searchTerm);
-      });
-
-      // Apply pagination (for mock data, we'll just simulate it)
-      const patientsPerPage = 10;
-      const startIndex = (currentPage - 1) * patientsPerPage;
-      const paginatedPatients = filteredPatients.slice(startIndex, startIndex + patientsPerPage);
-
-      setPatients(paginatedPatients);
-      setTotalPages(Math.ceil(filteredPatients.length / patientsPerPage));
+      setPatients(data.data || []);
+      setTotalPages(data.totalPages || Math.ceil((data.count || 0) / 10));
+      setRetryCount(0); // Reset retry count on success
+      setHasError(false);
       setIsLoading(false);
-    } catch (error) {
+      requestInProgress.current = false;
+    } catch (error: any) {
       console.error('Error fetching patients:', error);
-      toast.error('Failed to load patients');
+      setHasError(true);
       setIsLoading(false);
+      requestInProgress.current = false;
+
+      // Only show error message if it's not a retry
+      if (!isRetry) {
+        if (error.response?.status === 429) {
+          toast.error('Too many requests. Please wait a moment before trying again.');
+        } else {
+          toast.error('Failed to load patients from server. Please try refreshing the page.');
+        }
+      }
     }
   };
 
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+    fetchPatients(true);
+  };
+
   useEffect(() => {
-    fetchPatients();
+    // Debounce all API calls to avoid excessive requests
+    const timeoutId = setTimeout(() => {
+      fetchPatients();
+    }, 1000); // 1 second delay for all changes
+
+    return () => clearTimeout(timeoutId);
   }, [searchTerm, currentPage, filter]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1); // Reset to first page when searching
+    setHasError(false); // Clear error state when user starts typing
   };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -246,7 +192,7 @@ const PatientList: React.FC = () => {
               />
             </div>
           </div>
-          <div className="w-full md:w-auto">
+          <div className="w-full md:w-auto flex gap-2">
             <select
               className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
               value={filter}
@@ -257,12 +203,36 @@ const PatientList: React.FC = () => {
               <option value="male">Male</option>
               <option value="female">Female</option>
             </select>
+
+            <button
+              onClick={() => fetchPatients()}
+              className="p-2.5 text-gray-600 bg-white rounded-lg border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:ring-primary-300 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-primary-800"
+              title="Refresh patient list"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+            </button>
           </div>
         </div>
 
         {isLoading ? (
           <div className="flex justify-center items-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+          </div>
+        ) : hasError ? (
+          <div className="text-center py-8">
+            <svg className="w-16 h-16 mx-auto text-red-300 dark:text-red-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">Failed to load patients from server</p>
+            <Button
+              variant="primary"
+              onClick={handleRetry}
+              disabled={isLoading}
+            >
+              Try Again
+            </Button>
           </div>
         ) : patients.length === 0 ? (
           <div className="text-center py-8">

@@ -21,6 +21,7 @@ import billingRoutes from './routes/billing.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import settingsRoutes from './routes/settings.routes';
 import backupRoutes from './routes/backup.routes';
+import serviceRoutes from './routes/service.routes';
 
 // Import error handler
 import { errorHandler } from './middlewares/error.middleware';
@@ -48,10 +49,10 @@ app.use(helmet());
 app.use(morgan('dev'));
 app.use(compression());
 
-// Rate limiting
+// Rate limiting - Increased limits for development
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100, // Limit each IP to 100 requests per windowMs
+  windowMs: 1 * 60 * 1000, // 1 minute
+  limit: 200, // Limit each IP to 200 requests per minute
   standardHeaders: 'draft-7',
   legacyHeaders: false,
 });
@@ -72,6 +73,7 @@ app.use('/api/billing', billingRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/backups', backupRoutes);
+app.use('/api/services', serviceRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

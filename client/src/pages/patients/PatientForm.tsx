@@ -5,6 +5,7 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import MultiStepForm from '../../components/common/MultiStepForm';
 
 interface PatientFormData {
   firstName: string;
@@ -27,7 +28,7 @@ const PatientForm: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isEditMode = !!id;
-  
+
   const [formData, setFormData] = useState<PatientFormData>({
     firstName: '',
     lastName: '',
@@ -43,22 +44,23 @@ const PatientForm: React.FC = () => {
     emergencyContactRelationship: '',
     emergencyContactPhone: ''
   });
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(isEditMode);
   const [errors, setErrors] = useState<Partial<PatientFormData>>({});
+  const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
     const fetchPatient = async () => {
       if (!isEditMode) return;
-      
+
       try {
         setIsFetching(true);
-        
+
         // In a real implementation, we would fetch from the API
         // const response = await api.get(`/api/patients/${id}`);
         // const patientData = response.data;
-        
+
         // For now, we'll use mock data
         const mockPatient = {
           _id: id,
@@ -78,7 +80,7 @@ const PatientForm: React.FC = () => {
             phoneNumber: '+92 300 7654321'
           }
         };
-        
+
         setFormData({
           firstName: mockPatient.firstName,
           lastName: mockPatient.lastName,
@@ -94,7 +96,7 @@ const PatientForm: React.FC = () => {
           emergencyContactRelationship: mockPatient.emergencyContact.relationship,
           emergencyContactPhone: mockPatient.emergencyContact.phoneNumber
         });
-        
+
         setIsFetching(false);
       } catch (error) {
         console.error('Error fetching patient:', error);
@@ -110,7 +112,7 @@ const PatientForm: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     // Clear error when field is edited
     if (errors[name as keyof PatientFormData]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
@@ -119,32 +121,41 @@ const PatientForm: React.FC = () => {
 
   const validateForm = (): boolean => {
     const newErrors: Partial<PatientFormData> = {};
-    
+
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required';
     if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
     if (!formData.gender) newErrors.gender = 'Gender is required';
-    
+
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Invalid email format';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+
     if (!validateForm()) {
+      // Navigate to the step with errors
+      if (errors.firstName || errors.lastName || errors.dateOfBirth || errors.gender) {
+        setCurrentStep(0); // Personal Info step
+      } else if (errors.phoneNumber || errors.email) {
+        setCurrentStep(1); // Contact Info step
+      }
+
       toast.error('Please fix the errors in the form');
       return;
     }
-    
+
     try {
       setIsLoading(true);
-      
+
       // Prepare data for API
       const patientData = {
         ...formData,
@@ -155,17 +166,17 @@ const PatientForm: React.FC = () => {
           phoneNumber: formData.emergencyContactPhone
         }
       };
-      
+
       // In a real implementation, we would call the API
       // if (isEditMode) {
       //   await api.put(`/api/patients/${id}`, patientData);
       // } else {
       //   await api.post('/api/patients', patientData);
       // }
-      
+
       // For now, we'll just simulate a delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       toast.success(`Patient ${isEditMode ? 'updated' : 'created'} successfully`);
       navigate(`/patients${isEditMode ? `/${id}` : ''}`);
     } catch (error) {
@@ -206,8 +217,8 @@ const PatientForm: React.FC = () => {
           {isEditMode ? 'Edit Patient' : 'Register New Patient'}
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
-          {isEditMode 
-            ? 'Update patient information in the system' 
+          {isEditMode
+            ? 'Update patient information in the system'
             : 'Add a new patient to the dermatology clinic system'}
         </p>
       </div>
@@ -218,7 +229,7 @@ const PatientForm: React.FC = () => {
             {/* Personal Information */}
             <div className="space-y-6 md:col-span-2">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Personal Information</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -238,7 +249,7 @@ const PatientForm: React.FC = () => {
                     <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
                   )}
                 </div>
-                
+
                 <div>
                   <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Last Name <span className="text-red-600">*</span>
@@ -257,7 +268,7 @@ const PatientForm: React.FC = () => {
                     <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
                   )}
                 </div>
-                
+
                 <div>
                   <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Date of Birth <span className="text-red-600">*</span>
@@ -276,7 +287,7 @@ const PatientForm: React.FC = () => {
                     <p className="mt-1 text-sm text-red-600">{errors.dateOfBirth}</p>
                   )}
                 </div>
-                
+
                 <div>
                   <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Gender <span className="text-red-600">*</span>
@@ -299,7 +310,7 @@ const PatientForm: React.FC = () => {
                     <p className="mt-1 text-sm text-red-600">{errors.gender}</p>
                   )}
                 </div>
-                
+
                 <div>
                   <label htmlFor="bloodGroup" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Blood Group
@@ -324,11 +335,11 @@ const PatientForm: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Contact Information */}
             <div className="space-y-6 md:col-span-2">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Contact Information</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -349,7 +360,7 @@ const PatientForm: React.FC = () => {
                     <p className="mt-1 text-sm text-red-600">{errors.phoneNumber}</p>
                   )}
                 </div>
-                
+
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Email Address
@@ -368,7 +379,7 @@ const PatientForm: React.FC = () => {
                     <p className="mt-1 text-sm text-red-600">{errors.email}</p>
                   )}
                 </div>
-                
+
                 <div className="md:col-span-2">
                   <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Address
@@ -384,11 +395,11 @@ const PatientForm: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Emergency Contact */}
             <div className="space-y-6 md:col-span-2">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Emergency Contact</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label htmlFor="emergencyContactName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -403,7 +414,7 @@ const PatientForm: React.FC = () => {
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
-                
+
                 <div>
                   <label htmlFor="emergencyContactRelationship" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Relationship
@@ -417,7 +428,7 @@ const PatientForm: React.FC = () => {
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
-                
+
                 <div>
                   <label htmlFor="emergencyContactPhone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Contact Phone
@@ -433,11 +444,11 @@ const PatientForm: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Medical Information */}
             <div className="space-y-6 md:col-span-2">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Medical Information</h3>
-              
+
               <div className="grid grid-cols-1 gap-6">
                 <div>
                   <label htmlFor="allergies" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -453,7 +464,7 @@ const PatientForm: React.FC = () => {
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
-                
+
                 <div>
                   <label htmlFor="medicalHistory" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Medical History
@@ -470,7 +481,7 @@ const PatientForm: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button
               type="button"

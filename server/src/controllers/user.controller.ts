@@ -1,5 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import User, { UserRole } from '../models/user.model';
+import Patient from '../models/patient.model';
+import Appointment from '../models/appointment.model';
+import Prescription from '../models/prescription.model';
 import { AppError } from '../middlewares/error.middleware';
 import { generateToken } from '../utils/jwt';
 
@@ -10,11 +13,13 @@ import { generateToken } from '../utils/jwt';
  */
 export const createUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    console.log('Creating user with data:', req.body);
     const { firstName, lastName, email, password, role, phoneNumber } = req.body;
 
     // Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
+      console.log('User already exists:', email);
       return next(new AppError('User with this email already exists', 400));
     }
 
@@ -44,6 +49,7 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
       }
     });
   } catch (error) {
+    console.error('Error creating user:', error);
     next(error);
   }
 };
@@ -63,63 +69,59 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
       filter.role = role;
     }
 
-    // For development/demo purposes, use mock data
-    // In production, this would use the database query below
-    // const users = await User.find(filter).select('-password').sort({ createdAt: -1 });
+    // Use real MongoDB data
+    const users = await User.find(filter).select('-password').sort({ createdAt: -1 });
 
-    // Mock data for demonstration
-    const mockUsers = [
-      {
-        _id: '1',
-        firstName: 'Admin',
-        lastName: 'User',
-        email: 'admin@psc.com',
-        role: UserRole.ADMIN,
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        _id: '2',
-        firstName: 'Fatima',
-        lastName: 'Ali',
-        email: 'doctor@psc.com',
-        role: UserRole.DERMATOLOGIST,
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        _id: '3',
-        firstName: 'Imran',
-        lastName: 'Ahmed',
-        email: 'imran@psc.com',
-        role: UserRole.DERMATOLOGIST,
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        _id: '4',
-        firstName: 'Front',
-        lastName: 'Desk',
-        email: 'receptionist@psc.com',
-        role: UserRole.RECEPTIONIST,
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+    // Check if there are any users in the database
+    if (users.length === 0) {
+      // If no users exist, create default users
+      if (await User.countDocuments() === 0) {
+        // Create default admin user
+        await User.create({
+          firstName: 'Admin',
+          lastName: 'User',
+          email: 'admin@psc.com',
+          password: 'password123',
+          role: UserRole.ADMIN,
+          isActive: true,
+        });
+
+        // Create default dermatologist user
+        await User.create({
+          firstName: 'Dr',
+          lastName: 'Dermatologist',
+          email: 'doctor@psc.com',
+          password: 'password123',
+          role: UserRole.DERMATOLOGIST,
+          isActive: true,
+        });
+
+        // Create default receptionist user
+        await User.create({
+          firstName: 'Front',
+          lastName: 'Desk',
+          email: 'receptionist@psc.com',
+          password: 'password123',
+          role: UserRole.RECEPTIONIST,
+          isActive: true,
+        });
+
+        // Fetch users again after creating defaults
+        const defaultUsers = await User.find(filter).select('-password').sort({ createdAt: -1 });
+
+        res.status(200).json({
+          success: true,
+          count: defaultUsers.length,
+          data: defaultUsers,
+        });
+        return;
       }
-    ];
-
-    // Filter mock users based on role if provided
-    const filteredUsers = role
-      ? mockUsers.filter(user => user.role === role)
-      : mockUsers;
+    }
 
     res.status(200).json({
       success: true,
-      count: filteredUsers.length,
-      data: filteredUsers,
+      count: users.length,
+      data: users,
     });
   } catch (error) {
     next(error);
@@ -133,17 +135,28 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
  */
 export const getUserById = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    console.log('getUserById called with ID:', req.params.id);
+
+    // Check if ID is valid
+    if (!req.params.id || req.params.id === 'undefined') {
+      console.log('Invalid user ID provided:', req.params.id);
+      return next(new AppError('Invalid user ID', 400));
+    }
+
     const user = await User.findById(req.params.id).select('-password');
 
     if (!user) {
+      console.log('User not found for ID:', req.params.id);
       return next(new AppError('User not found', 404));
     }
 
+    console.log('User found:', user.firstName, user.lastName);
     res.status(200).json({
       success: true,
       data: user,
     });
   } catch (error) {
+    console.log('Error in getUserById:', error);
     next(error);
   }
 };
@@ -192,6 +205,56 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
 };
 
 /**
+ * Update user status
+ * @route PATCH /api/users/:id/status
+ * @access Private (Admin only)
+ */
+export const updateUserStatus = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { isActive } = req.body;
+
+    if (typeof isActive !== 'boolean') {
+      return next(new AppError('isActive must be a boolean value', 400));
+    }
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
+
+    // Don't allow deactivating the last admin
+    if (user.role === UserRole.ADMIN && !isActive) {
+      const activeAdminCount = await User.countDocuments({
+        role: UserRole.ADMIN,
+        isActive: true,
+        _id: { $ne: req.params.id }
+      });
+      if (activeAdminCount === 0) {
+        return next(new AppError('Cannot deactivate the last active admin user', 400));
+      }
+    }
+
+    user.isActive = isActive;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Delete user
  * @route DELETE /api/users/:id
  * @access Private (Admin only)
@@ -217,6 +280,109 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
     res.status(200).json({
       success: true,
       data: {},
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get dashboard data for the current user
+ * @route GET /api/users/me/dashboard
+ * @access Private
+ */
+export const getUserDashboard = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    // Get today's date range
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    let dashboardData: any = {};
+
+    if (userRole === UserRole.DERMATOLOGIST) {
+      // For dermatologists, get their specific data
+
+      // Count patients assigned to this dermatologist
+      const totalPatients = await Patient.countDocuments();
+
+      // Count all appointments for this dermatologist
+      const totalAppointments = await Appointment.countDocuments({
+        dermatologist: userId
+      });
+
+      // Count prescriptions created by this dermatologist
+      const totalPrescriptions = await Prescription.countDocuments({
+        createdBy: userId
+      });
+
+      // Count today's appointments for this dermatologist
+      const todayAppointments = await Appointment.countDocuments({
+        dermatologist: userId,
+        date: {
+          $gte: today,
+          $lt: tomorrow,
+        },
+      });
+
+      // Get appointment status data for this dermatologist
+      const appointmentsByStatus = await Appointment.aggregate([
+        {
+          $match: { dermatologist: userId }
+        },
+        {
+          $group: {
+            _id: '$status',
+            count: { $sum: 1 },
+          },
+        },
+        {
+          $sort: { _id: 1 },
+        },
+      ]);
+
+      dashboardData = {
+        totalPatients,
+        totalAppointments,
+        totalPrescriptions,
+        todayAppointments,
+        appointmentsByStatus,
+      };
+    } else if (userRole === UserRole.RECEPTIONIST) {
+      // For receptionists, get general clinic data
+
+      // Count all patients
+      const totalPatients = await Patient.countDocuments();
+
+      // Count all appointments
+      const totalAppointments = await Appointment.countDocuments();
+
+      // Count all prescriptions
+      const totalPrescriptions = await Prescription.countDocuments();
+
+      // Count today's appointments
+      const todayAppointments = await Appointment.countDocuments({
+        date: {
+          $gte: today,
+          $lt: tomorrow,
+        },
+      });
+
+      dashboardData = {
+        totalPatients,
+        totalAppointments,
+        totalPrescriptions,
+        todayAppointments,
+      };
+    }
+
+    res.status(200).json({
+      success: true,
+      data: dashboardData,
     });
   } catch (error) {
     next(error);

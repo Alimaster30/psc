@@ -1,6 +1,14 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { createUser, getUsers, getUserById, updateUser, deleteUser } from '../controllers/user.controller';
+import {
+  createUser,
+  getUsers,
+  getUserById,
+  updateUser,
+  updateUserStatus,
+  deleteUser,
+  getUserDashboard
+} from '../controllers/user.controller';
 import { protect, authorize } from '../middlewares/auth.middleware';
 import { validate } from '../middlewares/validation.middleware';
 import { UserRole } from '../models/user.model';
@@ -16,18 +24,14 @@ const userCreateValidation = [
     .withMessage('Please provide a valid email'),
   body('password')
     .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters')
-    .matches(/[a-z]/)
-    .withMessage('Password must contain a lowercase letter')
-    .matches(/[A-Z]/)
-    .withMessage('Password must contain an uppercase letter'),
+    .withMessage('Password must be at least 6 characters'),
   body('role')
     .isIn(Object.values(UserRole))
     .withMessage('Invalid role'),
   body('phoneNumber')
     .optional()
-    .isMobilePhone('any')
-    .withMessage('Please provide a valid phone number'),
+    .isLength({ min: 10, max: 15 })
+    .withMessage('Phone number must be between 10-15 digits'),
 ];
 
 // User update validation
@@ -48,6 +52,9 @@ const userUpdateValidation = [
 // Apply middleware to all routes
 router.use(protect);
 
+// Dashboard data for the current user
+router.get('/me/dashboard', getUserDashboard);
+
 // Routes that require admin access
 router.get('/', getUsers);
 router.post('/', authorize(UserRole.ADMIN), validate(userCreateValidation), createUser);
@@ -55,5 +62,8 @@ router.route('/:id')
   .get(getUserById)
   .put(validate(userUpdateValidation), updateUser)
   .delete(authorize(UserRole.ADMIN), deleteUser);
+
+// Status update route (Admin only)
+router.patch('/:id/status', authorize(UserRole.ADMIN), updateUserStatus);
 
 export default router;

@@ -4,17 +4,21 @@ import { toast } from 'react-hot-toast';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import { useAuth } from '../../context/AuthContext';
-import api from '../../services/api';
 
 interface Patient {
   _id: string;
   firstName: string;
   lastName: string;
+  email?: string;
+  phoneNumber?: string;
 }
 
 interface Service {
   name: string;
-  price: number;
+  description?: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
 }
 
 interface Invoice {
@@ -22,13 +26,20 @@ interface Invoice {
   invoiceNumber: string;
   patient: Patient;
   services: Service[];
-  totalAmount: number;
-  paidAmount: number;
-  status: 'paid' | 'partial' | 'unpaid';
+  subtotal: number;
+  tax: number;
+  discount: number;
+  total: number;
+  amountPaid: number;
+  balance: number;
+  paymentStatus: 'pending' | 'paid' | 'partially_paid' | 'overdue' | 'cancelled';
   paymentMethod?: string;
+  paymentDate?: string;
   notes?: string;
-  createdAt: string;
+  date: string;
   dueDate: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const BillingList: React.FC = () => {
@@ -63,117 +74,41 @@ const BillingList: React.FC = () => {
       try {
         setIsLoading(true);
 
-        // In a real implementation, we would fetch from the API with pagination and filtering
-        // const response = await api.get(`/api/invoices?page=${currentPage}&search=${searchTerm}&status=${statusFilter}&date=${dateFilter}`);
-        // setInvoices(response.data.data);
-        // setTotalPages(response.data.totalPages);
+        // Build query parameters
+        const params = new URLSearchParams();
+        if (statusFilter !== 'all') {
+          params.append('status', statusFilter);
+        }
+        if (dateFilter) {
+          params.append('startDate', dateFilter);
+          params.append('endDate', dateFilter);
+        }
 
-        // For now, we'll use mock data
-        const mockInvoices = [
-          {
-            _id: '1',
-            invoiceNumber: 'INV-2023-001',
-            patient: {
-              _id: '1',
-              firstName: 'Ahmed',
-              lastName: 'Khan'
-            },
-            services: [
-              { name: 'Dermatology Consultation', price: 2500 },
-              { name: 'Skin Biopsy', price: 5000 }
-            ],
-            totalAmount: 7500,
-            paidAmount: 7500,
-            status: 'paid' as const,
-            paymentMethod: 'Cash',
-            notes: 'Patient paid in full',
-            createdAt: '2023-08-01T10:30:00.000Z',
-            dueDate: '2023-08-15T00:00:00.000Z'
+        // Fetch from API
+        const response = await fetch(`/api/billing?${params.toString()}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
           },
-          {
-            _id: '2',
-            invoiceNumber: 'INV-2023-002',
-            patient: {
-              _id: '2',
-              firstName: 'Fatima',
-              lastName: 'Ali'
-            },
-            services: [
-              { name: 'Acne Treatment', price: 3500 },
-              { name: 'Medication', price: 1500 }
-            ],
-            totalAmount: 5000,
-            paidAmount: 2500,
-            status: 'partial' as const,
-            paymentMethod: 'Credit Card',
-            notes: 'Patient will pay remaining amount on next visit',
-            createdAt: '2023-08-05T14:15:00.000Z',
-            dueDate: '2023-08-20T00:00:00.000Z'
-          },
-          {
-            _id: '3',
-            invoiceNumber: 'INV-2023-003',
-            patient: {
-              _id: '3',
-              firstName: 'Muhammad',
-              lastName: 'Raza'
-            },
-            services: [
-              { name: 'Psoriasis Treatment', price: 6000 },
-              { name: 'Topical Medication', price: 2000 }
-            ],
-            totalAmount: 8000,
-            paidAmount: 0,
-            status: 'unpaid' as const,
-            notes: 'Insurance claim pending',
-            createdAt: '2023-08-10T09:45:00.000Z',
-            dueDate: '2023-08-25T00:00:00.000Z'
-          },
-          {
-            _id: '4',
-            invoiceNumber: 'INV-2023-004',
-            patient: {
-              _id: '4',
-              firstName: 'Ayesha',
-              lastName: 'Malik'
-            },
-            services: [
-              { name: 'Eczema Treatment', price: 4500 },
-              { name: 'Prescription Medication', price: 2500 }
-            ],
-            totalAmount: 7000,
-            paidAmount: 7000,
-            status: 'paid' as const,
-            paymentMethod: 'Bank Transfer',
-            createdAt: '2023-08-12T16:20:00.000Z',
-            dueDate: '2023-08-27T00:00:00.000Z'
-          },
-          {
-            _id: '5',
-            invoiceNumber: 'INV-2023-005',
-            patient: {
-              _id: '5',
-              firstName: 'Imran',
-              lastName: 'Ahmed'
-            },
-            services: [
-              { name: 'Skin Tag Removal', price: 3000 },
-              { name: 'Follow-up Consultation', price: 1500 }
-            ],
-            totalAmount: 4500,
-            paidAmount: 0,
-            status: 'unpaid' as const,
-            createdAt: '2023-08-15T11:30:00.000Z',
-            dueDate: '2023-08-30T00:00:00.000Z'
-          }
-        ];
+        });
 
-        // Filter invoices based on search term, status filter, and date filter
-        let filteredInvoices = mockInvoices;
+        if (response.status === 429) {
+          toast.error('Too many requests. Please wait a moment and try again.');
+          setIsLoading(false);
+          return;
+        }
 
-        // Filter by search term (patient name or invoice number)
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        let fetchedInvoices = data.data || [];
+
+        // Client-side filtering for search term (since API doesn't support search)
         if (searchTerm) {
-          filteredInvoices = filteredInvoices.filter(invoice => {
+          fetchedInvoices = fetchedInvoices.filter((invoice: Invoice) => {
             const patientName = `${invoice.patient.firstName} ${invoice.patient.lastName}`.toLowerCase();
             const invoiceNumber = invoice.invoiceNumber.toLowerCase();
 
@@ -182,24 +117,8 @@ const BillingList: React.FC = () => {
           });
         }
 
-        // Filter by status
-        if (statusFilter !== 'all') {
-          filteredInvoices = filteredInvoices.filter(invoice =>
-            invoice.status === statusFilter
-          );
-        }
-
-        // Filter by date (created date)
-        if (dateFilter) {
-          const filterDate = new Date(dateFilter);
-          filteredInvoices = filteredInvoices.filter(invoice => {
-            const createdDate = new Date(invoice.createdAt);
-            return createdDate.toDateString() === filterDate.toDateString();
-          });
-        }
-
-        setInvoices(filteredInvoices);
-        setTotalPages(Math.ceil(filteredInvoices.length / 10)); // Assuming 10 invoices per page
+        setInvoices(fetchedInvoices);
+        setTotalPages(Math.ceil(fetchedInvoices.length / 10)); // Assuming 10 invoices per page
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching invoices:', error);
@@ -208,7 +127,9 @@ const BillingList: React.FC = () => {
       }
     };
 
-    fetchInvoices();
+    // Debounce the API call to avoid too many requests
+    const timeoutId = setTimeout(fetchInvoices, 500);
+    return () => clearTimeout(timeoutId);
   }, [searchTerm, currentPage, statusFilter, dateFilter]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -243,12 +164,33 @@ const BillingList: React.FC = () => {
     switch (status) {
       case 'paid':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'partial':
+      case 'partially_paid':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'unpaid':
+      case 'pending':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      case 'overdue':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+    }
+  };
+
+  const getStatusDisplayText = (status: string) => {
+    switch (status) {
+      case 'paid':
+        return 'Paid';
+      case 'partially_paid':
+        return 'Partially Paid';
+      case 'pending':
+        return 'Pending';
+      case 'overdue':
+        return 'Overdue';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status;
     }
   };
 
@@ -301,8 +243,10 @@ const BillingList: React.FC = () => {
             >
               <option value="all">All Status</option>
               <option value="paid">Paid</option>
-              <option value="partial">Partially Paid</option>
-              <option value="unpaid">Unpaid</option>
+              <option value="partially_paid">Partially Paid</option>
+              <option value="pending">Pending</option>
+              <option value="overdue">Overdue</option>
+              <option value="cancelled">Cancelled</option>
             </select>
           </div>
           <div className="w-full md:w-1/4">
@@ -358,23 +302,22 @@ const BillingList: React.FC = () => {
                       {invoice.patient.firstName} {invoice.patient.lastName}
                     </td>
                     <td className="px-6 py-4">
-                      {formatDate(invoice.createdAt)}
+                      {formatDate(invoice.date || invoice.createdAt)}
                     </td>
                     <td className="px-6 py-4">
                       {formatDate(invoice.dueDate)}
                     </td>
                     <td className="px-6 py-4">
-                      <div>{formatCurrency(invoice.totalAmount)}</div>
-                      {invoice.status === 'partial' && (
+                      <div>{formatCurrency(invoice.total)}</div>
+                      {invoice.paymentStatus === 'partially_paid' && (
                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                          Paid: {formatCurrency(invoice.paidAmount)}
+                          Paid: {formatCurrency(invoice.amountPaid)}
                         </div>
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(invoice.status)}`}>
-                        {invoice.status === 'paid' ? 'Paid' :
-                         invoice.status === 'partial' ? 'Partially Paid' : 'Unpaid'}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(invoice.paymentStatus)}`}>
+                        {getStatusDisplayText(invoice.paymentStatus)}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -383,12 +326,25 @@ const BillingList: React.FC = () => {
                           onClick={() => navigate(`/billing/${invoice._id}`)}
                           className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
                         >
-                          <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                           </svg>
                           View
                         </button>
+
+                        {(user?.role === 'admin' || user?.role === 'receptionist') && (
+                          <button
+                            onClick={() => navigate(`/billing/${invoice._id}/edit`)}
+                            className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-green-600 dark:text-green-400 bg-white dark:bg-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
+                          >
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                            Edit
+                          </button>
+                        )}
+
                         <button
                           onClick={() => navigate(`/billing/${invoice._id}/receipt`)}
                           className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-purple-600 dark:text-purple-400 bg-white dark:bg-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
@@ -398,10 +354,12 @@ const BillingList: React.FC = () => {
                           </svg>
                           Print
                         </button>
-                        {invoice.status !== 'paid' && (
+
+                        {/* Pay Button - only show for pending/partially_paid/overdue invoices */}
+                        {(invoice.paymentStatus === 'pending' || invoice.paymentStatus === 'partially_paid' || invoice.paymentStatus === 'overdue') && (user?.role === 'admin' || user?.role === 'receptionist') && (
                           <button
                             onClick={() => navigate(`/billing/${invoice._id}/edit`)}
-                            className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-green-600 dark:text-green-400 bg-white dark:bg-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
+                            className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-orange-600 dark:text-orange-400 bg-white dark:bg-gray-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
                           >
                             <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>

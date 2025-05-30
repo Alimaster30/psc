@@ -8,6 +8,7 @@ import 'react-loading-skeleton/dist/skeleton.css';
 import { useAuth } from '../context/AuthContext';
 import AppointmentReminders from '../components/appointments/AppointmentReminders';
 import QuickActionPanel from '../components/dashboard/QuickActionPanel';
+import ReceptionistQuickActions from '../components/dashboard/ReceptionistQuickActions';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 
@@ -18,6 +19,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarEleme
 interface DashboardSummary {
   totalPatients: number;
   totalAppointments: number;
+  totalPrescriptions: number;
   todayAppointments: number;
   totalRevenue: number;
   monthlyRevenue: number;
@@ -42,7 +44,7 @@ const Dashboard: React.FC = () => {
   const [appointmentsByStatus, setAppointmentsByStatus] = useState<AppointmentStatusData[]>([]);
   const [appointmentsByMonth, setAppointmentsByMonth] = useState<MonthlyData[]>([]);
   const [patientGrowth, setPatientGrowth] = useState<MonthlyData[]>([]);
-  const [revenue, setRevenue] = useState<{ month: number; total: number }[]>([]);
+  const [revenue, setRevenue] = useState<{ month: number; revenue: number }[]>([]);
 
   // Fetch dashboard data
   useEffect(() => {
@@ -50,108 +52,195 @@ const Dashboard: React.FC = () => {
       try {
         setIsLoading(true);
 
-        // In a real implementation, we would fetch data from the API
-        // For example:
-        // const response = await axios.get('/api/analytics/dashboard-summary');
-        // const data = response.data;
-        // setSummary(data);
-
-        // For now, we'll use structured mock data that simulates real data
-        // This will be replaced with actual API calls when real data is available
+        // Fetch real-time data from the API based on user role
         if (user?.role === 'admin') {
-          // Admin dashboard data
-          setSummary({
-            totalPatients: 125,
-            totalAppointments: 450,
-            todayAppointments: 8,
-            totalRevenue: 4500000, // 4.5 million PKR
-            monthlyRevenue: 1250000, // 1.25 million PKR
+          // Admin dashboard data - fetch from API
+          const summaryResponse = await fetch('/api/analytics/dashboard-summary', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
           });
 
-          // Appointment status data - structured to match expected API response
-          setAppointmentsByStatus([
-            { _id: 'scheduled', count: 15 },
-            { _id: 'confirmed', count: 25 },
-            { _id: 'completed', count: 120 },
-            { _id: 'cancelled', count: 8 },
-            { _id: 'no-show', count: 5 },
-          ]);
-
-          // Generate consistent data for charts
-          const currentMonth = new Date().getMonth() + 1;
-
-          // Appointment monthly data with consistent pattern
-          const appointmentData = [];
-          for (let i = 0; i < 6; i++) {
-            const month = currentMonth - i <= 0 ? currentMonth - i + 12 : currentMonth - i;
-            // Create a pattern that shows growth over time
-            const baseCount = 30; // Base number of appointments
-            const growthFactor = 5; // Growth per month
-            const count = baseCount + (i * growthFactor);
-            appointmentData.push({ month, count });
+          if (summaryResponse.ok) {
+            const summaryData = await summaryResponse.json();
+            setSummary(summaryData.data);
+          } else {
+            // Fallback if API fails
+            setSummary({
+              totalPatients: 0,
+              totalAppointments: 0,
+              totalPrescriptions: 0,
+              todayAppointments: 0,
+              totalRevenue: 0,
+              monthlyRevenue: 0,
+            });
           }
-          setAppointmentsByMonth(appointmentData.reverse());
 
-          // Patient growth data with consistent pattern
-          const patientData = [];
-          for (let i = 0; i < 6; i++) {
-            const month = currentMonth - i <= 0 ? currentMonth - i + 12 : currentMonth - i;
-            // Create a pattern that shows growth over time
-            const baseCount = 10; // Base number of new patients
-            const growthFactor = 2; // Growth per month
-            const count = baseCount + (i * growthFactor);
-            patientData.push({ month, count });
-          }
-          setPatientGrowth(patientData.reverse());
+          // Fetch appointment analytics
+          const appointmentsResponse = await fetch('/api/analytics/appointments', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
 
-          // Revenue data with consistent pattern
-          const revenueData = [];
-          for (let i = 0; i < 6; i++) {
-            const month = currentMonth - i <= 0 ? currentMonth - i + 12 : currentMonth - i;
-            // Create a pattern that shows growth over time
-            const baseRevenue = 200000; // Base revenue
-            const growthFactor = 50000; // Growth per month
-            const total = baseRevenue + (i * growthFactor);
-            revenueData.push({ month, total });
+          if (appointmentsResponse.ok) {
+            const appointmentsData = await appointmentsResponse.json();
+            setAppointmentsByStatus(appointmentsData.data.byStatus);
+            setAppointmentsByMonth(appointmentsData.data.byMonth);
+          } else {
+            // Fallback if API fails
+            setAppointmentsByStatus([]);
+            setAppointmentsByMonth([]);
           }
-          setRevenue(revenueData.reverse());
+
+          // Fetch patient growth data
+          const patientGrowthResponse = await fetch('/api/analytics/patient-growth', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+
+          if (patientGrowthResponse.ok) {
+            const patientGrowthData = await patientGrowthResponse.json();
+            setPatientGrowth(patientGrowthData.data);
+          } else {
+            // Fallback if API fails
+            setPatientGrowth([]);
+          }
+
+          // Fetch revenue data
+          try {
+            const revenueResponse = await fetch('/api/analytics/revenue', {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }
+            });
+
+            if (revenueResponse.ok) {
+              const revenueData = await revenueResponse.json();
+              console.log('Main Dashboard received revenue data:', revenueData.data);
+              setRevenue(revenueData.data);
+            } else {
+              console.error('Revenue API returned error:', revenueResponse.status);
+              // Generate fallback data for revenue
+              const currentMonth = new Date().getMonth() + 1;
+              const revenueData = [];
+              for (let i = 0; i < 6; i++) {
+                const month = currentMonth - i <= 0 ? currentMonth - i + 12 : currentMonth - i;
+                // Create a pattern that shows growth over time
+                const baseRevenue = 200000; // Base revenue
+                const growthFactor = 50000; // Growth per month
+                const revenue = baseRevenue + (i * growthFactor);
+                revenueData.push({ month, revenue });
+              }
+              setRevenue(revenueData.reverse());
+            }
+          } catch (error) {
+            console.error('Error fetching revenue data:', error);
+            // Generate fallback data for revenue
+            const currentMonth = new Date().getMonth() + 1;
+            const revenueData = [];
+            for (let i = 0; i < 6; i++) {
+              const month = currentMonth - i <= 0 ? currentMonth - i + 12 : currentMonth - i;
+              // Create a pattern that shows growth over time
+              const baseRevenue = 200000; // Base revenue
+              const growthFactor = 50000; // Growth per month
+              const revenue = baseRevenue + (i * growthFactor);
+              revenueData.push({ month, revenue });
+            }
+            setRevenue(revenueData.reverse());
+          }
         } else if (user?.role === 'dermatologist') {
-          // Dermatologist dashboard data
-          setSummary({
-            totalPatients: 78, // Patients assigned to this doctor
-            totalAppointments: 210,
-            todayAppointments: 5,
-            totalRevenue: 0, // Doctors don't see revenue
-            monthlyRevenue: 0,
+          // Dermatologist dashboard data - fetch from API
+          // For dermatologists, we need to fetch their specific data
+          const response = await fetch('/api/users/me/dashboard', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
           });
 
-          // Appointment status data for this doctor
-          setAppointmentsByStatus([
-            { _id: 'scheduled', count: 8 },
-            { _id: 'confirmed', count: 12 },
-            { _id: 'completed', count: 65 },
-            { _id: 'cancelled', count: 4 },
-            { _id: 'no-show', count: 2 },
-          ]);
+          if (response.ok) {
+            const data = await response.json();
+            setSummary({
+              totalPatients: data.totalPatients || 0,
+              totalAppointments: data.totalAppointments || 0,
+              totalPrescriptions: data.totalPrescriptions || 0,
+              todayAppointments: data.todayAppointments || 0,
+              totalRevenue: 0, // Doctors don't see revenue
+              monthlyRevenue: 0,
+            });
+
+            // Set appointment status data if available
+            if (data.appointmentsByStatus) {
+              setAppointmentsByStatus(data.appointmentsByStatus);
+            }
+          } else {
+            // Fallback if API fails
+            setSummary({
+              totalPatients: 0,
+              totalAppointments: 0,
+              totalPrescriptions: 0,
+              todayAppointments: 0,
+              totalRevenue: 0,
+              monthlyRevenue: 0,
+            });
+            setAppointmentsByStatus([]);
+          }
         } else if (user?.role === 'receptionist') {
-          // Receptionist dashboard data
-          setSummary({
-            totalPatients: 125, // Receptionists can see all patients
-            totalAppointments: 45,
-            todayAppointments: 8,
-            totalRevenue: 0, // Limited financial data
-            monthlyRevenue: 0,
+          // Receptionist dashboard data - fetch from API
+          const response = await fetch('/api/users/me/dashboard', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
           });
+
+          if (response.ok) {
+            const data = await response.json();
+            setSummary({
+              totalPatients: data.totalPatients || 0,
+              totalAppointments: data.totalAppointments || 0,
+              totalPrescriptions: data.totalPrescriptions || 0,
+              todayAppointments: data.todayAppointments || 0,
+              totalRevenue: 0, // Limited financial data
+              monthlyRevenue: 0,
+            });
+          } else {
+            // Fallback if API fails
+            setSummary({
+              totalPatients: 0,
+              totalAppointments: 0,
+              totalPrescriptions: 0,
+              todayAppointments: 0,
+              totalRevenue: 0,
+              monthlyRevenue: 0,
+            });
+          }
         }
       } catch (error) {
         toast.error('Failed to load dashboard data');
         console.error('Dashboard data error:', error);
+
+        // Set fallback data in case of error
+        setSummary({
+          totalPatients: 0,
+          totalAppointments: 0,
+          totalPrescriptions: 0,
+          todayAppointments: 0,
+          totalRevenue: 0,
+          monthlyRevenue: 0,
+        });
+        setAppointmentsByStatus([]);
+        setAppointmentsByMonth([]);
+        setPatientGrowth([]);
+        setRevenue([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchDashboardData();
+    if (user) {
+      fetchDashboardData();
+    }
   }, [user]);
 
   // Prepare chart data
@@ -214,7 +303,7 @@ const Dashboard: React.FC = () => {
     datasets: [
       {
         label: 'Revenue',
-        data: revenue.map((item) => item.total),
+        data: revenue.map((item) => item.revenue),
         backgroundColor: 'rgba(153, 102, 255, 0.6)',
         borderColor: 'rgba(153, 102, 255, 1)',
         borderWidth: 2,
@@ -295,7 +384,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -371,6 +460,31 @@ const Dashboard: React.FC = () => {
           </Card>
         </motion.div>
 
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.35 }}
+          className="w-full"
+        >
+          <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white h-full">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-indigo-100">Total Prescriptions</p>
+                {isLoading ? (
+                  <Skeleton height={30} width={80} baseColor="#6366f1" highlightColor="#818cf8" />
+                ) : (
+                  <p className="text-2xl font-bold">{summary?.totalPrescriptions || 0}</p>
+                )}
+              </div>
+              <div className="p-3 bg-white bg-opacity-30 rounded-full">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
         {user?.role === 'admin' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -381,11 +495,11 @@ const Dashboard: React.FC = () => {
             <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white h-full">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-purple-100">Monthly Revenue</p>
+                  <p className="text-sm font-medium text-purple-100">Current Month Revenue</p>
                   {isLoading ? (
                     <Skeleton height={30} width={80} baseColor="#8b5cf6" highlightColor="#a78bfa" />
                   ) : (
-                    <p className="text-2xl font-bold">{formatCurrency(summary?.monthlyRevenue || 0)}</p>
+                    <p className="text-2xl font-bold">Rs {(summary?.monthlyRevenue || 0).toLocaleString()}</p>
                   )}
                 </div>
                 <div className="p-3 bg-white bg-opacity-30 rounded-full">
@@ -398,6 +512,17 @@ const Dashboard: React.FC = () => {
           </motion.div>
         )}
       </div>
+
+      {/* Quick Actions for Receptionist - Placed right after the statistics cards */}
+      {user?.role === 'receptionist' && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.5 }}
+        >
+          <ReceptionistQuickActions />
+        </motion.div>
+      )}
 
       {/* Charts */}
       {user?.role === 'admin' && (
@@ -610,8 +735,8 @@ const Dashboard: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Only show Quick Actions card for admin and receptionist roles */}
-          {(user?.role === 'admin' || user?.role === 'receptionist') && (
+          {/* Only show Quick Actions card for admin role */}
+          {user?.role === 'admin' && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -664,50 +789,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 )}
 
-                {/* Receptionist Quick Actions */}
-                {user?.role === 'receptionist' && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <button
-                      className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                      onClick={() => window.location.href = '/patients/new'}
-                    >
-                      <svg className="w-8 h-8 text-primary-600 dark:text-primary-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
-                      </svg>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Register Patient</span>
-                    </button>
 
-                    <button
-                      className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                      onClick={() => window.location.href = '/appointments/new'}
-                    >
-                      <svg className="w-8 h-8 text-primary-600 dark:text-primary-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                      </svg>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Schedule Appointment</span>
-                    </button>
-
-                    <button
-                      className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                      onClick={() => window.location.href = '/billing/new'}
-                    >
-                      <svg className="w-8 h-8 text-primary-600 dark:text-primary-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                      </svg>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Create Invoice</span>
-                    </button>
-
-                    <button
-                      className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                      onClick={() => window.location.href = '/receipts'}
-                    >
-                      <svg className="w-8 h-8 text-primary-600 dark:text-primary-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-                      </svg>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Print Receipt</span>
-                    </button>
-                  </div>
-                )}
               </Card>
             </motion.div>
           )}

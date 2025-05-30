@@ -4,6 +4,8 @@ import Patient from '../models/patient.model';
 import { UserRole } from '../models/user.model';
 import { AppError } from '../middlewares/error.middleware';
 import PDFDocument from 'pdfkit';
+import fs from 'fs';
+import path from 'path';
 
 // Add type declaration for populated billing
 interface PopulatedBilling {
@@ -310,10 +312,18 @@ export const generateInvoicePDF = async (req: Request, res: Response, next: Next
     // Pipe the PDF to the response
     doc.pipe(res);
 
+    // Add logo
+    const logoPath = path.join(__dirname, '../../uploads/logo.png');
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, 50, 45, { width: 100 });
+    }
+
     // Add content to the PDF
     doc
-      .fontSize(20)
-      .text('Dermatology Clinic Invoice', { align: 'center' })
+      .fontSize(16)
+      .text('INVOICE', 200, 45, { align: 'right' })
+      .fontSize(12)
+      .text('Pakistan\'s Premier Dermatology Solution', 200, 70, { align: 'right' })
       .moveDown();
 
     // Add invoice details

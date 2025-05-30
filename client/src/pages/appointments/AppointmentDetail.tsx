@@ -53,47 +53,93 @@ const AppointmentDetail: React.FC = () => {
     const fetchAppointment = async () => {
       try {
         setIsLoading(true);
-        
-        // In a real implementation, we would fetch from the API
-        // const response = await api.get(`/api/appointments/${id}`);
-        // const appointmentData = response.data;
-        
-        // For now, we'll use mock data
-        const mockAppointment = {
-          _id: id || '1',
-          patient: {
-            _id: '1',
-            firstName: 'Ahmed',
-            lastName: 'Khan',
-            email: 'ahmed.khan@example.com',
-            phoneNumber: '+92 300 1234567',
-            dateOfBirth: '1985-05-15',
-            gender: 'male'
-          },
-          doctor: {
-            _id: '1',
-            firstName: 'Dr. Fatima',
-            lastName: 'Ali',
-            specialization: 'Dermatologist',
-            email: 'dr.fatima@example.com'
-          },
-          date: '2023-08-15',
-          time: '10:30 AM',
-          status: 'scheduled' as const,
-          reason: 'Skin rash on arms and face, with itching and redness. Patient reports symptoms started 3 days ago after using a new soap.',
-          notes: 'Patient has a history of allergic reactions to certain soaps and detergents.',
-          medicalNotes: 'Possible contact dermatitis. Will examine and prescribe appropriate treatment.',
-          createdAt: '2023-08-01T10:30:00.000Z',
-          updatedAt: '2023-08-01T10:30:00.000Z'
-        };
-        
-        setAppointment(mockAppointment);
-        setNotes(mockAppointment.notes);
-        setMedicalNotes(mockAppointment.medicalNotes);
-        setStatus(mockAppointment.status);
+
+        if (!id || id === 'undefined') {
+          console.log('Skipping fetch due to invalid ID:', id);
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('=== APPOINTMENT DETAIL DEBUG ===');
+        console.log('URL ID parameter:', id);
+        console.log('Current URL:', window.location.href);
+        console.log('ID length:', id.length);
+        console.log('ID type:', typeof id);
+
+
+
+        console.log('Fetching appointment data for ID:', id);
+
+        // Fetch appointment from the API
+        const response = await api.get(`/appointments/${id}`);
+        console.log('Appointment API response:', response.data);
+
+        if (response.data && response.data.data) {
+          const appointmentData = response.data.data;
+
+          // Map the API response to our interface
+          const appointment = {
+            _id: appointmentData._id,
+            patient: {
+              _id: appointmentData.patient._id,
+              firstName: appointmentData.patient.firstName,
+              lastName: appointmentData.patient.lastName,
+              email: appointmentData.patient.email,
+              phoneNumber: appointmentData.patient.phoneNumber,
+              dateOfBirth: appointmentData.patient.dateOfBirth,
+              gender: appointmentData.patient.gender
+            },
+            doctor: {
+              _id: appointmentData.dermatologist._id,
+              firstName: appointmentData.dermatologist.firstName,
+              lastName: appointmentData.dermatologist.lastName,
+              specialization: 'Dermatologist',
+              email: appointmentData.dermatologist.email
+            },
+            date: appointmentData.date,
+            time: appointmentData.startTime,
+            status: appointmentData.status,
+            reason: appointmentData.reason || '',
+            notes: appointmentData.notes || '',
+            medicalNotes: appointmentData.medicalNotes || '',
+            createdAt: appointmentData.createdAt,
+            updatedAt: appointmentData.updatedAt
+          };
+
+          setAppointment(appointment);
+          setNotes(appointment.notes);
+          setMedicalNotes(appointment.medicalNotes);
+          setStatus(appointment.status);
+        } else {
+          console.error('Unexpected API response format:', response.data);
+          toast.error('Failed to load appointment details');
+        }
+
         setIsLoading(false);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching appointment:', error);
+
+        // Check if this is a 404 error (appointment not found)
+        if (error.response?.status === 404) {
+          console.log('🔍 Appointment not found - checking if this is a patient ID...');
+
+          // Try to fetch this ID as a patient to confirm our suspicion
+          try {
+            const patientCheck = await api.get(`/patients/${id}`);
+            if (patientCheck.data) {
+              console.log('🚨 CONFIRMED: This is a PATIENT ID, not an appointment ID!');
+              console.log('Patient data:', patientCheck.data);
+
+              // Silently redirect to the patient profile instead
+              navigate(`/patients/${id}`, { replace: true });
+              return; // Exit early, don't show error toast
+            }
+          } catch (patientError) {
+            console.log('ID is not a patient ID either');
+          }
+        }
+
+        // Only show error toast if it's not a patient ID redirect
         toast.error('Failed to load appointment details');
         setIsLoading(false);
       }
@@ -142,17 +188,14 @@ const AppointmentDetail: React.FC = () => {
   const handleUpdateAppointment = async () => {
     try {
       setIsUpdating(true);
-      
-      // In a real implementation, we would call the API
-      // await api.patch(`/api/appointments/${id}`, {
-      //   notes,
-      //   medicalNotes,
-      //   status
-      // });
-      
-      // For now, we'll just simulate a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
+      // Call the API to update the appointment
+      await api.patch(`/appointments/${id}`, {
+        notes,
+        medicalNotes,
+        status
+      });
+
       // Update local state
       if (appointment) {
         setAppointment({
@@ -163,7 +206,7 @@ const AppointmentDetail: React.FC = () => {
           updatedAt: new Date().toISOString()
         });
       }
-      
+
       toast.success('Appointment updated successfully');
       setIsUpdating(false);
     } catch (error) {
@@ -277,7 +320,7 @@ const AppointmentDetail: React.FC = () => {
         {/* Appointment Information */}
         <Card className="md:col-span-2">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Appointment Information</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Date & Time</p>
@@ -292,17 +335,17 @@ const AppointmentDetail: React.FC = () => {
               </p>
             </div>
           </div>
-          
+
           <div className="mb-6">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Reason for Visit</p>
             <p className="text-gray-900 dark:text-white whitespace-pre-line">{appointment.reason}</p>
           </div>
-          
+
           <div className="mb-6">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Created</p>
             <p className="text-gray-900 dark:text-white">{formatDateTime(appointment.createdAt)}</p>
           </div>
-          
+
           <div>
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Last Updated</p>
             <p className="text-gray-900 dark:text-white">{formatDateTime(appointment.updatedAt)}</p>
@@ -312,7 +355,7 @@ const AppointmentDetail: React.FC = () => {
         {/* Patient Information */}
         <Card>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Patient Information</h2>
-          
+
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Name</p>
@@ -343,7 +386,7 @@ const AppointmentDetail: React.FC = () => {
       {/* Doctor Information */}
       <Card>
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Doctor Information</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Name</p>
@@ -365,7 +408,7 @@ const AppointmentDetail: React.FC = () => {
       {/* Notes and Status Update */}
       <Card>
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Notes and Status</h2>
-        
+
         <div className="space-y-6">
           {/* Status Update */}
           {(user?.role === 'admin' || user?.role === 'receptionist') && appointment.status === 'scheduled' && (
@@ -386,7 +429,7 @@ const AppointmentDetail: React.FC = () => {
               </select>
             </div>
           )}
-          
+
           {/* General Notes */}
           <div>
             <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -402,7 +445,7 @@ const AppointmentDetail: React.FC = () => {
               disabled={!(user?.role === 'admin' || user?.role === 'receptionist')}
             />
           </div>
-          
+
           {/* Medical Notes (Only for doctors) */}
           {(user?.role === 'admin' || user?.role === 'dermatologist') && (
             <div>
@@ -420,9 +463,9 @@ const AppointmentDetail: React.FC = () => {
               />
             </div>
           )}
-          
+
           {/* Update Button */}
-          {((user?.role === 'admin' || user?.role === 'receptionist') || 
+          {((user?.role === 'admin' || user?.role === 'receptionist') ||
             (user?.role === 'dermatologist' && appointment.status === 'completed')) && (
             <div className="flex justify-end">
               <Button

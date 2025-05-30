@@ -7,6 +7,7 @@ import {
   updateAppointment,
   deleteAppointment,
   updateAppointmentStatus,
+  getAvailableTimes,
 } from '../controllers/appointment.controller';
 import { protect, authorize } from '../middlewares/auth.middleware';
 import { validate } from '../middlewares/validation.middleware';
@@ -19,9 +20,10 @@ const router = express.Router();
 const appointmentValidation = [
   body('patient').isMongoId().withMessage('Please provide a valid patient ID'),
   body('dermatologist').isMongoId().withMessage('Please provide a valid dermatologist ID'),
+  body('service').isMongoId().withMessage('Please provide a valid service ID'),
   body('date').isISO8601().toDate().withMessage('Please provide a valid date'),
-  body('startTime').matches(/^([01]\d|2[0-3]):([0-5]\d)$/).withMessage('Start time must be in HH:MM format'),
-  body('endTime').matches(/^([01]\d|2[0-3]):([0-5]\d)$/).withMessage('End time must be in HH:MM format'),
+  body('startTime').matches(/^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$/).withMessage('Start time must be in HH:MM AM/PM format'),
+  body('endTime').matches(/^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$/).withMessage('End time must be in HH:MM AM/PM format'),
   body('reason').notEmpty().withMessage('Reason is required'),
   body('status')
     .optional()
@@ -42,7 +44,10 @@ router.use(protect);
 // Routes
 router.route('/')
   .get(getAppointments)
-  .post(validate(appointmentValidation), createAppointment);
+  .post(validate(appointmentValidation), createAppointment); // Allow all authenticated users to create appointments
+
+// Get available times
+router.get('/available-times', getAvailableTimes);
 
 router.route('/:id')
   .get(getAppointment)

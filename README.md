@@ -1,4 +1,4 @@
-# Pak Skin Care - Dermatology Hospital Dashboard
+# Prime Skin Clinic - Dermatology Hospital Dashboard
 
 A comprehensive management system for dermatology clinics, featuring appointment scheduling, prescription management, billing, and analytics.
 
@@ -30,7 +30,7 @@ VITE_API_URL=http://localhost:5001/api
 ### Server (.env)
 ```
 PORT=5001
-MONGODB_URI=mongodb://localhost:27017/pak-skin-care
+MONGODB_URI=mongodb://localhost:27017/prime-skin-clinic
 JWT_SECRET=your_jwt_secret_here
 ```
 
@@ -38,8 +38,8 @@ JWT_SECRET=your_jwt_secret_here
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Alimaster30/Pak-Skin-Care.git
-   cd Pak-Skin-Care
+   git clone https://github.com/Alimaster30/Prime-Skin-Clinic.git
+   cd Prime-Skin-Clinic
    ```
 
 2. Install dependencies for client, server, and root:

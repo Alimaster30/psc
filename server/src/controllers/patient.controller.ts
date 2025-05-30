@@ -28,14 +28,22 @@ export const getPatients = async (req: Request, res: Response, next: NextFunctio
  */
 export const getPatient = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const patient = await Patient.findById(req.params.id)
-      .populate('visits')
-      .populate('prescriptions')
-      .populate('billings');
+    console.log('getPatient called with ID:', req.params.id);
+
+    // Validate patient ID
+    if (!req.params.id || req.params.id === 'undefined') {
+      console.log('Invalid patient ID provided:', req.params.id);
+      return next(new AppError('Invalid patient ID', 400));
+    }
+
+    const patient = await Patient.findById(req.params.id);
 
     if (!patient) {
+      console.log('Patient not found with ID:', req.params.id);
       return next(new AppError('Patient not found', 404));
     }
+
+    console.log('Patient found:', patient.firstName, patient.lastName);
 
     // Get decrypted medical history and allergies
     const medicalHistory = patient.getMedicalHistory();
@@ -47,9 +55,14 @@ export const getPatient = async (req: Request, res: Response, next: NextFunction
         ...patient.toObject(),
         medicalHistory,
         allergies,
+        // TODO: Add visits, prescriptions, and billings when those models are implemented
+        visits: [],
+        prescriptions: [],
+        billings: [],
       },
     });
   } catch (error) {
+    console.error('Error in getPatient:', error);
     next(error);
   }
 };

@@ -3,7 +3,7 @@ import { toast } from 'react-hot-toast';
 
 // Create axios instance with environment variable for base URL
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -34,8 +34,16 @@ api.interceptors.response.use(
       error.message ||
       'Something went wrong';
 
-    // Show error toast
-    toast.error(message);
+    // Don't show toast for 404/400 errors on user/patient/appointment endpoints (these are handled by components)
+    const isUserEndpoint = error.config?.url?.includes('/users/');
+    const isPatientEndpoint = error.config?.url?.includes('/patients/');
+    const isAppointmentEndpoint = error.config?.url?.includes('/appointments/');
+    const is404or400 = error.response?.status === 404 || error.response?.status === 400;
+
+    if (!((isUserEndpoint || isPatientEndpoint || isAppointmentEndpoint) && is404or400)) {
+      // Show error toast for other errors
+      toast.error(message);
+    }
 
     // Handle 401 Unauthorized errors
     if (error.response && error.response.status === 401) {
