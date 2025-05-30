@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './api';
 
 export interface Service {
   _id: string;
@@ -18,7 +18,7 @@ export interface Service {
 
 export const getServices = async (): Promise<Service[]> => {
   try {
-    const response = await axios.get('/api/services');
+    const response = await api.get('/services');
     return response.data.data;
   } catch (error) {
     console.error('Error fetching services:', error);
@@ -28,7 +28,7 @@ export const getServices = async (): Promise<Service[]> => {
 
 export const getServicesByCategory = async (category: string): Promise<Service[]> => {
   try {
-    const response = await axios.get(`/api/services/category/${category}`);
+    const response = await api.get(`/services/category/${category}`);
     return response.data.data;
   } catch (error) {
     console.error(`Error fetching services for category ${category}:`, error);
@@ -38,7 +38,7 @@ export const getServicesByCategory = async (category: string): Promise<Service[]
 
 export const getServiceById = async (id: string): Promise<Service> => {
   try {
-    const response = await axios.get(`/api/services/${id}`);
+    const response = await api.get(`/services/${id}`);
     return response.data.data;
   } catch (error) {
     console.error(`Error fetching service with id ${id}:`, error);

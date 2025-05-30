@@ -31,10 +31,12 @@ const UserDetail: React.FC = () => {
   useEffect(() => {
     console.log('UserDetail useEffect triggered with ID:', id);
 
-    // Don't fetch if ID is undefined or empty
-    if (!id || id === 'undefined') {
+    // Don't fetch if ID is undefined, empty, or invalid
+    if (!id || id === 'undefined' || id === 'null' || id.length < 10) {
       console.log('Skipping fetch due to invalid ID:', id);
       setIsLoading(false);
+      toast.error('Invalid user ID');
+      navigate('/users');
       return;
     }
 

@@ -11,7 +11,7 @@ import QuickActionPanel from '../components/dashboard/QuickActionPanel';
 import ReceptionistQuickActions from '../components/dashboard/ReceptionistQuickActions';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
-import { analyticsAPI, userAPI } from '../services/api';
+import api, { analyticsAPI, userAPI } from '../services/api';
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, ArcElement);
@@ -55,12 +55,12 @@ const Dashboard: React.FC = () => {
 
         // Fetch real-time data from the API based on user role
         if (user?.role === 'admin') {
-          // Admin dashboard data - fetch from API
+          // Admin dashboard data - fetch from analytics API
           try {
             const summaryResponse = await analyticsAPI.getDashboardSummary();
             setSummary(summaryResponse.data.data);
           } catch (error) {
-            console.error('Failed to fetch dashboard summary:', error);
+            console.error('Failed to fetch admin dashboard summary:', error);
             // Fallback if API fails
             setSummary({
               totalPatients: 0,
@@ -71,8 +71,7 @@ const Dashboard: React.FC = () => {
               monthlyRevenue: 0,
             });
           }
-
-          // Fetch appointment analytics
+          // Fetch appointment analytics (admin only)
           try {
             const appointmentsResponse = await analyticsAPI.getAppointmentAnalytics();
             setAppointmentsByStatus(appointmentsResponse.data.data.byStatus);
@@ -84,7 +83,7 @@ const Dashboard: React.FC = () => {
             setAppointmentsByMonth([]);
           }
 
-          // Fetch patient growth data
+          // Fetch patient growth data (admin only)
           try {
             const patientGrowthResponse = await analyticsAPI.getPatientGrowth();
             setPatientGrowth(patientGrowthResponse.data.data);
@@ -94,7 +93,7 @@ const Dashboard: React.FC = () => {
             setPatientGrowth([]);
           }
 
-          // Fetch revenue data
+          // Fetch revenue data (admin only)
           try {
             const revenueResponse = await analyticsAPI.getRevenue();
             console.log('Main Dashboard received revenue data:', revenueResponse.data.data);
@@ -169,6 +168,42 @@ const Dashboard: React.FC = () => {
               totalRevenue: 0,
               monthlyRevenue: 0,
             });
+          }
+        } else {
+          // Other users - fetch from user dashboard API
+          try {
+            const dashboardResponse = await api.get('/users/me/dashboard');
+            const dashboardData = dashboardResponse.data.data;
+
+            setSummary({
+              totalPatients: dashboardData.totalPatients || 0,
+              totalAppointments: dashboardData.totalAppointments || 0,
+              totalPrescriptions: dashboardData.totalPrescriptions || 0,
+              todayAppointments: dashboardData.todayAppointments || 0,
+              totalRevenue: dashboardData.totalRevenue || 0,
+              monthlyRevenue: dashboardData.monthlyRevenue || 0,
+            });
+
+            // Set empty arrays for charts (non-admin users don't see charts)
+            setAppointmentsByStatus([]);
+            setAppointmentsByMonth([]);
+            setPatientGrowth([]);
+            setRevenue([]);
+          } catch (error) {
+            console.error('Failed to fetch user dashboard data:', error);
+            // Fallback if API fails
+            setSummary({
+              totalPatients: 0,
+              totalAppointments: 0,
+              totalPrescriptions: 0,
+              todayAppointments: 0,
+              totalRevenue: 0,
+              monthlyRevenue: 0,
+            });
+            setAppointmentsByStatus([]);
+            setAppointmentsByMonth([]);
+            setPatientGrowth([]);
+            setRevenue([]);
           }
         }
       } catch (error) {

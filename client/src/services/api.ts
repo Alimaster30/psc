@@ -1,21 +1,71 @@
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
+// Simple cache for API responses
+const cache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+const getCacheKey = (url: string, params?: any) => {
+  return `${url}${params ? JSON.stringify(params) : ''}`;
+};
+
+const getCachedData = (key: string) => {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  return null;
+};
+
+const setCachedData = (key: string, data: any) => {
+  cache.set(key, { data, timestamp: Date.now() });
+};
+
+const clearCache = (pattern?: string) => {
+  if (pattern) {
+    // Clear cache entries that match the pattern
+    for (const key of cache.keys()) {
+      if (key.includes(pattern)) {
+        cache.delete(key);
+      }
+    }
+  } else {
+    // Clear all cache
+    cache.clear();
+  }
+};
+
 // Create axios instance with environment variable for base URL
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
+  timeout: 15000, // 15 second timeout
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Add request interceptor to add auth token
+// Add request interceptor to add auth token and check cache
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Check cache for GET requests
+    if (config.method === 'get') {
+      const cacheKey = getCacheKey(config.url || '', config.params);
+      const cachedData = getCachedData(cacheKey);
+      if (cachedData) {
+        // Return cached data as a resolved promise
+        return Promise.reject({
+          config,
+          response: { data: cachedData },
+          cached: true
+        });
+      }
+    }
+
     return config;
   },
   (error) => {
@@ -23,25 +73,71 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor to handle errors
+// Add response interceptor to handle errors and caching
 api.interceptors.response.use(
   (response) => {
+    // Cache successful GET responses
+    if (response.config.method === 'get') {
+      const cacheKey = getCacheKey(response.config.url || '', response.config.params);
+      setCachedData(cacheKey, response.data);
+    }
+
+    // Clear relevant cache on data modifications
+    if (['post', 'put', 'patch', 'delete'].includes(response.config.method || '')) {
+      const url = response.config.url || '';
+      if (url.includes('/users')) {
+        clearCache('/users');
+      } else if (url.includes('/patients')) {
+        clearCache('/patients');
+      } else if (url.includes('/appointments')) {
+        clearCache('/appointments');
+      } else if (url.includes('/services')) {
+        clearCache('/services');
+      } else if (url.includes('/billing')) {
+        clearCache('/billing');
+      }
+    }
+
     return response;
   },
   (error) => {
+    // Handle cached responses
+    if (error.cached) {
+      return Promise.resolve(error.response);
+    }
+
+    // Log error details for debugging
+    console.error('API Error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
+
     const message =
       error.response?.data?.message ||
+      error.response?.data?.error ||
       error.message ||
       'Something went wrong';
 
-    // Don't show toast for 404/400 errors on user/patient/appointment endpoints (these are handled by components)
-    const isUserEndpoint = error.config?.url?.includes('/users/');
-    const isPatientEndpoint = error.config?.url?.includes('/patients/');
-    const isAppointmentEndpoint = error.config?.url?.includes('/appointments/');
+    // Don't show toast for specific endpoints and status codes that are handled by components
+    const isUserEndpoint = error.config?.url?.includes('/users');
+    const isPatientEndpoint = error.config?.url?.includes('/patients');
+    const isAppointmentEndpoint = error.config?.url?.includes('/appointments');
+    const isServiceEndpoint = error.config?.url?.includes('/services');
+    const isBillingEndpoint = error.config?.url?.includes('/billing');
+    const isDashboardEndpoint = error.config?.url?.includes('/dashboard');
     const is404or400 = error.response?.status === 404 || error.response?.status === 400;
 
-    if (!((isUserEndpoint || isPatientEndpoint || isAppointmentEndpoint) && is404or400)) {
-      // Show error toast for other errors
+    // Only show toast for critical errors, not for expected 400/404 errors
+    const shouldShowToast = !(
+      (isUserEndpoint || isPatientEndpoint || isAppointmentEndpoint ||
+       isServiceEndpoint || isBillingEndpoint || isDashboardEndpoint) &&
+      is404or400
+    );
+
+    if (shouldShowToast && error.response?.status !== 401) {
       toast.error(message);
     }
 
@@ -287,3 +383,4 @@ export const analyticsAPI = {
 };
 
 export default api;
+export { clearCache };
