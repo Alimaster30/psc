@@ -50,7 +50,8 @@ api.interceptors.response.use(
       // Clear local storage and redirect to login
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Use absolute URL to preserve protocol
+      window.location.href = `${window.location.protocol}//${window.location.host}/login`;
     }
 
     return Promise.reject(error);
@@ -84,6 +85,44 @@ export const authAPI = {
       currentPassword,
       newPassword,
     });
+    return response;
+  },
+};
+
+// User API
+export const userAPI = {
+  getUsers: async (params?: any) => {
+    const response = await api.get('/users', { params });
+    return response;
+  },
+
+  getUser: async (id: string) => {
+    const response = await api.get(`/users/${id}`);
+    return response;
+  },
+
+  createUser: async (userData: any) => {
+    const response = await api.post('/users', userData);
+    return response;
+  },
+
+  updateUser: async (id: string, userData: any) => {
+    const response = await api.put(`/users/${id}`, userData);
+    return response;
+  },
+
+  deleteUser: async (id: string) => {
+    const response = await api.delete(`/users/${id}`);
+    return response;
+  },
+
+  updateUserStatus: async (id: string, isActive: boolean) => {
+    const response = await api.patch(`/users/${id}/status`, { isActive });
+    return response;
+  },
+
+  getUserDashboard: async () => {
+    const response = await api.get('/users/me/dashboard');
     return response;
   },
 };
@@ -222,7 +261,7 @@ export const billingAPI = {
 // Analytics API
 export const analyticsAPI = {
   getDashboardSummary: async () => {
-    const response = await api.get('/analytics/dashboard');
+    const response = await api.get('/analytics/dashboard-summary');
     return response;
   },
 

@@ -11,6 +11,7 @@ import QuickActionPanel from '../components/dashboard/QuickActionPanel';
 import ReceptionistQuickActions from '../components/dashboard/ReceptionistQuickActions';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { analyticsAPI, userAPI } from '../services/api';
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, ArcElement);
@@ -55,16 +56,11 @@ const Dashboard: React.FC = () => {
         // Fetch real-time data from the API based on user role
         if (user?.role === 'admin') {
           // Admin dashboard data - fetch from API
-          const summaryResponse = await fetch('/api/analytics/dashboard-summary', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          });
-
-          if (summaryResponse.ok) {
-            const summaryData = await summaryResponse.json();
-            setSummary(summaryData.data);
-          } else {
+          try {
+            const summaryResponse = await analyticsAPI.getDashboardSummary();
+            setSummary(summaryResponse.data.data);
+          } catch (error) {
+            console.error('Failed to fetch dashboard summary:', error);
             // Fallback if API fails
             setSummary({
               totalPatients: 0,
@@ -77,64 +73,32 @@ const Dashboard: React.FC = () => {
           }
 
           // Fetch appointment analytics
-          const appointmentsResponse = await fetch('/api/analytics/appointments', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          });
-
-          if (appointmentsResponse.ok) {
-            const appointmentsData = await appointmentsResponse.json();
-            setAppointmentsByStatus(appointmentsData.data.byStatus);
-            setAppointmentsByMonth(appointmentsData.data.byMonth);
-          } else {
+          try {
+            const appointmentsResponse = await analyticsAPI.getAppointmentAnalytics();
+            setAppointmentsByStatus(appointmentsResponse.data.data.byStatus);
+            setAppointmentsByMonth(appointmentsResponse.data.data.byMonth);
+          } catch (error) {
+            console.error('Failed to fetch appointment analytics:', error);
             // Fallback if API fails
             setAppointmentsByStatus([]);
             setAppointmentsByMonth([]);
           }
 
           // Fetch patient growth data
-          const patientGrowthResponse = await fetch('/api/analytics/patient-growth', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          });
-
-          if (patientGrowthResponse.ok) {
-            const patientGrowthData = await patientGrowthResponse.json();
-            setPatientGrowth(patientGrowthData.data);
-          } else {
+          try {
+            const patientGrowthResponse = await analyticsAPI.getPatientGrowth();
+            setPatientGrowth(patientGrowthResponse.data.data);
+          } catch (error) {
+            console.error('Failed to fetch patient growth:', error);
             // Fallback if API fails
             setPatientGrowth([]);
           }
 
           // Fetch revenue data
           try {
-            const revenueResponse = await fetch('/api/analytics/revenue', {
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-              }
-            });
-
-            if (revenueResponse.ok) {
-              const revenueData = await revenueResponse.json();
-              console.log('Main Dashboard received revenue data:', revenueData.data);
-              setRevenue(revenueData.data);
-            } else {
-              console.error('Revenue API returned error:', revenueResponse.status);
-              // Generate fallback data for revenue
-              const currentMonth = new Date().getMonth() + 1;
-              const revenueData = [];
-              for (let i = 0; i < 6; i++) {
-                const month = currentMonth - i <= 0 ? currentMonth - i + 12 : currentMonth - i;
-                // Create a pattern that shows growth over time
-                const baseRevenue = 200000; // Base revenue
-                const growthFactor = 50000; // Growth per month
-                const revenue = baseRevenue + (i * growthFactor);
-                revenueData.push({ month, revenue });
-              }
-              setRevenue(revenueData.reverse());
-            }
+            const revenueResponse = await analyticsAPI.getRevenue();
+            console.log('Main Dashboard received revenue data:', revenueResponse.data.data);
+            setRevenue(revenueResponse.data.data);
           } catch (error) {
             console.error('Error fetching revenue data:', error);
             // Generate fallback data for revenue
@@ -152,15 +116,9 @@ const Dashboard: React.FC = () => {
           }
         } else if (user?.role === 'dermatologist') {
           // Dermatologist dashboard data - fetch from API
-          // For dermatologists, we need to fetch their specific data
-          const response = await fetch('/api/users/me/dashboard', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          });
-
-          if (response.ok) {
-            const data = await response.json();
+          try {
+            const response = await userAPI.getUserDashboard();
+            const data = response.data.data;
             setSummary({
               totalPatients: data.totalPatients || 0,
               totalAppointments: data.totalAppointments || 0,
@@ -174,7 +132,8 @@ const Dashboard: React.FC = () => {
             if (data.appointmentsByStatus) {
               setAppointmentsByStatus(data.appointmentsByStatus);
             }
-          } else {
+          } catch (error) {
+            console.error('Failed to fetch dermatologist dashboard:', error);
             // Fallback if API fails
             setSummary({
               totalPatients: 0,
@@ -188,14 +147,9 @@ const Dashboard: React.FC = () => {
           }
         } else if (user?.role === 'receptionist') {
           // Receptionist dashboard data - fetch from API
-          const response = await fetch('/api/users/me/dashboard', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          });
-
-          if (response.ok) {
-            const data = await response.json();
+          try {
+            const response = await userAPI.getUserDashboard();
+            const data = response.data.data;
             setSummary({
               totalPatients: data.totalPatients || 0,
               totalAppointments: data.totalAppointments || 0,
@@ -204,7 +158,8 @@ const Dashboard: React.FC = () => {
               totalRevenue: 0, // Limited financial data
               monthlyRevenue: 0,
             });
-          } else {
+          } catch (error) {
+            console.error('Failed to fetch receptionist dashboard:', error);
             // Fallback if API fails
             setSummary({
               totalPatients: 0,

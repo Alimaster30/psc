@@ -33,6 +33,9 @@ services:
     buildCommand: cd client && npm install && npm run build
     staticPublishPath: client/dist
     pullRequestPreviewsEnabled: false
+    envVars:
+      - key: VITE_API_URL
+        value: https://prime-skin-clinic-api.onrender.com/api
     headers:
       - path: /*
         name: X-Frame-Options

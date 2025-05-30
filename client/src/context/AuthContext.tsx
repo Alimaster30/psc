@@ -140,8 +140,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Show success message
     toast.success('Logged out successfully');
 
-    // Redirect to login page
-    window.location.href = '/login';
+    // Redirect to login page using absolute URL to preserve protocol
+    window.location.href = `${window.location.protocol}//${window.location.host}/login`;
   };
 
   // Update profile function
