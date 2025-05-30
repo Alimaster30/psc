@@ -250,11 +250,18 @@ const PatientList: React.FC = () => {
         ) : (
           <DataTable
             data={patients}
-            keyExtractor={(patient) => patient._id}
+            isLoading={isLoading}
+            emptyMessage="No patients found"
+            emptyIcon={
+              <svg className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+              </svg>
+            }
             columns={[
               {
-                header: 'Name',
-                accessor: (patient: Patient) => (
+                key: 'name',
+                label: 'Name',
+                render: (patient: Patient) => (
                   <div className="font-medium text-gray-900 dark:text-white">
                     {patient.firstName} {patient.lastName}
                   </div>
@@ -262,8 +269,9 @@ const PatientList: React.FC = () => {
                 mobileLabel: 'Name'
               },
               {
-                header: 'Gender/Age',
-                accessor: (patient: Patient) => (
+                key: 'genderAge',
+                label: 'Gender/Age',
+                render: (patient: Patient) => (
                   <div>
                     <span className="capitalize">{patient.gender}</span> / {calculateAge(patient.dateOfBirth)} years
                   </div>
@@ -271,8 +279,9 @@ const PatientList: React.FC = () => {
                 mobileLabel: 'Gender/Age'
               },
               {
-                header: 'Contact',
-                accessor: (patient: Patient) => (
+                key: 'contact',
+                label: 'Contact',
+                render: (patient: Patient) => (
                   <div>
                     <div>{patient.phoneNumber}</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">{patient.email}</div>
@@ -281,14 +290,16 @@ const PatientList: React.FC = () => {
                 mobileLabel: 'Contact'
               },
               {
-                header: 'Registered On',
-                accessor: (patient: Patient) => formatDate(patient.createdAt),
+                key: 'registeredOn',
+                label: 'Registered On',
+                render: (patient: Patient) => formatDate(patient.createdAt),
                 mobileLabel: 'Registered',
                 hideOnMobile: true
               },
               {
-                header: 'Actions',
-                accessor: (patient: Patient) => (
+                key: 'actions',
+                label: 'Actions',
+                render: (patient: Patient) => (
                   <div className="flex flex-wrap gap-2">
                     <QuickActionButton
                       icon={
