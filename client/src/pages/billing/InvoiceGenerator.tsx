@@ -78,7 +78,7 @@ const InvoiceGenerator: React.FC = () => {
           return;
         }
 
-        setBilling(mockBilling);
+        setBilling(mockBilling as any);
       } catch (error) {
         console.error('Error fetching billing:', error);
         toast.error('Failed to load billing information');
@@ -93,7 +93,7 @@ const InvoiceGenerator: React.FC = () => {
   }, [id]);
 
   const handlePrint = useReactToPrint({
-    content: () => invoiceRef.current,
+    contentRef: invoiceRef,
     documentTitle: `Invoice_${billing?.invoiceNumber || 'Unknown'}`,
     onBeforeGetContent: () => {
       setIsGenerating(true);

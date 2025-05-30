@@ -153,7 +153,7 @@ const CreateBilling: React.FC = () => {
   useEffect(() => {
     if (formData.patient) {
       const filtered = appointments.filter(
-        (appointment) => appointment.patient?._id === formData.patient || appointment.patient === formData.patient
+        (appointment) => (appointment as any).patient?._id === formData.patient || (appointment as any).patient === formData.patient
       );
       setFilteredAppointments(filtered);
     } else {

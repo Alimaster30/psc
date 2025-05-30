@@ -115,16 +115,16 @@ const EditBilling: React.FC = () => {
           return;
         }
 
-        setBilling(mockBillingData);
+        setBilling(mockBillingData as any);
 
         // Convert billing data to form format
         setFormData({
           patient: mockBillingData.patient._id,
-          appointment: mockBillingData.appointment || '',
+          appointment: (mockBillingData as any).appointment || '',
           services: mockBillingData.services.map((service: any) => ({
             name: service.name,
             description: service.description || '',
-            amount: service.totalPrice,
+            amount: service.totalPrice || service.unitPrice || service.price || 0,
           })),
           subtotal: mockBillingData.subtotal,
           tax: mockBillingData.tax,
