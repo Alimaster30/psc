@@ -255,9 +255,10 @@ const PatientImageUpload: React.FC = () => {
 
       try {
         // Try to upload image via API
-        await axios.post('/api/patient-images', formData, {
+        await axios.post('https://prime-skin-clinic-api.onrender.com/api/patient-images', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           },
         });
 

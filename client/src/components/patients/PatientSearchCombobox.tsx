@@ -35,7 +35,7 @@ const PatientSearchCombobox: React.FC<PatientSearchComboboxProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  
+
   const comboboxRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listboxRef = useRef<HTMLDivElement>(null);
@@ -48,13 +48,17 @@ const PatientSearchCombobox: React.FC<PatientSearchComboboxProps> = ({
     const fetchPatients = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get('/api/patients');
+        const response = await axios.get('https://prime-skin-clinic-api.onrender.com/api/patients', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
         setPatients(response.data.data);
         setFilteredPatients(response.data.data);
       } catch (error) {
         console.error('Error fetching patients:', error);
         toast.error('Failed to load patients');
-        
+
         // Fallback to mock data if API fails
         const mockPatients = [
           {
@@ -132,7 +136,7 @@ const PatientSearchCombobox: React.FC<PatientSearchComboboxProps> = ({
       });
       setFilteredPatients(filtered);
     }
-    
+
     // Reset highlighted index when search changes
     setHighlightedIndex(-1);
   }, [searchTerm, patients]);
@@ -180,7 +184,7 @@ const PatientSearchCombobox: React.FC<PatientSearchComboboxProps> = ({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setHighlightedIndex(prev => 
+        setHighlightedIndex(prev =>
           prev < filteredPatients.length - 1 ? prev + 1 : prev
         );
         break;
@@ -221,7 +225,7 @@ const PatientSearchCombobox: React.FC<PatientSearchComboboxProps> = ({
   const handlePatientSelect = (patientId: string) => {
     onPatientSelect(patientId);
     setIsDropdownOpen(false);
-    
+
     // Set search term to selected patient's name
     const patient = patients.find(p => p._id === patientId);
     if (patient) {
@@ -232,12 +236,12 @@ const PatientSearchCombobox: React.FC<PatientSearchComboboxProps> = ({
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-    
+
     // Open dropdown when typing
     if (!isDropdownOpen) {
       setIsDropdownOpen(true);
     }
-    
+
     // Clear selected patient if search term is cleared
     if (e.target.value === '' && selectedPatientId) {
       onPatientSelect('');
@@ -291,7 +295,7 @@ const PatientSearchCombobox: React.FC<PatientSearchComboboxProps> = ({
 
         {/* Dropdown menu */}
         {isDropdownOpen && (
-          <div 
+          <div
             id="patient-listbox"
             ref={listboxRef}
             className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 max-h-60 overflow-y-auto"

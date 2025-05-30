@@ -599,7 +599,7 @@ const CreatePrescription: React.FC = () => {
 
       // Add authentication token to the request
       const token = localStorage.getItem('token');
-      const response = await axios.post('/api/prescriptions', submissionData, {
+      const response = await axios.post('https://prime-skin-clinic-api.onrender.com/api/prescriptions', submissionData, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`

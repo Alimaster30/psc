@@ -308,7 +308,7 @@ const CreateBilling: React.FC = () => {
 
       console.log('Sending billing data:', billingData);
 
-      const response = await axios.post('/api/billing', billingData, {
+      const response = await axios.post('https://prime-skin-clinic-api.onrender.com/api/billing', billingData, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

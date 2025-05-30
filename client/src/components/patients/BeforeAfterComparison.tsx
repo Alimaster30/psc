@@ -35,7 +35,11 @@ const BeforeAfterComparison: React.FC<BeforeAfterComparisonProps> = ({ patientId
 
         try {
           // Try to fetch from API
-          const response = await axios.get(`/api/patient-images/patient/${patientId}/before-after`);
+          const response = await axios.get(`https://prime-skin-clinic-api.onrender.com/api/patient-images/patient/${patientId}/before-after`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
           if (response.data && response.data.data) {
             setImagePairs(response.data.data);
 

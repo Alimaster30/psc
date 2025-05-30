@@ -26,10 +26,14 @@ const PatientImageSelector: React.FC = () => {
     const fetchPatients = async () => {
       try {
         setIsLoading(true);
-        
+
         try {
           // Try to fetch patients from API
-          const response = await axios.get('/api/patients');
+          const response = await axios.get('https://prime-skin-clinic-api.onrender.com/api/patients', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
           setPatients(response.data.data);
         } catch (apiError) {
           console.log('API endpoint for patients not available, using mock data');
@@ -92,7 +96,7 @@ const PatientImageSelector: React.FC = () => {
   // Filter patients based on search term
   const filteredPatients = patients.filter(patient => {
     const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
-    return fullName.includes(searchTerm.toLowerCase()) || 
+    return fullName.includes(searchTerm.toLowerCase()) ||
            patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
            patient.phoneNumber.includes(searchTerm);
   });
@@ -103,7 +107,7 @@ const PatientImageSelector: React.FC = () => {
       toast.error('Please select a patient');
       return;
     }
-    
+
     navigate(`/patients/${selectedPatient}/upload-image`);
   };
 

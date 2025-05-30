@@ -30,7 +30,11 @@ const PatientSearchSelector: React.FC<PatientSearchSelectorProps> = ({
     const fetchPatients = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get('/api/patients');
+        const response = await axios.get('https://prime-skin-clinic-api.onrender.com/api/patients', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
         setPatients(response.data.data);
       } catch (error) {
         console.error('Error fetching patients:', error);
