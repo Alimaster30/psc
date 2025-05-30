@@ -118,15 +118,8 @@ const AppRoutes: React.FC = () => {
     };
   }, []);
 
-  // Handle logout redirect
-  useEffect(() => {
-    if (!isAuthenticated && window.location.pathname !== '/login') {
-      // Use a small delay to ensure state is fully updated
-      setTimeout(() => {
-        window.location.replace('/login');
-      }, 100);
-    }
-  }, [isAuthenticated]);
+  // Remove automatic logout redirect - let ProtectedRoute handle authentication
+  // This prevents conflicts during login/logout state changes
 
   return (
     <SkeletonTheme baseColor={isDarkMode ? '#374151' : '#e5e7eb'} highlightColor={isDarkMode ? '#4b5563' : '#f3f4f6'}>
