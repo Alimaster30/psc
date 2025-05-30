@@ -88,7 +88,7 @@ const BillingDetail: React.FC = () => {
         setIsLoading(true);
 
         // Fetch from API
-        const response = await fetch(`/api/billing/${id}`, {
+        const response = await fetch(`https://prime-skin-clinic-api.onrender.com/api/billing/${id}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

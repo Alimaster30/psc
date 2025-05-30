@@ -92,7 +92,11 @@ const CreateBilling: React.FC = () => {
     const fetchPatients = async () => {
       try {
         setIsLoadingPatients(true);
-        const response = await axios.get('/api/patients');
+        const response = await axios.get('https://prime-skin-clinic-api.onrender.com/api/patients', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
         setPatients(response.data.data);
       } catch (error) {
         console.error('Error fetching patients:', error);
@@ -136,7 +140,11 @@ const CreateBilling: React.FC = () => {
     const fetchAppointments = async () => {
       try {
         setIsLoadingAppointments(true);
-        const response = await axios.get('/api/appointments');
+        const response = await axios.get('https://prime-skin-clinic-api.onrender.com/api/appointments', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
         setAppointments(response.data.data);
       } catch (error) {
         console.error('Error fetching appointments:', error);
