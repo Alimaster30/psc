@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
+import DataTable from '../../components/common/DataTable';
 
 interface Backup {
   _id: string;
@@ -244,75 +245,79 @@ In a production environment, this would be a properly formatted database backup.
             </div>
           </div>
 
-          {isLoading ? (
-            <div className="space-y-4 py-8 text-center">
-              <p className="text-gray-500 dark:text-gray-400">Loading backup history...</p>
-            </div>
-          ) : backups.length === 0 ? (
-            <div className="text-center py-8">
+          <DataTable
+            data={backups}
+            isLoading={isLoading}
+            emptyMessage="No backups found"
+            emptyIcon={
               <svg className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
               </svg>
-              <p className="text-gray-500 dark:text-gray-400">No backups found</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-800">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Backup ID
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Date & Time
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Size
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
-                  {backups.map((backup) => (
-                    <tr key={backup._id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                        {backup.backupId}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                        {new Date(backup.timestamp).toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                        {backup.size}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                          ${backup.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                            backup.status === 'processing' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                            'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
-                          {backup.status.charAt(0).toUpperCase() + backup.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        {backup.status === 'completed' && (
-                          <button
-                            onClick={() => downloadBackup(backup.backupId)}
-                            className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300"
-                          >
-                            Download
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+            }
+            columns={[
+              {
+                key: 'backupId',
+                label: 'Backup ID',
+                render: (backup: Backup) => (
+                  <div className="font-medium text-gray-900 dark:text-white">
+                    {backup.backupId}
+                  </div>
+                ),
+                mobileLabel: 'Backup ID'
+              },
+              {
+                key: 'timestamp',
+                label: 'Date & Time',
+                render: (backup: Backup) => (
+                  <div className="text-gray-500 dark:text-gray-400">
+                    {new Date(backup.timestamp).toLocaleString()}
+                  </div>
+                ),
+                mobileLabel: 'Date & Time'
+              },
+              {
+                key: 'size',
+                label: 'Size',
+                render: (backup: Backup) => (
+                  <div className="text-gray-500 dark:text-gray-400">
+                    {backup.size}
+                  </div>
+                ),
+                mobileLabel: 'Size',
+                hideOnMobile: true
+              },
+              {
+                key: 'status',
+                label: 'Status',
+                render: (backup: Backup) => (
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                    ${backup.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                      backup.status === 'processing' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                      'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
+                    {backup.status.charAt(0).toUpperCase() + backup.status.slice(1)}
+                  </span>
+                ),
+                mobileLabel: 'Status'
+              },
+              {
+                key: 'actions',
+                label: 'Actions',
+                render: (backup: Backup) => (
+                  <div className="text-right">
+                    {backup.status === 'completed' && (
+                      <button
+                        onClick={() => downloadBackup(backup.backupId)}
+                        className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
+                      >
+                        Download
+                      </button>
+                    )}
+                  </div>
+                ),
+                mobileLabel: 'Actions'
+              }
+            ]}
+          />
         </div>
       </Card>
 

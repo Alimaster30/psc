@@ -1,0 +1,89 @@
+/* DataTable responsive styles */
+.dataTable {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+}
+
+.dark .dataTable {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+/* Desktop table view - visible on screens >= 768px */
+.desktopView {
+  display: block;
+}
+
+/* Mobile card view - hidden on screens >= 768px */
+.mobileView {
+  display: none;
+}
+
+/* Mobile styles - screens < 768px */
+@media (max-width: 767px) {
+  .desktopView {
+    display: none !important;
+  }
+  
+  .mobileView {
+    display: block !important;
+    padding: 1rem;
+    gap: 1rem;
+  }
+}
+
+/* Mobile card styles */
+.mobileCard {
+  background: #f9fafb;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.dark .mobileCard {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+.mobileCardRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.dark .mobileCardRow {
+  border-bottom-color: #4b5563;
+}
+
+.mobileCardRow:last-child {
+  border-bottom: none;
+}
+
+.mobileCardLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  flex-shrink: 0;
+  margin-right: 1rem;
+}
+
+.dark .mobileCardLabel {
+  color: #9ca3af;
+}
+
+.mobileCardValue {
+  font-size: 0.875rem;
+  color: #111827;
+  text-align: right;
+  flex: 1;
+}
+
+.dark .mobileCardValue {
+  color: #f3f4f6;
+}

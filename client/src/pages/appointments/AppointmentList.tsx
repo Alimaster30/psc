@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
+import DataTable from '../../components/common/DataTable';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
@@ -251,95 +252,123 @@ const AppointmentList: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-gray-700 dark:text-gray-300">
-              <thead className="text-xs text-gray-600 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                <tr>
-                  <th scope="col" className="px-6 py-3">Date & Time</th>
-                  <th scope="col" className="px-6 py-3">Patient</th>
-                  <th scope="col" className="px-6 py-3">Doctor</th>
-                  <th scope="col" className="px-6 py-3">Reason</th>
-                  <th scope="col" className="px-6 py-3">Status</th>
-                  <th scope="col" className="px-6 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {appointments.map((appointment) => (
-                  <tr
-                    key={appointment._id}
-                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="font-medium">{formatDate(appointment.date)}</div>
-                      <div className="text-gray-500 dark:text-gray-400">{appointment.startTime}</div>
-                    </td>
-                    <td className="px-6 py-4 font-medium">
-                      {appointment.patient.firstName} {appointment.patient.lastName}
-                    </td>
-                    <td className="px-6 py-4">
-                      {appointment.dermatologist.firstName} {appointment.dermatologist.lastName}
-                    </td>
-                    <td className="px-6 py-4">
-                      {appointment.reason.length > 30
-                        ? `${appointment.reason.substring(0, 30)}...`
-                        : appointment.reason}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(appointment.status)}`}>
-                        {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-wrap gap-2">
+          <DataTable
+            data={appointments}
+            isLoading={isLoading}
+            emptyMessage="No appointments found"
+            emptyIcon={
+              <svg className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            }
+            columns={[
+              {
+                key: 'datetime',
+                label: 'Date & Time',
+                render: (appointment: Appointment) => (
+                  <div>
+                    <div className="font-medium">{formatDate(appointment.date)}</div>
+                    <div className="text-gray-500 dark:text-gray-400">{appointment.startTime}</div>
+                  </div>
+                ),
+                mobileLabel: 'Date & Time'
+              },
+              {
+                key: 'patient',
+                label: 'Patient',
+                render: (appointment: Appointment) => (
+                  <div className="font-medium">
+                    {appointment.patient.firstName} {appointment.patient.lastName}
+                  </div>
+                ),
+                mobileLabel: 'Patient'
+              },
+              {
+                key: 'doctor',
+                label: 'Doctor',
+                render: (appointment: Appointment) => (
+                  <div>
+                    {appointment.dermatologist.firstName} {appointment.dermatologist.lastName}
+                  </div>
+                ),
+                mobileLabel: 'Doctor'
+              },
+              {
+                key: 'reason',
+                label: 'Reason',
+                render: (appointment: Appointment) => (
+                  <div>
+                    {appointment.reason.length > 30
+                      ? `${appointment.reason.substring(0, 30)}...`
+                      : appointment.reason}
+                  </div>
+                ),
+                mobileLabel: 'Reason',
+                hideOnMobile: true
+              },
+              {
+                key: 'status',
+                label: 'Status',
+                render: (appointment: Appointment) => (
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(appointment.status)}`}>
+                    {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                  </span>
+                ),
+                mobileLabel: 'Status'
+              },
+              {
+                key: 'actions',
+                label: 'Actions',
+                render: (appointment: Appointment) => (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => navigate(`/appointments/${appointment._id}`)}
+                      className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
+                    >
+                      <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                      </svg>
+                      View
+                    </button>
+
+                    {(user?.role === 'admin' || user?.role === 'receptionist') && appointment.status === 'scheduled' && (
+                      <>
                         <button
-                          onClick={() => navigate(`/appointments/${appointment._id}`)}
-                          className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
+                          onClick={() => handleUpdateStatus(appointment._id, 'completed')}
+                          className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-green-600 dark:text-green-400 bg-white dark:bg-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
                         >
                           <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                           </svg>
-                          View
+                          Complete
                         </button>
-
-                        {(user?.role === 'admin' || user?.role === 'receptionist') && appointment.status === 'scheduled' && (
-                          <>
-                            <button
-                              onClick={() => handleUpdateStatus(appointment._id, 'completed')}
-                              className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-green-600 dark:text-green-400 bg-white dark:bg-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
-                            >
-                              <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                              </svg>
-                              Complete
-                            </button>
-                            <button
-                              onClick={() => handleUpdateStatus(appointment._id, 'no-show')}
-                              className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-amber-600 dark:text-amber-400 bg-white dark:bg-gray-700 hover:bg-amber-50 dark:hover:bg-amber-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
-                            >
-                              <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                              </svg>
-                              No-Show
-                            </button>
-                            <button
-                              onClick={() => handleUpdateStatus(appointment._id, 'cancelled')}
-                              className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-red-600 dark:text-red-400 bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
-                            >
-                              <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                              </svg>
-                              Cancel
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                        <button
+                          onClick={() => handleUpdateStatus(appointment._id, 'no-show')}
+                          className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-amber-600 dark:text-amber-400 bg-white dark:bg-gray-700 hover:bg-amber-50 dark:hover:bg-amber-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
+                        >
+                          <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                          </svg>
+                          No-Show
+                        </button>
+                        <button
+                          onClick={() => handleUpdateStatus(appointment._id, 'cancelled')}
+                          className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-red-600 dark:text-red-400 bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
+                        >
+                          <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                          </svg>
+                          Cancel
+                        </button>
+                      </>
+                    )}
+                  </div>
+                ),
+                mobileLabel: 'Actions'
+              }
+            ]}
+          />
         )}
 
         {/* Pagination */}

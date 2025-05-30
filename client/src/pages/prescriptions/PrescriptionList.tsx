@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
+import DataTable from '../../components/common/DataTable';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
@@ -195,91 +196,119 @@ const PrescriptionList: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-gray-700 dark:text-gray-300">
-              <thead className="text-xs text-gray-600 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                <tr>
-                  <th scope="col" className="px-6 py-3">Date</th>
-                  <th scope="col" className="px-6 py-3">Patient</th>
-                  <th scope="col" className="px-6 py-3">Doctor</th>
-                  <th scope="col" className="px-6 py-3">Diagnosis</th>
-                  <th scope="col" className="px-6 py-3">Medications</th>
-                  <th scope="col" className="px-6 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {prescriptions.map((prescription) => (
-                  <tr
-                    key={prescription._id}
-                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    <td className="px-6 py-4">
-                      {formatDate(prescription.date || prescription.createdAt)}
-                    </td>
-                    <td className="px-6 py-4 font-medium">
-                      {prescription.patient.firstName} {prescription.patient.lastName}
-                    </td>
-                    <td className="px-6 py-4">
-                      {prescription.dermatologist.firstName} {prescription.dermatologist.lastName}
-                    </td>
-                    <td className="px-6 py-4">
-                      {prescription.diagnosis.length > 30
-                        ? `${prescription.diagnosis.substring(0, 30)}...`
-                        : prescription.diagnosis}
-                    </td>
-                    <td className="px-6 py-4">
-                      <ul className="list-disc list-inside">
-                        {prescription.medications.slice(0, 2).map((med, index) => (
-                          <li key={index} className="truncate max-w-xs">
-                            {med.name}
-                          </li>
-                        ))}
-                        {prescription.medications.length > 2 && (
-                          <li className="text-gray-500 dark:text-gray-400">
-                            +{prescription.medications.length - 2} more
-                          </li>
-                        )}
-                      </ul>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() => navigate(`/prescriptions/${prescription._id}`)}
-                          className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
-                        >
-                          <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                          </svg>
-                          View
-                        </button>
-                        <button
-                          onClick={() => navigate(`/prescriptions/${prescription._id}/print`)}
-                          className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-purple-600 dark:text-purple-400 bg-white dark:bg-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
-                        >
-                          <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-                          </svg>
-                          Print
-                        </button>
-                        {(user?.role === 'admin' || user?.role === 'dermatologist') && (
-                          <button
-                            onClick={() => navigate(`/prescriptions/${prescription._id}/edit`)}
-                            className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-amber-600 dark:text-amber-400 bg-white dark:bg-gray-700 hover:bg-amber-50 dark:hover:bg-amber-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
-                          >
-                            <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                            </svg>
-                            Edit
-                          </button>
-                        )}
+          <DataTable
+            data={prescriptions}
+            isLoading={isLoading}
+            emptyMessage="No prescriptions found"
+            emptyIcon={
+              <svg className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            }
+            columns={[
+              {
+                key: 'date',
+                label: 'Date',
+                render: (prescription: Prescription) => (
+                  <div className="font-medium">
+                    {formatDate(prescription.date || prescription.createdAt)}
+                  </div>
+                ),
+                mobileLabel: 'Date'
+              },
+              {
+                key: 'patient',
+                label: 'Patient',
+                render: (prescription: Prescription) => (
+                  <div className="font-medium">
+                    {prescription.patient.firstName} {prescription.patient.lastName}
+                  </div>
+                ),
+                mobileLabel: 'Patient'
+              },
+              {
+                key: 'doctor',
+                label: 'Doctor',
+                render: (prescription: Prescription) => (
+                  <div>
+                    {prescription.dermatologist.firstName} {prescription.dermatologist.lastName}
+                  </div>
+                ),
+                mobileLabel: 'Doctor'
+              },
+              {
+                key: 'diagnosis',
+                label: 'Diagnosis',
+                render: (prescription: Prescription) => (
+                  <div>
+                    {prescription.diagnosis.length > 30
+                      ? `${prescription.diagnosis.substring(0, 30)}...`
+                      : prescription.diagnosis}
+                  </div>
+                ),
+                mobileLabel: 'Diagnosis',
+                hideOnMobile: true
+              },
+              {
+                key: 'medications',
+                label: 'Medications',
+                render: (prescription: Prescription) => (
+                  <div>
+                    {prescription.medications.slice(0, 2).map((med, index) => (
+                      <div key={index} className="text-sm">
+                        • {med.name}
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    ))}
+                    {prescription.medications.length > 2 && (
+                      <div className="text-gray-500 dark:text-gray-400 text-sm">
+                        +{prescription.medications.length - 2} more
+                      </div>
+                    )}
+                  </div>
+                ),
+                mobileLabel: 'Medications'
+              },
+              {
+                key: 'actions',
+                label: 'Actions',
+                render: (prescription: Prescription) => (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => navigate(`/prescriptions/${prescription._id}`)}
+                      className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
+                    >
+                      <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                      </svg>
+                      View
+                    </button>
+                    <button
+                      onClick={() => navigate(`/prescriptions/${prescription._id}/print`)}
+                      className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-purple-600 dark:text-purple-400 bg-white dark:bg-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
+                    >
+                      <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                      </svg>
+                      Print
+                    </button>
+                    {(user?.role === 'admin' || user?.role === 'dermatologist') && (
+                      <button
+                        onClick={() => navigate(`/prescriptions/${prescription._id}/edit`)}
+                        className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-amber-600 dark:text-amber-400 bg-white dark:bg-gray-700 hover:bg-amber-50 dark:hover:bg-amber-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
+                      >
+                        <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        Edit
+                      </button>
+                    )}
+                  </div>
+                ),
+                mobileLabel: 'Actions'
+              }
+            ]}
+          />
         )}
 
         {/* Pagination */}

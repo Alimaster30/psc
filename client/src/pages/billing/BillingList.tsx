@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
+import DataTable from '../../components/common/DataTable';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
@@ -260,104 +261,116 @@ const BillingList: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-gray-700 dark:text-gray-300">
-              <thead className="text-xs text-gray-600 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                <tr>
-                  <th scope="col" className="px-6 py-3">Invoice #</th>
-                  <th scope="col" className="px-6 py-3">Patient</th>
-                  <th scope="col" className="px-6 py-3">Date</th>
-                  <th scope="col" className="px-6 py-3">Due Date</th>
-                  <th scope="col" className="px-6 py-3">Amount</th>
-                  <th scope="col" className="px-6 py-3">Status</th>
-                  <th scope="col" className="px-6 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoices.map((invoice) => (
-                  <tr
-                    key={invoice._id}
-                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    <td className="px-6 py-4 font-medium">
-                      {invoice.invoiceNumber}
-                    </td>
-                    <td className="px-6 py-4">
-                      {invoice.patient.firstName} {invoice.patient.lastName}
-                    </td>
-                    <td className="px-6 py-4">
-                      {formatDate(invoice.date || invoice.createdAt)}
-                    </td>
-                    <td className="px-6 py-4">
-                      {formatDate(invoice.dueDate)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div>{formatCurrency(invoice.total)}</div>
-                      {invoice.paymentStatus === 'partially_paid' && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          Paid: {formatCurrency(invoice.amountPaid)}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(invoice.paymentStatus)}`}>
-                        {getStatusDisplayText(invoice.paymentStatus)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() => navigate(`/billing/${invoice._id}`)}
-                          className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
-                        >
-                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                          </svg>
-                          View
-                        </button>
-
-                        {(user?.role === 'admin' || user?.role === 'receptionist') && (
-                          <button
-                            onClick={() => navigate(`/billing/${invoice._id}/edit`)}
-                            className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-green-600 dark:text-green-400 bg-white dark:bg-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
-                          >
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                            </svg>
-                            Edit
-                          </button>
-                        )}
-
-                        <button
-                          onClick={() => navigate(`/billing/${invoice._id}/receipt`)}
-                          className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-purple-600 dark:text-purple-400 bg-white dark:bg-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
-                        >
-                          <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-                          </svg>
-                          Print
-                        </button>
-
-                        {/* Pay Button - only show for pending/partially_paid/overdue invoices */}
-                        {(invoice.paymentStatus === 'pending' || invoice.paymentStatus === 'partially_paid' || invoice.paymentStatus === 'overdue') && (user?.role === 'admin' || user?.role === 'receptionist') && (
-                          <button
-                            onClick={() => navigate(`/billing/${invoice._id}/edit`)}
-                            className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-orange-600 dark:text-orange-400 bg-white dark:bg-gray-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
-                          >
-                            <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                            </svg>
-                            Pay
-                          </button>
-                        )}
+          <DataTable
+            data={invoices}
+            isLoading={isLoading}
+            emptyMessage="No invoices found"
+            emptyIcon={
+              <svg className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            }
+            columns={[
+              {
+                key: 'invoiceNumber',
+                label: 'Invoice #',
+                render: (invoice: Invoice) => (
+                  <div className="font-medium">
+                    {invoice.invoiceNumber}
+                  </div>
+                ),
+                mobileLabel: 'Invoice #'
+              },
+              {
+                key: 'patient',
+                label: 'Patient',
+                render: (invoice: Invoice) => (
+                  <div className="font-medium">
+                    {invoice.patient.firstName} {invoice.patient.lastName}
+                  </div>
+                ),
+                mobileLabel: 'Patient'
+              },
+              {
+                key: 'amount',
+                label: 'Amount',
+                render: (invoice: Invoice) => (
+                  <div>
+                    <div className="font-medium">{formatCurrency(invoice.total)}</div>
+                    {invoice.paymentStatus === 'partially_paid' && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Paid: {formatCurrency(invoice.amountPaid)}
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    )}
+                  </div>
+                ),
+                mobileLabel: 'Amount'
+              },
+              {
+                key: 'status',
+                label: 'Status',
+                render: (invoice: Invoice) => (
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(invoice.paymentStatus)}`}>
+                    {getStatusDisplayText(invoice.paymentStatus)}
+                  </span>
+                ),
+                mobileLabel: 'Status'
+              },
+              {
+                key: 'actions',
+                label: 'Actions',
+                render: (invoice: Invoice) => (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => navigate(`/billing/${invoice._id}`)}
+                      className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
+                    >
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                      </svg>
+                      View
+                    </button>
+
+                    {(user?.role === 'admin' || user?.role === 'receptionist') && (
+                      <button
+                        onClick={() => navigate(`/billing/${invoice._id}/edit`)}
+                        className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-green-600 dark:text-green-400 bg-white dark:bg-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
+                      >
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        Edit
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => navigate(`/billing/${invoice._id}/receipt`)}
+                      className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-purple-600 dark:text-purple-400 bg-white dark:bg-gray-700 hover:bg-purple-50 dark:hover:bg-purple-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
+                    >
+                      <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                      </svg>
+                      Print
+                    </button>
+
+                    {(invoice.paymentStatus === 'pending' || invoice.paymentStatus === 'partially_paid' || invoice.paymentStatus === 'overdue') && (user?.role === 'admin' || user?.role === 'receptionist') && (
+                      <button
+                        onClick={() => navigate(`/billing/${invoice._id}/edit`)}
+                        className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-orange-600 dark:text-orange-400 bg-white dark:bg-gray-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
+                      >
+                        <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        Pay
+                      </button>
+                    )}
+                  </div>
+                ),
+                mobileLabel: 'Actions'
+              }
+            ]}
+          />
         )}
 
         {/* Pagination */}
