@@ -1,8 +1,9 @@
 import express from 'express';
 import { body } from 'express-validator';
 import { register, login, getMe, updateProfile, changePassword } from '../controllers/auth.controller';
-import { protect } from '../middlewares/auth.middleware';
+import { protect, authorize } from '../middlewares/auth.middleware';
 import { validate } from '../middlewares/validation.middleware';
+import { UserRole } from '../models/user.model';
 
 const router = express.Router();
 
@@ -46,8 +47,8 @@ const changePasswordValidation = [
 ];
 
 // Routes
-// Removed public register endpoint - only admins can create users through the user management interface
 router.post('/login', validate(loginValidation), login);
+router.post('/register', protect, authorize(UserRole.ADMIN), validate(registerValidation), register);
 router.get('/me', protect, getMe);
 router.put('/me', protect, validate(updateProfileValidation), updateProfile);
 router.put('/change-password', protect, validate(changePasswordValidation), changePassword);

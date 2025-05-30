@@ -395,7 +395,12 @@ app.post('/api/create-test-users', async (req, res) => {
         }
       ];
 
-      const createdUsers = await User.insertMany(testUsers);
+      // Create users one by one to trigger password hashing middleware
+      const createdUsers = [];
+      for (const userData of testUsers) {
+        const user = await User.create(userData);
+        createdUsers.push(user);
+      }
       console.log(`Created ${createdUsers.length} users`);
 
       return res.status(201).json({
