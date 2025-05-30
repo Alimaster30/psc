@@ -97,6 +97,7 @@ const ReceiptPrinting: React.FC = () => {
     const fetchBilling = async () => {
       try {
         setIsLoading(true);
+        console.log('Fetching billing data for ID:', billingId);
 
         try {
           // Try to fetch from API
@@ -105,21 +106,25 @@ const ReceiptPrinting: React.FC = () => {
               'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
           });
+
+          console.log('API Response:', response.data);
+
           if (response.data && response.data.data) {
+            console.log('Setting billing data:', response.data.data);
             setBilling(response.data.data);
           } else {
-            // If API response doesn't have the expected format, use mock data
             console.log('API response format unexpected, using mock data');
+            toast.error('Failed to load receipt data');
             setBilling(mockBilling);
           }
         } catch (apiError) {
-          console.log('API endpoint not available, using mock data');
-          // Use mock data when API is not available
+          console.error('API Error:', apiError);
+          toast.error('Failed to load receipt from server');
           setBilling(mockBilling);
         }
       } catch (error) {
         console.error('Error in fetchBilling:', error);
-        // Don't show error toast, just use mock data
+        toast.error('Failed to load receipt');
         setBilling(mockBilling);
       } finally {
         setIsLoading(false);
@@ -129,7 +134,7 @@ const ReceiptPrinting: React.FC = () => {
     if (billingId) {
       fetchBilling();
     } else {
-      // If no billingId is provided, use mock data
+      console.log('No billing ID provided, using mock data');
       setBilling(mockBilling);
       setIsLoading(false);
     }
@@ -347,6 +352,8 @@ const ReceiptPrinting: React.FC = () => {
 
 
 
+  console.log('Render state:', { isLoading, billing: !!billing, billingId });
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -359,6 +366,24 @@ const ReceiptPrinting: React.FC = () => {
         <Card>
           <div className="flex justify-center items-center py-12">
             <p className="text-gray-500 dark:text-gray-400">Loading receipt data...</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!billing) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Receipt</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">No receipt data available</p>
+          </div>
+        </div>
+        <Card>
+          <div className="flex justify-center items-center py-12">
+            <p className="text-gray-500 dark:text-gray-400">No billing data found for ID: {billingId}</p>
           </div>
         </Card>
       </div>
@@ -442,7 +467,7 @@ const ReceiptPrinting: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-600 font-medium">Date:</p>
                 <p className="text-gray-900">
-                  {billing && billing.date ? new Date(billing.date).toLocaleDateString() : 'N/A'}
+                  {billing && (billing.date || billing.createdAt) ? new Date(billing.date || billing.createdAt).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
             </div>
@@ -480,13 +505,17 @@ const ReceiptPrinting: React.FC = () => {
             </thead>
             <tbody>
               {billing && billing.services && billing.services.length > 0 ? (
-                billing.services.map((service, index) => (
-                  <tr key={index} className="border-b border-gray-200">
-                    <td className="py-3 text-gray-900">{service.name}</td>
-                    <td className="py-3 text-gray-600">{service.description}</td>
-                    <td className="py-3 text-right text-gray-900">PKR {service.amount.toFixed(2)}</td>
-                  </tr>
-                ))
+                billing.services.map((service, index) => {
+                  // Handle different possible field names from API
+                  const amount = service.amount || service.unitPrice || service.totalPrice || 0;
+                  return (
+                    <tr key={index} className="border-b border-gray-200">
+                      <td className="py-3 text-gray-900">{service.name || 'Service'}</td>
+                      <td className="py-3 text-gray-600">{service.description || ''}</td>
+                      <td className="py-3 text-right text-gray-900">PKR {amount.toFixed(2)}</td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr className="border-b border-gray-200">
                   <td colSpan={3} className="py-3 text-center text-gray-500">No services found</td>
