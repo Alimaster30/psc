@@ -18,11 +18,13 @@ services:
           name: mongodb-atlas
           property: connectionString
       - key: JWT_SECRET
-        generateValue: true
+        value: your_production_jwt_secret_here_32_chars_minimum_length_required
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: ENCRYPTION_KEY
         generateValue: true
+      - key: CORS_ORIGIN
+        value: https://prime-skin-clinic-frontend.onrender.com
 
   # Frontend Static Site
   - type: static

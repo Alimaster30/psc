@@ -44,8 +44,12 @@ const connectDB = async () => {
 // CORS configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? ['https://prime-skin-clinic-frontend.onrender.com', 'https://prime-skin-clinic-api.onrender.com']
-    : ['http://localhost:3000', 'http://localhost:5173'],
+    ? [
+        'https://prime-skin-clinic-frontend.onrender.com',
+        'https://prime-skin-clinic-api.onrender.com',
+        process.env.CORS_ORIGIN || 'https://prime-skin-clinic-frontend.onrender.com'
+      ].filter(Boolean)
+    : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5001'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -77,11 +81,14 @@ app.get('/', (req: Request, res: Response) => {
 app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({
     status: 'OK',
-    message: 'Prime Skin Clinic API is running',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    environment: process.env.NODE_ENV,
+    port: PORT,
+    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
   });
 });
+
+
 
 // Apply routes
 app.use('/api/auth', authRoutes);
@@ -102,5 +109,9 @@ app.use(errorHandler);
 connectDB().then(() => {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV}`);
+    console.log(`CORS Origins:`, corsOptions.origin);
+    console.log(`MongoDB URI: ${process.env.MONGODB_URI ? 'Connected' : 'Not configured'}`);
+    console.log(`JWT Secret: ${process.env.JWT_SECRET ? 'Configured' : 'Not configured'}`);
   });
 });
