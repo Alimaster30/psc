@@ -7,8 +7,8 @@
 
 // The date when the application was deployed
 // This is used to reset analytics counters
-// Format: YYYY-MM-DD
-export const DEPLOYMENT_DATE = new Date();
+// Set to a date before any billing records were created
+export const DEPLOYMENT_DATE = new Date('2024-01-01');
 
 // Set this to true when deploying to production
 // This will enable additional security measures

@@ -63,7 +63,7 @@ const AnalyticsDashboard: React.FC = () => {
         setIsLoading(true);
 
         // Fetch real-time data from the API
-        const summaryResponse = await fetch('/api/analytics/dashboard-summary', {
+        const summaryResponse = await fetch('https://prime-skin-clinic-api.onrender.com/api/analytics/dashboard-summary', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -85,7 +85,7 @@ const AnalyticsDashboard: React.FC = () => {
         }
 
         // Fetch revenue data with period filter
-        const revenueResponse = await fetch(`/api/analytics/revenue?period=${dateRange}`, {
+        const revenueResponse = await fetch(`https://prime-skin-clinic-api.onrender.com/api/analytics/revenue?period=${dateRange}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -140,7 +140,7 @@ const AnalyticsDashboard: React.FC = () => {
         }
 
         // Fetch patient growth data with period filter
-        const patientGrowthResponse = await fetch(`/api/analytics/patient-growth?period=${dateRange}`, {
+        const patientGrowthResponse = await fetch(`https://prime-skin-clinic-api.onrender.com/api/analytics/patient-growth?period=${dateRange}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -176,7 +176,7 @@ const AnalyticsDashboard: React.FC = () => {
         }
 
         // Fetch appointment data
-        const appointmentsResponse = await fetch('/api/analytics/appointments', {
+        const appointmentsResponse = await fetch('https://prime-skin-clinic-api.onrender.com/api/analytics/appointments', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
