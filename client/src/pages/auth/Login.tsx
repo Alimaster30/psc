@@ -30,10 +30,14 @@ const Login: React.FC = () => {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setIsLoading(true);
+      console.log('Attempting login with:', data.email);
+      console.log('API URL:', import.meta.env.VITE_API_URL);
       await login(data.email, data.password);
       toast.success('Login successful!');
       navigate('/');
     } catch (error: any) {
+      console.error('Login error:', error);
+      console.error('Error response:', error.response);
       toast.error(error.response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
