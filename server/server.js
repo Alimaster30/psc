@@ -343,6 +343,63 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Temporary endpoint to create test users (remove in production)
+app.post('/api/create-test-users', async (req, res) => {
+  try {
+    // Check if users already exist
+    const existingUsers = await User.find({});
+    if (existingUsers.length > 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'Users already exist',
+        users: existingUsers.map(u => ({ email: u.email, role: u.role, isActive: u.isActive }))
+      });
+    }
+
+    // Create test users
+    const testUsers = [
+      {
+        firstName: 'Admin',
+        lastName: 'User',
+        email: 'admin@psc.com',
+        password: 'Admin123!',
+        role: 'admin',
+        phoneNumber: '+92 300 1234567',
+        isActive: true,
+      },
+      {
+        firstName: 'Dr. Sarah',
+        lastName: 'Ahmed',
+        email: 'doctor@psc.com',
+        password: 'Doctor123!',
+        role: 'dermatologist',
+        phoneNumber: '+92 301 2345678',
+        isActive: true,
+      },
+      {
+        firstName: 'Fatima',
+        lastName: 'Khan',
+        email: 'receptionist@psc.com',
+        password: 'Reception123!',
+        role: 'receptionist',
+        phoneNumber: '+92 302 3456789',
+        isActive: true,
+      }
+    ];
+
+    const createdUsers = await User.insertMany(testUsers);
+
+    res.status(201).json({
+      success: true,
+      message: 'Test users created successfully',
+      users: createdUsers.map(u => ({ email: u.email, role: u.role, isActive: u.isActive }))
+    });
+  } catch (error) {
+    console.error('Create test users error:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
+
 // Auth Routes
 app.post('/api/auth/register', authenticate, roleBasedAccess.registrationAccess, async (req, res) => {
   try {
@@ -1603,11 +1660,15 @@ const createAdminUser = async () => {
       await User.create({
         firstName: 'Admin',
         lastName: 'User',
-        email: 'admin@example.com',
+        email: 'admin@psc.com',
         password: 'Admin123!',
         role: 'admin',
+        phoneNumber: '+92 300 1234567',
+        isActive: true,
       });
-      console.log('Admin user created');
+      console.log('Admin user created with email: admin@psc.com');
+    } else {
+      console.log('Admin user already exists:', adminExists.email);
     }
   } catch (error) {
     console.error('Create admin user error:', error);
