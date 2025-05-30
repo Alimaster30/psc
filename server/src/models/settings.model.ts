@@ -1,4 +1,54 @@
-import mongoose from 'mongoose';
+import mongoose, { Document } from 'mongoose';
+
+export interface IWorkingHours {
+  monday: { start: string; end: string };
+  tuesday: { start: string; end: string };
+  wednesday: { start: string; end: string };
+  thursday: { start: string; end: string };
+  friday: { start: string; end: string };
+  saturday: { start: string; end: string };
+  sunday: { start: string; end: string };
+}
+
+export interface IConsultationFees {
+  initial: number;
+  followUp: number;
+}
+
+export interface INotificationSettings {
+  appointmentReminders: boolean;
+  reminderHours: number;
+  smsEnabled: boolean;
+  emailEnabled: boolean;
+  prescriptionReady: boolean;
+  paymentReceived: boolean;
+}
+
+export interface IBackupSettings {
+  autoBackup: boolean;
+  backupFrequency: 'daily' | 'weekly' | 'monthly';
+  backupTime: string;
+  retentionDays: number;
+}
+
+export interface ISettings extends Document {
+  clinicName: string;
+  address: string;
+  phoneNumber: string;
+  email: string;
+  website: string;
+  workingHours: IWorkingHours;
+  consultationFees: IConsultationFees;
+  currency: string;
+  taxRate: number;
+  notifications: INotificationSettings;
+  backup: IBackupSettings;
+  appointmentDuration: number;
+  appointmentBuffer: number;
+  logo: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 const workingHoursSchema = new mongoose.Schema({
   monday: { start: String, end: String },
@@ -31,7 +81,7 @@ const backupSettingsSchema = new mongoose.Schema({
   retentionDays: Number,
 }, { _id: false });
 
-const settingsSchema = new mongoose.Schema({
+const settingsSchema = new mongoose.Schema<ISettings>({
   clinicName: String,
   address: String,
   phoneNumber: String,
@@ -48,4 +98,4 @@ const settingsSchema = new mongoose.Schema({
   logo: String,
 }, { timestamps: true });
 
-export default mongoose.model('Settings', settingsSchema); 
+export default mongoose.model<ISettings>('Settings', settingsSchema);

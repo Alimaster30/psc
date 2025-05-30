@@ -38,6 +38,7 @@ export interface IBilling extends Document {
   total: number;
   amountPaid: number;
   balance: number;
+  currency: string;
   paymentStatus: PaymentStatus;
   paymentMethod?: PaymentMethod;
   paymentDate?: Date;
@@ -128,6 +129,10 @@ const billingSchema = new Schema<IBilling>(
         return this.total - this.amountPaid;
       },
       min: [0, 'Balance cannot be negative'],
+    },
+    currency: {
+      type: String,
+      default: 'PKR',
     },
     paymentStatus: {
       type: String,
