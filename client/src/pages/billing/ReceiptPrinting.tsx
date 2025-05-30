@@ -100,7 +100,11 @@ const ReceiptPrinting: React.FC = () => {
 
         try {
           // Try to fetch from API
-          const response = await axios.get(`/api/billing/${billingId}/receipt`);
+          const response = await axios.get(`https://prime-skin-clinic-api.onrender.com/api/billing/${billingId}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
           if (response.data && response.data.data) {
             setBilling(response.data.data);
           } else {

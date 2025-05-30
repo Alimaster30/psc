@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useReactToPrint } from 'react-to-print';
-import { getBillingById } from '../../services/mockData';
+import axios from 'axios';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import { useAuth } from '../../context/AuthContext';
@@ -69,19 +69,24 @@ const InvoiceGenerator: React.FC = () => {
       try {
         setIsLoading(true);
 
-        // Get billing data by ID from mock data
-        const mockBilling = getBillingById(id || '1');
+        // Fetch billing data from API
+        const response = await axios.get(`https://prime-skin-clinic-api.onrender.com/api/billing/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
 
-        if (!mockBilling) {
+        if (response.data && response.data.data) {
+          setBilling(response.data.data);
+        } else {
           toast.error('Billing record not found');
           navigate('/billing');
           return;
         }
-
-        setBilling(mockBilling as any);
       } catch (error) {
         console.error('Error fetching billing:', error);
         toast.error('Failed to load billing information');
+        navigate('/billing');
       } finally {
         setIsLoading(false);
       }
@@ -90,7 +95,7 @@ const InvoiceGenerator: React.FC = () => {
     if (id) {
       fetchBilling();
     }
-  }, [id]);
+  }, [id, navigate]);
 
   const printFunction = useReactToPrint({
     contentRef: invoiceRef,
