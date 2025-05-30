@@ -63,6 +63,16 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Dermatology Clinic Management System API');
 });
 
+// Health check endpoint for Render
+app.get('/api/health', (req: Request, res: Response) => {
+  res.status(200).json({
+    status: 'OK',
+    message: 'Prime Skin Clinic API is running',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // Apply routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
