@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 
 interface Patient {
   _id: string;
@@ -84,26 +85,9 @@ const BillingList: React.FC = () => {
           params.append('endDate', dateFilter);
         }
 
-        // Fetch from API
-        const response = await fetch(`/api/billing?${params.toString()}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-
-        if (response.status === 429) {
-          toast.error('Too many requests. Please wait a moment and try again.');
-          setIsLoading(false);
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
+        // Fetch from API using the configured api instance
+        const response = await api.get(`/billing?${params.toString()}`);
+        const data = response.data;
         let fetchedInvoices = data.data || [];
 
         // Client-side filtering for search term (since API doesn't support search)
