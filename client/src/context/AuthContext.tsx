@@ -90,6 +90,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('token', newToken);
       localStorage.setItem('user', JSON.stringify(userData));
 
+      // Set default Authorization header for all requests
+      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+
       toast.success('Login successful!');
     } catch (error) {
       console.error('Login error:', error);
@@ -114,6 +117,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Save to localStorage
       localStorage.setItem('token', newToken);
       localStorage.setItem('user', JSON.stringify(newUser));
+
+      // Set default Authorization header for all requests
+      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
 
       toast.success('Registration successful!');
     } catch (error) {
