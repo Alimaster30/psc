@@ -296,14 +296,7 @@ function DataTable<T>({
         {sortedData.map((item) => (
           <motion.div
             key={keyExtractor(item)}
-            style={{
-              backgroundColor: '#f9fafb',
-              borderRadius: '0.5rem',
-              border: '1px solid #e5e7eb',
-              padding: '1rem',
-              marginBottom: '1rem'
-            }}
-            className={`mobile-card ${onRowClick ? 'cursor-pointer hover:shadow-md' : ''}`}
+            className={`bg-gray-50 dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 p-4 mb-4 mobile-card ${onRowClick ? 'cursor-pointer hover:shadow-md' : ''}`}
             onClick={() => onRowClick && onRowClick(item)}
             whileHover={{ scale: onRowClick ? 1.02 : 1 }}
             transition={{ duration: 0.2 }}
@@ -313,29 +306,16 @@ function DataTable<T>({
               .map((column, index) => (
                 <div
                   key={index}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    padding: '0.5rem 0',
-                    borderBottom: index < columns.filter(col => !col.hideOnMobile).length - 1 ? '1px solid #f3f4f6' : 'none'
-                  }}
+                  className={`flex justify-between items-start py-2 ${
+                    index < columns.filter(col => !col.hideOnMobile).length - 1
+                      ? 'border-b border-gray-100 dark:border-gray-600'
+                      : ''
+                  }`}
                 >
-                  <span style={{
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    color: '#6b7280',
-                    flexShrink: 0,
-                    marginRight: '1rem'
-                  }}>
+                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400 flex-shrink-0 mr-4">
                     {column.mobileLabel || column.label}:
                   </span>
-                  <span style={{
-                    fontSize: '0.875rem',
-                    color: '#111827',
-                    textAlign: 'right',
-                    flex: 1
-                  }}>
+                  <span className="text-sm text-gray-900 dark:text-gray-100 text-right flex-1">
                     {column.render(item)}
                   </span>
                 </div>
