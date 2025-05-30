@@ -513,7 +513,7 @@ const UserForm: React.FC = () => {
               )}
             </div>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Password must be at least 8 characters long
+              Password must be at least 8 characters long, contain a number and an uppercase letter
             </p>
           </div>
           <div>
@@ -637,8 +637,14 @@ const UserForm: React.FC = () => {
     else if (step === 3 && !isEditMode) {
       if (!formData.password) {
         errors.password = 'Password is required';
-      } else if (formData.password.length < 8) {
-        errors.password = 'Password must be at least 8 characters';
+      } else {
+        if (formData.password.length < 8) {
+          errors.password = 'Password must be at least 8 characters long';
+        } else if (!/\d/.test(formData.password)) {
+          errors.password = 'Password must contain a number';
+        } else if (!/[A-Z]/.test(formData.password)) {
+          errors.password = 'Password must contain an uppercase letter';
+        }
       }
 
       if (!formData.confirmPassword) {

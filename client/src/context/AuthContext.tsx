@@ -140,8 +140,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Show success message
     toast.success('Logged out successfully');
 
-    // Redirect to login page using absolute URL to preserve protocol
-    window.location.href = `${window.location.protocol}//${window.location.host}/login`;
+    // Don't redirect here - let the component handle it
+    // This prevents the protocol issue
   };
 
   // Update profile function

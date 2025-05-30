@@ -106,6 +106,7 @@ const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
 // App Routes
 const AppRoutes: React.FC = () => {
   const { isDarkMode } = useTheme();
+  const { isAuthenticated } = useAuth();
 
   // Start NProgress on route change
   useEffect(() => {
@@ -116,6 +117,16 @@ const AppRoutes: React.FC = () => {
       NProgress.remove();
     };
   }, []);
+
+  // Handle logout redirect
+  useEffect(() => {
+    if (!isAuthenticated && window.location.pathname !== '/login') {
+      // Use a small delay to ensure state is fully updated
+      setTimeout(() => {
+        window.location.replace('/login');
+      }, 100);
+    }
+  }, [isAuthenticated]);
 
   return (
     <SkeletonTheme baseColor={isDarkMode ? '#374151' : '#e5e7eb'} highlightColor={isDarkMode ? '#4b5563' : '#f3f4f6'}>

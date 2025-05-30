@@ -23,8 +23,12 @@ const userCreateValidation = [
     .isEmail()
     .withMessage('Please provide a valid email'),
   body('password')
-    .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters'),
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters long')
+    .matches(/\d/)
+    .withMessage('Password must contain a number')
+    .matches(/[A-Z]/)
+    .withMessage('Password must contain an uppercase letter'),
   body('role')
     .isIn(Object.values(UserRole))
     .withMessage('Invalid role'),

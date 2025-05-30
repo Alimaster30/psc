@@ -13,13 +13,12 @@ const router = express.Router();
 
 // Apply middleware to all routes
 router.use(protect);
-router.use(authorize(UserRole.ADMIN));
 
-// Routes
-router.get('/patient-growth', getPatientGrowth);
-router.get('/revenue', getRevenue);
-router.get('/appointments', getAppointmentAnalytics);
-router.get('/top-medications', getTopMedications);
-router.get('/dashboard-summary', getDashboardSummary);
+// Routes (Admin only)
+router.get('/patient-growth', authorize(UserRole.ADMIN), getPatientGrowth);
+router.get('/revenue', authorize(UserRole.ADMIN), getRevenue);
+router.get('/appointments', authorize(UserRole.ADMIN), getAppointmentAnalytics);
+router.get('/top-medications', authorize(UserRole.ADMIN), getTopMedications);
+router.get('/dashboard-summary', authorize(UserRole.ADMIN), getDashboardSummary);
 
 export default router;

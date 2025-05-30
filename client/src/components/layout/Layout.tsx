@@ -31,7 +31,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Handle logout
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    // Don't navigate here - let App.tsx handle the redirect
+    // This prevents routing conflicts
   };
 
   // Toggle dropdown
