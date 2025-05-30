@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { SkeletonTheme } from 'react-loading-skeleton';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
+import './styles/mobile.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 

@@ -53,20 +53,20 @@ const Card: React.FC<CardProps> = ({
   // Combine all classes
   const cardClasses = `${baseClasses} ${variantClasses[variant]} ${hoverClasses} ${clickableClasses} ${className}`;
 
-  // Content padding
-  const contentPadding = noPadding ? '' : 'p-6';
+  // Content padding - responsive for mobile
+  const contentPadding = noPadding ? '' : 'p-4 sm:p-6';
 
   const cardContent = (
     <>
       {title && (
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white">{title}</h3>
-          {headerActions && <div className="flex items-center">{headerActions}</div>}
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-white truncate mr-2">{title}</h3>
+          {headerActions && <div className="flex items-center flex-shrink-0">{headerActions}</div>}
         </div>
       )}
       <div className={contentPadding}>{children}</div>
       {footer && (
-        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-700">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-700">
           {footer}
         </div>
       )}

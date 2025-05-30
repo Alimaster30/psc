@@ -199,6 +199,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Toast container */}
       <Toaster position="top-right" />
 
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 z-20 bg-black bg-opacity-50 md:hidden"
+          onClick={closeSidebar}
+        />
+      )}
+
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-30 w-64 bg-white dark:bg-gray-800 shadow-lg transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out`}>
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
@@ -280,7 +288,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
               </button>
-              <h1 className="text-lg font-semibold text-gray-800 dark:text-white">
+              <h1 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-white ml-2 md:ml-0">
                 {location.pathname === '/' ? 'Dashboard' :
                   location.pathname.split('/')[1].charAt(0).toUpperCase() + location.pathname.split('/')[1].slice(1)}
               </h1>
@@ -348,7 +356,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </header>
 
         {/* Page content */}
-        <main className="px-4 md:px-6 py-6">
+        <main className="px-3 sm:px-4 md:px-6 py-4 sm:py-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}

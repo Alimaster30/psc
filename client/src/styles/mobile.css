@@ -1,0 +1,255 @@
+/* Mobile-first responsive utilities for Prime Skin Clinic */
+
+/* Touch-friendly button sizes */
+@media (max-width: 768px) {
+  .btn {
+    min-height: 44px; /* iOS recommended touch target */
+    min-width: 44px;
+  }
+  
+  /* Larger touch targets for mobile */
+  button, 
+  [role="button"], 
+  input[type="submit"], 
+  input[type="button"] {
+    min-height: 44px;
+  }
+  
+  /* Better spacing for mobile forms */
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  /* Mobile-optimized text sizes */
+  .mobile-text-sm {
+    font-size: 0.875rem;
+  }
+  
+  .mobile-text-base {
+    font-size: 1rem;
+  }
+  
+  .mobile-text-lg {
+    font-size: 1.125rem;
+  }
+  
+  /* Mobile-friendly card spacing */
+  .card {
+    margin-bottom: 1rem;
+  }
+  
+  /* Better mobile table handling */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Mobile navigation improvements */
+  .mobile-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  /* Mobile sidebar improvements */
+  .mobile-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    z-index: 40;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .mobile-sidebar.open {
+    transform: translateX(0);
+  }
+  
+  /* Mobile overlay */
+  .mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 30;
+  }
+  
+  /* Mobile-friendly modals */
+  .modal-mobile {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+  
+  /* Better mobile form layouts */
+  .form-mobile {
+    padding: 1rem;
+  }
+  
+  .form-mobile .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  /* Mobile-optimized data tables */
+  .data-table-mobile {
+    display: none;
+  }
+  
+  .data-cards-mobile {
+    display: block;
+  }
+  
+  /* Mobile-friendly pagination */
+  .pagination-mobile {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+  }
+  
+  .pagination-mobile .page-info {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+  
+  /* Mobile dashboard improvements */
+  .dashboard-mobile {
+    padding: 1rem;
+  }
+  
+  .dashboard-mobile .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .dashboard-mobile .chart-container {
+    height: 250px;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Mobile-friendly alerts and toasts */
+  .alert-mobile {
+    margin: 0.5rem;
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
+  
+  /* Mobile search improvements */
+  .search-mobile {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: white;
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  /* Mobile-optimized loading states */
+  .loading-mobile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+  }
+  
+  /* Mobile-friendly error states */
+  .error-mobile {
+    padding: 2rem 1rem;
+    text-align: center;
+  }
+  
+  .error-mobile .error-icon {
+    width: 3rem;
+    height: 3rem;
+    margin: 0 auto 1rem;
+  }
+  
+  /* Mobile accessibility improvements */
+  .focus-visible:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+  
+  /* Mobile-optimized animations */
+  .animate-mobile {
+    animation-duration: 0.2s;
+  }
+  
+  /* Reduce motion for mobile users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-mobile {
+      animation: none;
+    }
+    
+    .transition-mobile {
+      transition: none;
+    }
+  }
+}
+
+/* Tablet-specific optimizations */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .data-table-mobile {
+    display: table;
+  }
+  
+  .data-cards-mobile {
+    display: none;
+  }
+  
+  .dashboard-mobile .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Desktop optimizations */
+@media (min-width: 1024px) {
+  .data-table-mobile {
+    display: table;
+  }
+  
+  .data-cards-mobile {
+    display: none;
+  }
+  
+  .dashboard-mobile .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Dark mode mobile optimizations */
+@media (max-width: 768px) {
+  .dark .mobile-nav {
+    background: #1f2937;
+    border-bottom-color: #374151;
+  }
+  
+  .dark .search-mobile {
+    background: #1f2937;
+    border-bottom-color: #374151;
+  }
+}
+
+/* Print optimizations for mobile */
+@media print {
+  .mobile-nav,
+  .mobile-sidebar,
+  .mobile-overlay {
+    display: none !important;
+  }
+  
+  .print-mobile {
+    margin: 0;
+    padding: 1rem;
+  }
+}
