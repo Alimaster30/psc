@@ -6,10 +6,16 @@ import { toast } from 'react-hot-toast';
 // Define types
 export interface User {
   id: string;
+  _id?: string;
   firstName: string;
   lastName: string;
   email: string;
   role: 'admin' | 'receptionist' | 'dermatologist';
+  phoneNumber?: string;
+  isActive?: boolean;
+  lastLogin?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface AuthContextType {

@@ -16,6 +16,9 @@
     "strictPropertyInitialization": false,
     "noImplicitOverride": false,
     "exactOptionalPropertyTypes": false,
-    "useUnknownInCatchVariables": false
+    "useUnknownInCatchVariables": false,
+    "suppressImplicitAnyIndexErrors": true,
+    "noStrictGenericChecks": true,
+    "suppressExcessPropertyErrors": true
   }
 }

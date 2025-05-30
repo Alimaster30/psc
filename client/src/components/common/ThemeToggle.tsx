@@ -5,7 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 const ThemeToggle: React.FC = () => {
   const { isDarkMode, toggleTheme } = useTheme();
   const [showTooltip, setShowTooltip] = useState(false);
-  const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const tooltipTimeoutRef = useRef<number | null>(null);
 
   // Handle tooltip display
   const handleMouseEnter = () => {
