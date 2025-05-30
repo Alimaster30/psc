@@ -117,7 +117,7 @@ const UserDetail: React.FC = () => {
       ];
 
       const foundUser = mockUsers.find(u => u._id === id);
-      setUser(foundUser || null);
+      setUser(foundUser ? { ...foundUser, role: foundUser.role as 'admin' | 'receptionist' | 'dermatologist' } : null);
     };
 
     fetchUser();

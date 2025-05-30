@@ -8,7 +8,7 @@ type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger' | 'success' 
 type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
 // Define button props
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onAnimationStart' | 'onAnimationEnd'> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   isLoading?: boolean;
