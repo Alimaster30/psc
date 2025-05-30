@@ -117,7 +117,12 @@ const seedUsers = async () => {
       }
     ];
 
-    const createdUsers = await User.insertMany(users);
+    // Create users one by one to trigger password hashing middleware
+    const createdUsers = [];
+    for (const userData of users) {
+      const user = await User.create(userData);
+      createdUsers.push(user);
+    }
     console.log(`✅ Created ${createdUsers.length} users`);
     return createdUsers;
   } catch (error) {

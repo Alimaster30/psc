@@ -348,54 +348,99 @@ app.post('/api/create-test-users', async (req, res) => {
   try {
     // Check if users already exist
     const existingUsers = await User.find({});
-    if (existingUsers.length > 0) {
-      return res.status(200).json({
+
+    res.status(200).json({
+      success: true,
+      message: `Found ${existingUsers.length} existing users`,
+      users: existingUsers.map(u => ({
+        email: u.email,
+        role: u.role,
+        isActive: u.isActive,
+        id: u._id
+      }))
+    });
+
+    // If no users exist, create them
+    if (existingUsers.length === 0) {
+      console.log('No users found, creating test users...');
+
+      // Create test users
+      const testUsers = [
+        {
+          firstName: 'Admin',
+          lastName: 'User',
+          email: 'admin@psc.com',
+          password: 'Admin123!',
+          role: 'admin',
+          phoneNumber: '+92 300 1234567',
+          isActive: true,
+        },
+        {
+          firstName: 'Dr. Sarah',
+          lastName: 'Ahmed',
+          email: 'doctor@psc.com',
+          password: 'Doctor123!',
+          role: 'dermatologist',
+          phoneNumber: '+92 301 2345678',
+          isActive: true,
+        },
+        {
+          firstName: 'Fatima',
+          lastName: 'Khan',
+          email: 'receptionist@psc.com',
+          password: 'Reception123!',
+          role: 'receptionist',
+          phoneNumber: '+92 302 3456789',
+          isActive: true,
+        }
+      ];
+
+      const createdUsers = await User.insertMany(testUsers);
+      console.log(`Created ${createdUsers.length} users`);
+
+      return res.status(201).json({
         success: true,
-        message: 'Users already exist',
-        users: existingUsers.map(u => ({ email: u.email, role: u.role, isActive: u.isActive }))
+        message: 'Test users created successfully',
+        users: createdUsers.map(u => ({ email: u.email, role: u.role, isActive: u.isActive }))
       });
     }
+  } catch (error) {
+    console.error('Create test users error:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
 
-    // Create test users
-    const testUsers = [
-      {
-        firstName: 'Admin',
-        lastName: 'User',
-        email: 'admin@psc.com',
-        password: 'Admin123!',
-        role: 'admin',
-        phoneNumber: '+92 300 1234567',
-        isActive: true,
-      },
-      {
-        firstName: 'Dr. Sarah',
-        lastName: 'Ahmed',
-        email: 'doctor@psc.com',
-        password: 'Doctor123!',
-        role: 'dermatologist',
-        phoneNumber: '+92 301 2345678',
-        isActive: true,
-      },
-      {
-        firstName: 'Fatima',
-        lastName: 'Khan',
-        email: 'receptionist@psc.com',
-        password: 'Reception123!',
-        role: 'receptionist',
-        phoneNumber: '+92 302 3456789',
-        isActive: true,
-      }
-    ];
+// Force create admin user endpoint
+app.post('/api/force-create-admin', async (req, res) => {
+  try {
+    // Delete existing admin if any
+    await User.deleteOne({ email: 'admin@psc.com' });
 
-    const createdUsers = await User.insertMany(testUsers);
+    // Create new admin user
+    const adminUser = await User.create({
+      firstName: 'Admin',
+      lastName: 'User',
+      email: 'admin@psc.com',
+      password: 'Admin123!',
+      role: 'admin',
+      phoneNumber: '+92 300 1234567',
+      isActive: true,
+    });
+
+    console.log('Force created admin user:', adminUser.email);
 
     res.status(201).json({
       success: true,
-      message: 'Test users created successfully',
-      users: createdUsers.map(u => ({ email: u.email, role: u.role, isActive: u.isActive }))
+      message: 'Admin user force created successfully',
+      user: {
+        email: adminUser.email,
+        role: adminUser.role,
+        isActive: adminUser.isActive,
+        id: adminUser._id
+      }
     });
   } catch (error) {
-    console.error('Create test users error:', error);
+    console.error('Force create admin error:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
