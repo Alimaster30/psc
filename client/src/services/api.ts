@@ -361,12 +361,12 @@ export const analyticsAPI = {
     return response;
   },
 
-  getPatientGrowth: async (period: string = 'monthly') => {
+  getPatientGrowth: async (period: string = 'month') => {
     const response = await api.get(`/analytics/patient-growth?period=${period}`);
     return response;
   },
 
-  getRevenue: async (period: string = 'monthly') => {
+  getRevenue: async (period: string = 'month') => {
     const response = await api.get(`/analytics/revenue?period=${period}`);
     return response;
   },

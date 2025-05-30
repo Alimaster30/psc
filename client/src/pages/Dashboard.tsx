@@ -85,7 +85,7 @@ const Dashboard: React.FC = () => {
 
           // Fetch patient growth data (admin only)
           try {
-            const patientGrowthResponse = await analyticsAPI.getPatientGrowth();
+            const patientGrowthResponse = await analyticsAPI.getPatientGrowth('month');
             setPatientGrowth(patientGrowthResponse.data.data);
           } catch (error) {
             console.error('Failed to fetch patient growth:', error);
@@ -95,7 +95,7 @@ const Dashboard: React.FC = () => {
 
           // Fetch revenue data (admin only)
           try {
-            const revenueResponse = await analyticsAPI.getRevenue();
+            const revenueResponse = await analyticsAPI.getRevenue('month');
             console.log('Main Dashboard received revenue data:', revenueResponse.data.data);
             setRevenue(revenueResponse.data.data);
           } catch (error) {
