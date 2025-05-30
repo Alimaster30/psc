@@ -367,9 +367,10 @@ const AppointmentCalendar: React.FC = () => {
           {weekDays.map((day, index) => (
             <div
               key={index}
-              className="py-2 text-center text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="py-2 px-1 text-center text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              {day}
+              <span className="hidden sm:inline">{day}</span>
+              <span className="sm:hidden">{day.slice(0, 2)}</span>
             </div>
           ))}
         </div>
@@ -379,36 +380,39 @@ const AppointmentCalendar: React.FC = () => {
           {calendarDays.map((day, index) => (
             <div
               key={index}
-              className={`min-h-[120px] p-2 bg-white dark:bg-gray-800 ${
+              className={`min-h-[120px] md:min-h-[140px] p-1 md:p-2 bg-white dark:bg-gray-800 ${
                 !day.isCurrentMonth ? 'bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-600' : ''
               } ${day.isToday ? 'ring-2 ring-inset ring-primary-500 dark:ring-primary-400' : ''}`}
             >
-              <div className="flex justify-between">
-                <span className={`text-sm font-medium ${day.isCurrentMonth ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-600'}`}>
+              <div className="flex justify-between items-start">
+                <span className={`text-xs md:text-sm font-medium ${day.isCurrentMonth ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-600'}`}>
                   {day.date.getDate()}
                 </span>
                 {day.isCurrentMonth && user?.role !== 'dermatologist' && (
                   <button
                     onClick={() => navigate(`/appointments/new?date=${day.date.toISOString().split('T')[0]}&doctor=${selectedDoctor}`)}
-                    className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-xs"
+                    className="w-6 h-6 md:w-5 md:h-5 flex items-center justify-center bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400 hover:bg-primary-200 dark:hover:bg-primary-800 rounded text-xs font-bold touch-manipulation"
+                    title="Add appointment"
                   >
                     +
                   </button>
                 )}
               </div>
 
-              <div className="mt-2 space-y-1 max-h-[80px] overflow-y-auto">
+              <div className="mt-1 md:mt-2 space-y-0.5 md:space-y-1 max-h-[80px] md:max-h-[100px] overflow-y-auto">
                 {day.appointments.slice(0, 3).map((appointment, idx) => (
                   <div
                     key={idx}
                     onClick={() => navigate(`/appointments/${appointment._id}`)}
-                    className={`px-2 py-1 text-xs rounded cursor-pointer ${getStatusColor(appointment.status)}`}
+                    className={`px-1 md:px-2 py-0.5 md:py-1 text-xs rounded cursor-pointer touch-manipulation ${getStatusColor(appointment.status)}`}
                   >
-                    {formatTime(appointment.startTime)} - {appointment.patient.firstName} {appointment.patient.lastName.charAt(0)}.
+                    <div className="truncate">
+                      {formatTime(appointment.startTime)} - {appointment.patient.firstName} {appointment.patient.lastName.charAt(0)}.
+                    </div>
                   </div>
                 ))}
                 {day.appointments.length > 3 && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-0.5">
                     +{day.appointments.length - 3} more
                   </div>
                 )}
@@ -443,17 +447,24 @@ const AppointmentCalendar: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
         {/* Week header */}
         <div className="grid grid-cols-8 gap-px border-b border-gray-200 dark:border-gray-700 bg-gray-200 dark:bg-gray-700">
-          <div className="py-2 text-center text-sm font-medium text-gray-700 dark:text-gray-300">
+          <div className="py-2 px-1 text-center text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">
             Hour
           </div>
           {weekDays.map((date, index) => (
             <div
               key={index}
-              className={`py-2 text-center text-sm font-medium ${
+              className={`py-2 px-1 text-center text-xs md:text-sm font-medium ${
                 isSameDay(date, today) ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' : 'text-gray-700 dark:text-gray-300'
               }`}
             >
-              {date.toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' })}
+              <div className="hidden md:block">
+                {date.toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' })}
+              </div>
+              <div className="md:hidden">
+                {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                <br />
+                {date.getDate()}
+              </div>
             </div>
           ))}
         </div>
@@ -477,7 +488,7 @@ const AppointmentCalendar: React.FC = () => {
                 return (
                   <div
                     key={dateIndex}
-                    className={`relative min-h-[60px] p-1 ${
+                    className={`relative min-h-[50px] md:min-h-[60px] p-0.5 md:p-1 ${
                       isSameDay(date, today) ? 'bg-primary-50 dark:bg-primary-900/10' : 'bg-white dark:bg-gray-800'
                     }`}
                   >
@@ -485,16 +496,19 @@ const AppointmentCalendar: React.FC = () => {
                       <div
                         key={idx}
                         onClick={() => navigate(`/appointments/${appointment._id}`)}
-                        className={`px-2 py-1 text-xs rounded cursor-pointer mb-1 ${getStatusColor(appointment.status)}`}
+                        className={`px-1 md:px-2 py-0.5 md:py-1 text-xs rounded cursor-pointer mb-0.5 md:mb-1 touch-manipulation ${getStatusColor(appointment.status)}`}
                       >
-                        {formatTime(appointment.startTime)} - {appointment.patient.firstName} {appointment.patient.lastName.charAt(0)}.
+                        <div className="truncate">
+                          {formatTime(appointment.startTime)} - {appointment.patient.firstName} {appointment.patient.lastName.charAt(0)}.
+                        </div>
                       </div>
                     ))}
 
                     {user?.role !== 'dermatologist' && (
                       <button
                         onClick={() => navigate(`/appointments/new?date=${dateStr}&time=${hour}:00&doctor=${selectedDoctor}`)}
-                        className="absolute bottom-0 right-0 p-1 text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-xs"
+                        className="absolute bottom-0.5 right-0.5 w-5 h-5 md:w-4 md:h-4 flex items-center justify-center bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400 hover:bg-primary-200 dark:hover:bg-primary-800 rounded text-xs font-bold touch-manipulation"
+                        title="Add appointment"
                       >
                         +
                       </button>
@@ -585,6 +599,28 @@ const AppointmentCalendar: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <style>{`
+        .touch-manipulation {
+          touch-action: manipulation;
+        }
+
+        @media (max-width: 640px) {
+          .calendar-mobile {
+            font-size: 0.75rem;
+          }
+
+          .calendar-mobile .appointment-card {
+            min-height: 28px;
+            padding: 2px 4px;
+          }
+
+          .calendar-mobile .add-button {
+            min-width: 24px;
+            min-height: 24px;
+          }
+        }
+      `}</style>
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Appointment Calendar</h1>
@@ -620,20 +656,20 @@ const AppointmentCalendar: React.FC = () => {
           <div className="flex items-center space-x-4">
             <button
               onClick={goToPreviousMonth}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 touch-manipulation"
             >
               <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
               </svg>
             </button>
 
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
               {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </h2>
 
             <button
               onClick={goToNextMonth}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 touch-manipulation"
             >
               <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
@@ -642,7 +678,7 @@ const AppointmentCalendar: React.FC = () => {
 
             <button
               onClick={goToToday}
-              className="ml-2 px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+              className="ml-2 px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600 touch-manipulation"
             >
               Today
             </button>
@@ -666,7 +702,7 @@ const AppointmentCalendar: React.FC = () => {
             <div className="flex rounded-md shadow-sm">
               <button
                 onClick={() => setViewMode('month')}
-                className={`px-3 py-1 text-sm rounded-l-md ${
+                className={`px-3 py-1 text-sm rounded-l-md touch-manipulation ${
                   viewMode === 'month'
                     ? 'bg-primary-500 text-white'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -676,7 +712,7 @@ const AppointmentCalendar: React.FC = () => {
               </button>
               <button
                 onClick={() => setViewMode('week')}
-                className={`px-3 py-1 text-sm ${
+                className={`px-3 py-1 text-sm touch-manipulation ${
                   viewMode === 'week'
                     ? 'bg-primary-500 text-white'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -686,7 +722,7 @@ const AppointmentCalendar: React.FC = () => {
               </button>
               <button
                 onClick={() => setViewMode('day')}
-                className={`px-3 py-1 text-sm rounded-r-md ${
+                className={`px-3 py-1 text-sm rounded-r-md touch-manipulation ${
                   viewMode === 'day'
                     ? 'bg-primary-500 text-white'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
