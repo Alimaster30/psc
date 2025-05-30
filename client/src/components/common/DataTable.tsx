@@ -8,6 +8,8 @@ interface Column<T> {
   header: string;
   accessor: keyof T | ((item: T) => ReactNode);
   width?: string;
+  mobileLabel?: string; // Label for mobile card view
+  hideOnMobile?: boolean; // Hide this column on mobile
 }
 
 // Define data table props
@@ -45,34 +47,53 @@ function DataTable<T>({
   // Render loading skeleton
   if (isLoading) {
     return (
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-700">
-            <tr>
-              {columns.map((column, index) => (
-                <th
-                  key={index}
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                  style={{ width: column.width }}
-                >
-                  {column.header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <tr key={index}>
-                {columns.map((_, colIndex) => (
-                  <td key={colIndex} className="px-6 py-4 whitespace-nowrap">
-                    <Skeleton />
-                  </td>
+      <div>
+        {/* Desktop Loading */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                {columns.map((column, index) => (
+                  <th
+                    key={index}
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    style={{ width: column.width }}
+                  >
+                    {column.header}
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <tr key={index}>
+                  {columns.map((_, colIndex) => (
+                    <td key={colIndex} className="px-6 py-4 whitespace-nowrap">
+                      <Skeleton />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Loading */}
+        <div className="md:hidden space-y-4">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+              {columns
+                .filter(column => !column.hideOnMobile)
+                .map((_, colIndex) => (
+                  <div key={colIndex} className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                    <Skeleton width={80} height={16} />
+                    <Skeleton width={120} height={16} />
+                  </div>
+                ))}
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -88,7 +109,8 @@ function DataTable<T>({
 
   return (
     <div>
-      <div className="overflow-x-auto">
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
@@ -121,6 +143,34 @@ function DataTable<T>({
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {data.map((item) => (
+          <motion.div
+            key={keyExtractor(item)}
+            className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 ${
+              onRowClick ? 'cursor-pointer hover:shadow-md' : ''
+            }`}
+            onClick={() => onRowClick && onRowClick(item)}
+            whileHover={{ scale: onRowClick ? 1.02 : 1 }}
+            transition={{ duration: 0.2 }}
+          >
+            {columns
+              .filter(column => !column.hideOnMobile)
+              .map((column, index) => (
+                <div key={index} className="flex justify-between items-start py-2 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400 flex-shrink-0 mr-4">
+                    {column.mobileLabel || column.header}:
+                  </span>
+                  <span className="text-sm text-gray-900 dark:text-gray-100 text-right flex-1">
+                    {getCellContent(item, column.accessor)}
+                  </span>
+                </div>
+              ))}
+          </motion.div>
+        ))}
       </div>
 
       {pagination && pagination.totalPages > 1 && (
@@ -160,11 +210,11 @@ function DataTable<T>({
                     <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 </button>
-                
+
                 {Array.from({ length: pagination.totalPages }).map((_, index) => {
                   const page = index + 1;
                   const isCurrentPage = page === pagination.currentPage;
-                  
+
                   // Show only current page, first, last, and pages around current
                   if (
                     page === 1 ||
@@ -185,7 +235,7 @@ function DataTable<T>({
                       </button>
                     );
                   }
-                  
+
                   // Show ellipsis for gaps
                   if (
                     (page === 2 && pagination.currentPage > 3) ||
@@ -200,10 +250,10 @@ function DataTable<T>({
                       </span>
                     );
                   }
-                  
+
                   return null;
                 })}
-                
+
                 <button
                   onClick={() => pagination.onPageChange(pagination.currentPage + 1)}
                   disabled={pagination.currentPage === pagination.totalPages}

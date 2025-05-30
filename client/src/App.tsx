@@ -8,6 +8,7 @@ import { ThemeProvider, useTheme } from './context/ThemeContext';
 
 // Layouts
 import Layout from './components/layout/Layout';
+import LoadingScreen from './components/common/LoadingScreen';
 
 // Auth Pages
 import Login from './pages/auth/Login';
@@ -70,7 +71,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRoles
   const { isAuthenticated, user, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return <LoadingScreen message="Authenticating..." />;
   }
 
   if (!isAuthenticated) {
@@ -93,7 +94,7 @@ const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return <LoadingScreen message="Loading..." />;
   }
 
   if (isAuthenticated) {
