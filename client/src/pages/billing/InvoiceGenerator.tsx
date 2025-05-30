@@ -92,17 +92,9 @@ const InvoiceGenerator: React.FC = () => {
     }
   }, [id]);
 
-  const handlePrint = useReactToPrint({
+  const printFunction = useReactToPrint({
     contentRef: invoiceRef,
     documentTitle: `Invoice_${billing?.invoiceNumber || 'Unknown'}`,
-    onBeforeGetContent: () => {
-      setIsGenerating(true);
-      return new Promise<void>((resolve) => {
-        setTimeout(() => {
-          resolve();
-        }, 500);
-      });
-    },
     onAfterPrint: () => {
       setIsGenerating(false);
       toast.success('Invoice printed successfully');
@@ -112,6 +104,11 @@ const InvoiceGenerator: React.FC = () => {
       toast.error('Failed to print invoice');
     },
   });
+
+  const handlePrint = () => {
+    setIsGenerating(true);
+    printFunction();
+  };
 
   const handleDownloadPDF = async () => {
     try {
