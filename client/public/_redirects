@@ -1,0 +1,8 @@
+# Redirect all routes to index.html for React Router
+# This ensures that direct URL access and page refreshes work correctly
+
+# API routes should not be redirected
+/api/* https://prime-skin-clinic-api.onrender.com/api/:splat 200
+
+# All other routes should serve index.html for React Router
+/* /index.html 200

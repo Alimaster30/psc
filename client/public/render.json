@@ -1,0 +1,12 @@
+{
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "https://prime-skin-clinic-api.onrender.com/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+Options -MultiViews
+RewriteEngine On
+
+# Handle Angular and React Router
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
+
+# Security headers
+Header always set X-Frame-Options DENY
+Header always set X-Content-Type-Options nosniff
+Header always set Referrer-Policy strict-origin-when-cross-origin
+
+# Cache static assets
+<filesMatch "\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$">
+  ExpiresActive on
+  ExpiresDefault "access plus 1 year"
+</filesMatch>
+
+# Don't cache index.html
+<filesMatch "index.html$">
+  ExpiresActive on
+  ExpiresDefault "access plus 0 seconds"
+  Header set Cache-Control "no-cache, no-store, must-revalidate"
+  Header set Pragma "no-cache"
+  Header set Expires 0
+</filesMatch>
