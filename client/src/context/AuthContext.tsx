@@ -65,18 +65,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const storedToken = localStorage.getItem('token');
         const storedUser = localStorage.getItem('user');
 
-        console.log('Initializing auth:', { hasToken: !!storedToken, hasUser: !!storedUser });
+        console.log('Initializing auth:', {
+          hasToken: !!storedToken,
+          hasUser: !!storedUser,
+          currentPath: window.location.pathname
+        });
 
         if (storedToken && storedUser) {
           const userData = JSON.parse(storedUser);
 
-          setToken(storedToken);
-          setUser(userData);
+          // Validate token format (basic check)
+          if (storedToken.length > 20 && userData.email && userData.role) {
+            setToken(storedToken);
+            setUser(userData);
 
-          // Set default Authorization header for all requests
-          axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+            // Set default Authorization header for all requests
+            axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
 
-          console.log('Auth restored from localStorage:', { user: userData.email, role: userData.role });
+            console.log('Auth restored from localStorage:', {
+              user: userData.email,
+              role: userData.role,
+              userId: userData.id || userData._id
+            });
+          } else {
+            console.log('Invalid stored auth data, clearing...');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+          }
         } else {
           console.log('No stored auth found');
         }
@@ -86,7 +101,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       } finally {
-        setIsLoading(false);
+        // Add a small delay to ensure state is properly set
+        setTimeout(() => {
+          setIsLoading(false);
+          console.log('Auth initialization complete');
+        }, 100);
       }
     };
 

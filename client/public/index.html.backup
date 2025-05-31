@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prime Skin Clinic</title>
+    <script>
+        // Simple client-side routing fallback
+        // This runs before React loads and handles direct URL access
+        (function() {
+            const path = window.location.pathname;
+            
+            // If we're not on the root path and this is a direct access (no referrer from same domain)
+            if (path !== '/' && (!document.referrer || !document.referrer.includes(window.location.hostname))) {
+                console.log('Direct access detected for path:', path);
+                // Store the intended path
+                sessionStorage.setItem('intendedPath', path + window.location.search + window.location.hash);
+                // Redirect to root to load the React app
+                if (window.location.pathname !== '/') {
+                    window.history.replaceState({}, '', '/');
+                }
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div id="root">
+        <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif;">
+            <div style="text-align: center;">
+                <h2>Loading Prime Skin Clinic...</h2>
+                <div style="border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 20px auto;"></div>
+            </div>
+        </div>
+    </div>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</body>
+</html>
