@@ -1,4 +1,2 @@
-# SPA Routing for React Router
-# All routes should serve index.html for client-side routing
-
+# React Router SPA - serve index.html for all routes
 /*    /index.html   200
