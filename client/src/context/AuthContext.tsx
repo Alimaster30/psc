@@ -60,18 +60,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Initialize auth state from localStorage
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    const initializeAuth = async () => {
+      try {
+        const storedToken = localStorage.getItem('token');
+        const storedUser = localStorage.getItem('user');
 
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+        console.log('Initializing auth:', { hasToken: !!storedToken, hasUser: !!storedUser });
 
-      // Set default Authorization header for all requests
-      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-    }
+        if (storedToken && storedUser) {
+          const userData = JSON.parse(storedUser);
 
-    setIsLoading(false);
+          setToken(storedToken);
+          setUser(userData);
+
+          // Set default Authorization header for all requests
+          axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+
+          console.log('Auth restored from localStorage:', { user: userData.email, role: userData.role });
+        } else {
+          console.log('No stored auth found');
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        // Clear corrupted data
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
   // Login function

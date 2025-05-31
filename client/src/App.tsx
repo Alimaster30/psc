@@ -76,11 +76,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRoles
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
   if (requiredRoles && user && !requiredRoles.includes(user.role)) {
-    return <Navigate to="/" />;
+    // Instead of redirecting to homepage, show an access denied message
+    // or redirect to a more appropriate page based on user role
+    console.log(`Access denied: User role '${user.role}' not in required roles:`, requiredRoles);
+
+    // For now, redirect to dashboard but we should show an error message
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
@@ -99,7 +104,7 @@ const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/" />;
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
