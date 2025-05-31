@@ -142,7 +142,7 @@ const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
 // App Routes
 const AppRoutes: React.FC = () => {
   const { isDarkMode } = useTheme();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   // Start NProgress on route change
   useEffect(() => {
@@ -153,6 +153,23 @@ const AppRoutes: React.FC = () => {
       NProgress.remove();
     };
   }, []);
+
+  // Handle intended path restoration after authentication
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      const intendedPath = sessionStorage.getItem('intendedPath');
+      if (intendedPath && intendedPath !== window.location.pathname) {
+        console.log('Restoring intended path:', intendedPath);
+        sessionStorage.removeItem('intendedPath');
+
+        // Use setTimeout to ensure React Router is ready
+        setTimeout(() => {
+          window.history.replaceState({}, '', intendedPath);
+          window.dispatchEvent(new PopStateEvent('popstate'));
+        }, 100);
+      }
+    }
+  }, [isAuthenticated, isLoading]);
 
   // Remove automatic logout redirect - let ProtectedRoute handle authentication
   // This prevents conflicts during login/logout state changes

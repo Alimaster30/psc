@@ -12,7 +12,60 @@
     <title>Prime Skin Clinic | Dermatology Clinic Management</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Loading fallback while React loads -->
+      <div id="initial-loading" style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Inter, sans-serif; background: #f8fafc;">
+        <div style="text-align: center;">
+          <div style="width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid #0284c7; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+          <h2 style="color: #1e293b; margin: 0; font-size: 18px; font-weight: 500;">Loading Prime Skin Clinic...</h2>
+          <p style="color: #64748b; margin: 8px 0 0; font-size: 14px;">Please wait while we prepare your dashboard</p>
+        </div>
+      </div>
+      <style>
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+    </div>
+
+    <!-- Client-side routing handler -->
+    <script>
+      // Handle client-side routing for SPA
+      (function() {
+        // Remove loading screen once React takes over
+        window.addEventListener('load', function() {
+          setTimeout(function() {
+            const loading = document.getElementById('initial-loading');
+            if (loading) {
+              loading.style.display = 'none';
+            }
+          }, 1000);
+        });
+
+        // Store the current path for React Router to handle
+        const currentPath = window.location.pathname;
+        const currentSearch = window.location.search;
+        const currentHash = window.location.hash;
+
+        // If we're not on the root and this looks like a direct access
+        if (currentPath !== '/' && !document.referrer.includes(window.location.hostname)) {
+          console.log('Direct access detected for:', currentPath);
+
+          // Store the intended destination
+          sessionStorage.setItem('intendedPath', currentPath + currentSearch + currentHash);
+
+          // For debugging
+          console.log('Stored intended path:', currentPath + currentSearch + currentHash);
+        }
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', function(event) {
+          console.log('Popstate event:', event.state);
+        });
+      })();
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
