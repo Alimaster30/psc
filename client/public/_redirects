@@ -1,8 +1,8 @@
-# Redirect all routes to index.html for React Router
-# This ensures that direct URL access and page refreshes work correctly
+# Netlify/Render style redirects for React Router SPA
+# This file must be in the root of the published directory
 
-# API routes should not be redirected
-/api/* https://prime-skin-clinic-api.onrender.com/api/:splat 200
+# Handle API routes - proxy to backend
+/api/* https://prime-skin-clinic-api.onrender.com/api/:splat 200!
 
-# All other routes should serve index.html for React Router
+# Handle all other routes - serve index.html for React Router
 /* /index.html 200
