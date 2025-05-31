@@ -34,6 +34,7 @@ services:
     plan: free
     buildCommand: cd client && npm install && npm run build && cd .. && npm install
     startCommand: npm run start:frontend
+    healthCheckPath: /health
     pullRequestPreviewsEnabled: false
     envVars:
       - key: NODE_ENV
