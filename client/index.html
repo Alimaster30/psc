@@ -40,7 +40,28 @@
             if (loading) {
               loading.style.display = 'none';
             }
-          }, 1000);
+          }, 500);
+        });
+
+        // Also remove loading screen when React root is populated
+        const observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length > 0) {
+              const root = document.getElementById('root');
+              if (root && root.children.length > 1) {
+                const loading = document.getElementById('initial-loading');
+                if (loading) {
+                  loading.style.display = 'none';
+                }
+                observer.disconnect();
+              }
+            }
+          });
+        });
+
+        observer.observe(document.getElementById('root'), {
+          childList: true,
+          subtree: true
         });
 
         // Store the current path for React Router to handle
@@ -48,9 +69,10 @@
         const currentSearch = window.location.search;
         const currentHash = window.location.hash;
 
-        // If we're not on the root and this looks like a direct access
-        if (currentPath !== '/' && !document.referrer.includes(window.location.hostname)) {
-          console.log('Direct access detected for:', currentPath);
+        // If we're not on the root, store the path (regardless of referrer)
+        // This handles both direct access and 404 redirects
+        if (currentPath !== '/' && currentPath !== '/index.html') {
+          console.log('Non-root path detected:', currentPath);
 
           // Store the intended destination
           sessionStorage.setItem('intendedPath', currentPath + currentSearch + currentHash);
