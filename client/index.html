@@ -31,8 +31,31 @@
 
     <!-- Client-side routing handler -->
     <script>
-      // Handle client-side routing for SPA
+      // Aggressive client-side routing for SPA
+      // This runs immediately when ANY page loads
       (function() {
+        // Check if we're on a 404 or error page
+        if (document.title.includes('Not Found') ||
+            document.body.textContent.includes('Not Found') ||
+            window.location.pathname !== '/' && window.location.pathname !== '/index.html') {
+
+          // Store the intended path
+          var currentPath = window.location.pathname;
+          var currentSearch = window.location.search;
+          var currentHash = window.location.hash;
+          var fullPath = currentPath + currentSearch + currentHash;
+
+          if (currentPath !== '/' && currentPath !== '/index.html') {
+            try {
+              sessionStorage.setItem('intendedPath', fullPath);
+              console.log('Stored intended path:', fullPath);
+            } catch(e) {}
+
+            // Force redirect to root
+            window.location.replace('/');
+            return;
+          }
+        }
         // Remove loading screen once React takes over
         window.addEventListener('load', function() {
           setTimeout(function() {

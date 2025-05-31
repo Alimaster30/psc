@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=/">
+    <script>
+        // Store path and redirect immediately
+        try {
+            sessionStorage.setItem('intendedPath', window.location.pathname + window.location.search + window.location.hash);
+        } catch(e) {}
+        window.location.replace('/');
+    </script>
+    <style>body{display:none;}</style>
+</head>
+<body></body>
+</html>
