@@ -7,6 +7,7 @@ import Button from '../../components/common/Button';
 import QuickActionButton from '../../components/common/QuickActionButton';
 import Breadcrumb from '../../components/common/Breadcrumb';
 import BeforeAfterComparison from '../../components/patients/BeforeAfterComparison';
+import PatientImageGallery from '../../components/patients/PatientImageGallery';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
@@ -585,6 +586,10 @@ const PatientDetail: React.FC = () => {
             )}
           </div>
 
+          {/* Image Gallery */}
+          <PatientImageGallery patientId={patient._id} />
+
+          {/* Before/After Comparison */}
           <BeforeAfterComparison patientId={patient._id} />
         </div>
       )}

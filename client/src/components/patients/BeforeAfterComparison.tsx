@@ -29,6 +29,13 @@ const BeforeAfterComparison: React.FC<BeforeAfterComparisonProps> = ({ patientId
   const [selectedPair, setSelectedPair] = useState<number | null>(null);
   const [selectedAfterImage, setSelectedAfterImage] = useState<string | null>(null);
 
+  // Get the API base URL for image display
+  const getImageUrl = (imageUrl: string) => {
+    const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://prime-skin-clinic-api.onrender.com/api';
+    const baseUrl = apiBaseUrl.replace('/api', '');
+    return `${baseUrl}${imageUrl}`;
+  };
+
   useEffect(() => {
     const fetchImagePairs = async () => {
       try {
@@ -195,9 +202,13 @@ const BeforeAfterComparison: React.FC<BeforeAfterComparisonProps> = ({ patientId
               </div>
               <div className="p-4">
                 <img
-                  src={currentPair.before.imageUrl}
+                  src={getImageUrl(currentPair.before.imageUrl)}
                   alt="Before treatment"
                   className="w-full h-auto rounded-md"
+                  onError={(e) => {
+                    console.error('Before image failed to load:', getImageUrl(currentPair.before.imageUrl));
+                    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzBMMTMwIDEwMEgxMTBWMTMwSDkwVjEwMEg3MEwxMDAgNzBaIiBmaWxsPSIjOUI5QjlCIi8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUI5QjlCIiBmb250LXNpemU9IjEyIj5JbWFnZSBub3QgZm91bmQ8L3RleHQ+Cjwvc3ZnPg==';
+                  }}
                 />
                 <div className="mt-2">
                   <p className="text-sm text-gray-700 dark:text-gray-300">
@@ -218,9 +229,13 @@ const BeforeAfterComparison: React.FC<BeforeAfterComparisonProps> = ({ patientId
                 </div>
                 <div className="p-4">
                   <img
-                    src={currentAfterImage.imageUrl}
+                    src={getImageUrl(currentAfterImage.imageUrl)}
                     alt="After treatment"
                     className="w-full h-auto rounded-md"
+                    onError={(e) => {
+                      console.error('After image failed to load:', getImageUrl(currentAfterImage.imageUrl));
+                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzBMMTMwIDEwMEgxMTBWMTMwSDkwVjEwMEg3MEwxMDAgNzBaIiBmaWxsPSIjOUI5QjlCIi8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUI5QjlCIiBmb250LXNpemU9IjEyIj5JbWFnZSBub3QgZm91bmQ8L3RleHQ+Cjwvc3ZnPg==';
+                    }}
                   />
                   <div className="mt-2">
                     <p className="text-sm text-gray-700 dark:text-gray-300">
