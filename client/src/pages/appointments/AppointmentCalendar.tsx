@@ -56,27 +56,21 @@ const AppointmentCalendar: React.FC = () => {
       try {
         setIsLoading(true);
 
-        // Mock doctors data for development
-        const mockDoctors = [
-          {
-            _id: '2',
-            firstName: 'Fatima',
-            lastName: 'Ali'
-          },
-          {
-            _id: '3',
-            firstName: 'Imran',
-            lastName: 'Ahmed'
+        // Fetch doctors from API
+        try {
+          const doctorsResponse = await api.get('/users?role=dermatologist');
+          const doctorsData = doctorsResponse.data.data || [];
+          setDoctors(doctorsData);
+
+          // Set default selected doctor if user is a dermatologist
+          if (user?.role === 'dermatologist') {
+            setSelectedDoctor(user.id);
+          } else if (doctorsData.length > 0) {
+            setSelectedDoctor(doctorsData[0]._id);
           }
-        ];
-
-        setDoctors(mockDoctors);
-
-        // Set default selected doctor if user is a dermatologist
-        if (user?.role === 'dermatologist') {
-          setSelectedDoctor(user.id);
-        } else if (mockDoctors.length > 0) {
-          setSelectedDoctor(mockDoctors[0]._id);
+        } catch (error) {
+          console.error('Error fetching doctors:', error);
+          toast.error('Failed to load doctors');
         }
 
         // Fetch appointments
@@ -102,117 +96,24 @@ const AppointmentCalendar: React.FC = () => {
       endDate.setMonth(endDate.getMonth() + 1);
       endDate.setDate(0);
 
-      // Mock appointments data for development
-      const mockAppointments = [
-        {
-          _id: '1',
-          patient: {
-            _id: '1',
-            firstName: 'Ahmed',
-            lastName: 'Khan'
-          },
-          dermatologist: {
-            _id: '2',
-            firstName: 'Fatima',
-            lastName: 'Ali'
-          },
-          date: new Date().toISOString().split('T')[0], // Today
-          startTime: '09:00',
-          endTime: '09:30',
-          status: 'confirmed',
-          reason: 'Acne consultation'
-        },
-        {
-          _id: '2',
-          patient: {
-            _id: '2',
-            firstName: 'Fatima',
-            lastName: 'Malik'
-          },
-          dermatologist: {
-            _id: '2',
-            firstName: 'Fatima',
-            lastName: 'Ali'
-          },
-          date: new Date().toISOString().split('T')[0], // Today
-          startTime: '10:00',
-          endTime: '10:30',
-          status: 'scheduled',
-          reason: 'Eczema follow-up'
-        },
-        {
-          _id: '3',
-          patient: {
-            _id: '3',
-            firstName: 'Muhammad',
-            lastName: 'Raza'
-          },
-          dermatologist: {
-            _id: '3',
-            firstName: 'Imran',
-            lastName: 'Ahmed'
-          },
-          date: new Date().toISOString().split('T')[0], // Today
-          startTime: '11:00',
-          endTime: '11:30',
-          status: 'completed',
-          reason: 'Psoriasis treatment'
-        },
-        {
-          _id: '4',
-          patient: {
-            _id: '4',
-            firstName: 'Ayesha',
-            lastName: 'Siddiqui'
-          },
-          dermatologist: {
-            _id: '2',
-            firstName: 'Fatima',
-            lastName: 'Ali'
-          },
-          date: (() => {
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            return tomorrow.toISOString().split('T')[0];
-          })(), // Tomorrow
-          startTime: '09:00',
-          endTime: '09:30',
-          status: 'scheduled',
-          reason: 'Skin allergy'
-        },
-        {
-          _id: '5',
-          patient: {
-            _id: '5',
-            firstName: 'Zainab',
-            lastName: 'Qureshi'
-          },
-          dermatologist: {
-            _id: '3',
-            firstName: 'Imran',
-            lastName: 'Ahmed'
-          },
-          date: (() => {
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            return tomorrow.toISOString().split('T')[0];
-          })(), // Tomorrow
-          startTime: '10:00',
-          endTime: '10:30',
-          status: 'confirmed',
-          reason: 'Hair loss consultation'
-        }
-      ];
+      // Build query parameters for API call
+      const params: any = {
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0]
+      };
 
-      // Filter appointments by selected doctor
-      const filteredAppointments = selectedDoctor
-        ? mockAppointments.filter(appointment => appointment.dermatologist._id === selectedDoctor)
-        : mockAppointments;
+      if (selectedDoctor) {
+        params.dermatologist = selectedDoctor;
+      }
 
-      setAppointments(filteredAppointments as Appointment[]);
+      // Fetch appointments from API
+      const response = await api.get('/appointments', { params });
+      const appointmentsData = response.data.data || [];
+
+      setAppointments(appointmentsData);
 
       // Generate calendar days
-      generateCalendarDays(startDate, endDate, filteredAppointments as Appointment[]);
+      generateCalendarDays(startDate, endDate, appointmentsData);
     } catch (error) {
       console.error('Error fetching appointments:', error);
       toast.error('Failed to load appointments');

@@ -126,121 +126,27 @@ const PatientDetail: React.FC = () => {
             setIsLoading(false);
             return;
           } else {
-            // If API response doesn't have the expected format, use mock data
-            console.log('API response format unexpected, using mock data');
+            // If API response doesn't have the expected format
+            console.log('API response format unexpected');
+            setPatient(null);
+            setIsLoading(false);
+            return;
           }
         } catch (apiError: any) {
           console.error('API Error:', apiError);
           if (apiError.response?.status === 404) {
             // Patient not found
             setPatient(null);
-            setIsLoading(false);
-            return;
           } else if (apiError.response?.status === 401) {
             toast.error('Please log in to view patient details');
-            setIsLoading(false);
-            return;
           } else if (apiError.response?.status === 403) {
             toast.error('Access denied');
-            setIsLoading(false);
-            return;
           } else {
-            console.log('API endpoint not available, using mock data');
+            toast.error('Failed to load patient information');
           }
+          setIsLoading(false);
+          return;
         }
-
-        // Fallback to mock data if API fails
-        const mockPatient = {
-          _id: id || '1',
-          firstName: 'Ahmed',
-          lastName: 'Khan',
-          email: 'ahmed.khan@example.com',
-          phoneNumber: '+92 300 1234567',
-          dateOfBirth: '1985-05-15',
-          gender: 'male',
-          address: 'House 123, Street 4, Islamabad, Pakistan',
-          medicalHistory: 'Patient has a history of eczema and mild psoriasis. No other significant medical conditions.',
-          allergies: ['Penicillin', 'Dust mites'],
-          bloodGroup: 'O+',
-          emergencyContact: {
-            name: 'Fatima Khan',
-            relationship: 'Wife',
-            phoneNumber: '+92 300 7654321'
-          },
-          createdAt: '2023-01-15T10:30:00.000Z'
-        };
-
-        const mockAppointments = [
-          {
-            _id: 'a1',
-            date: '2023-06-10T10:30:00.000Z',
-            startTime: '10:30 AM',
-            endTime: '11:00 AM',
-            status: 'completed',
-            reason: 'Skin rash on arms',
-            notes: 'Patient presented with rash on both arms. Prescribed topical cream.'
-          },
-          {
-            _id: 'a2',
-            date: '2023-07-15T11:00:00.000Z',
-            startTime: '11:00 AM',
-            endTime: '11:30 AM',
-            status: 'completed',
-            reason: 'Follow-up for skin rash',
-            notes: 'Rash has improved significantly. Continuing treatment for another week.'
-          },
-          {
-            _id: 'a3',
-            date: '2023-08-20T09:15:00.000Z',
-            startTime: '09:15 AM',
-            endTime: '09:45 AM',
-            status: 'scheduled',
-            reason: 'Final follow-up',
-            notes: ''
-          }
-        ];
-
-        const mockPrescriptions = [
-          {
-            _id: 'p1',
-            date: '2023-06-10',
-            medications: [
-              {
-                name: 'Hydrocortisone Cream 1%',
-                dosage: 'Apply thin layer',
-                frequency: 'Twice daily',
-                duration: '2 weeks'
-              },
-              {
-                name: 'Cetirizine 10mg',
-                dosage: '1 tablet',
-                frequency: 'Once daily',
-                duration: '1 week'
-              }
-            ],
-            instructions: 'Apply cream after washing and drying the affected area. Take antihistamine before bedtime.',
-            diagnosis: 'Contact dermatitis'
-          },
-          {
-            _id: 'p2',
-            date: '2023-07-15',
-            medications: [
-              {
-                name: 'Hydrocortisone Cream 1%',
-                dosage: 'Apply thin layer',
-                frequency: 'Once daily',
-                duration: '1 week'
-              }
-            ],
-            instructions: 'Continue applying cream to any remaining affected areas.',
-            diagnosis: 'Resolving contact dermatitis'
-          }
-        ];
-
-        setPatient(mockPatient);
-        setAppointments(mockAppointments);
-        setPrescriptions(mockPrescriptions);
-        setIsLoading(false);
       } catch (error) {
         console.error('Error fetching patient data:', error);
         toast.error('Failed to load patient information');

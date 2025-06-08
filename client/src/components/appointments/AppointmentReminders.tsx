@@ -4,6 +4,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import Card from '../common/Card';
 import Button from '../common/Button';
+import api from '../../services/api';
 
 interface Appointment {
   _id: string;
@@ -43,72 +44,16 @@ const AppointmentReminders: React.FC = () => {
         tomorrow.setDate(tomorrow.getDate() + 1);
         const tomorrowStr = tomorrow.toISOString().split('T')[0];
         
-        // In a real implementation, we would fetch from the API
-        // const response = await axios.get(`/api/appointments?date=${tomorrowStr}&status=scheduled`);
-        // setUpcomingAppointments(response.data.data);
-        
-        // For now, we'll use mock data
-        const mockAppointments = [
-          {
-            _id: '1',
-            patient: {
-              _id: '1',
-              firstName: 'Ahmed',
-              lastName: 'Khan',
-              phoneNumber: '+92 300 1234567',
-              email: 'ahmed.khan@example.com'
-            },
-            dermatologist: {
-              _id: '1',
-              firstName: 'Dr. Fatima',
-              lastName: 'Ali'
-            },
+        // Fetch appointments from API for tomorrow
+        const response = await api.get('/appointments', {
+          params: {
             date: tomorrowStr,
-            startTime: '10:00',
-            endTime: '10:30',
-            status: 'scheduled'
-          },
-          {
-            _id: '2',
-            patient: {
-              _id: '2',
-              firstName: 'Fatima',
-              lastName: 'Ali',
-              phoneNumber: '+92 301 2345678',
-              email: 'fatima.ali@example.com'
-            },
-            dermatologist: {
-              _id: '2',
-              firstName: 'Dr. Imran',
-              lastName: 'Ahmed'
-            },
-            date: tomorrowStr,
-            startTime: '11:00',
-            endTime: '11:30',
-            status: 'scheduled'
-          },
-          {
-            _id: '3',
-            patient: {
-              _id: '3',
-              firstName: 'Muhammad',
-              lastName: 'Raza',
-              phoneNumber: '+92 302 3456789',
-              email: 'muhammad.raza@example.com'
-            },
-            dermatologist: {
-              _id: '1',
-              firstName: 'Dr. Fatima',
-              lastName: 'Ali'
-            },
-            date: tomorrowStr,
-            startTime: '14:00',
-            endTime: '14:30',
             status: 'scheduled'
           }
-        ];
-        
-        setUpcomingAppointments(mockAppointments);
+        });
+
+        const appointmentsData = response.data.data || [];
+        setUpcomingAppointments(appointmentsData);
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching upcoming appointments:', error);

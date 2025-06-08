@@ -45,81 +45,25 @@ const UserDetail: React.FC = () => {
         setIsLoading(true);
         console.log('Fetching user with ID:', id);
 
-        // Try to fetch from API
-        try {
-          const response = await api.get(`/users/${id}`);
-          if (response.data && response.data.data) {
-            setUser(response.data.data);
-          } else {
-            // If API response doesn't have the expected format, use mock data
-            useMockData();
-          }
-        } catch (apiError: any) {
-          console.error('API Error:', apiError);
-          if (apiError.response?.status === 404) {
-            // User not found
-            setUser(null);
-          } else if (apiError.response?.status === 401) {
-            toast.error('Please log in to view user details');
-          } else if (apiError.response?.status === 403) {
-            toast.error('Access denied');
-          } else {
-            console.log('API endpoint not available, using mock data');
-            useMockData();
-          }
-        }
-      } catch (error) {
+        // Fetch user from API
+        const response = await api.get(`/users/${id}`);
+        setUser(response.data.data);
+      } catch (error: any) {
         console.error('Error fetching user:', error);
-        toast.error('Failed to load user details');
+
+        if (error.response?.status === 404) {
+          toast.error('User not found');
+          setUser(null);
+        } else if (error.response?.status === 401) {
+          toast.error('Please log in to view user details');
+        } else if (error.response?.status === 403) {
+          toast.error('Access denied');
+        } else {
+          toast.error('Failed to load user details');
+        }
       } finally {
         setIsLoading(false);
       }
-    };
-
-    // Function to set mock data
-    const useMockData = () => {
-      // Find the user with the matching ID from our mock data
-      const mockUsers = [
-        {
-          _id: '1',
-          firstName: 'Admin',
-          lastName: 'User',
-          email: 'admin@psc.com',
-          role: 'admin',
-          isActive: true,
-          phoneNumber: '+92 300 1234567',
-          lastLogin: new Date().toISOString(),
-          createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
-          updatedAt: new Date().toISOString()
-        },
-        {
-          _id: '2',
-          firstName: 'Dr',
-          lastName: 'Dermatologist',
-          email: 'doctor@psc.com',
-          role: 'dermatologist',
-          isActive: true,
-          phoneNumber: '+92 300 7654321',
-          lastLogin: new Date().toISOString(),
-          createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days ago
-          updatedAt: new Date().toISOString()
-        },
-        {
-          _id: '3',
-          firstName: 'Front',
-          lastName: 'Desk',
-          email: 'receptionist@psc.com',
-          role: 'receptionist',
-          isActive: true,
-          phoneNumber: '+92 300 9876543',
-          lastLogin: new Date().toISOString(),
-          createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(), // 90 days ago
-          updatedAt: new Date().toISOString()
-        }
-      ];
-
-      const foundUser = mockUsers.find(u => u._id === id);
-      setUser(foundUser ? { ...foundUser, role: foundUser.role as 'admin' | 'receptionist' | 'dermatologist' } : null);
     };
 
     fetchUser();
@@ -129,21 +73,24 @@ const UserDetail: React.FC = () => {
     if (!user) return;
 
     try {
-      try {
-        // Try to update via API
-        await api.patch(`/users/${id}/status`, {
-          isActive: !user.isActive,
-        });
-      } catch (apiError) {
-        console.log('API endpoint not available, updating UI only');
-      }
+      // Update user status via API
+      await api.patch(`/users/${id}/status`, {
+        isActive: !user.isActive,
+      });
 
       // Update local state
       setUser(prev => prev ? { ...prev, isActive: !prev.isActive } : null);
       toast.success(`User ${user.isActive ? 'deactivated' : 'activated'} successfully`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error toggling user status:', error);
-      toast.error('Failed to update user status');
+
+      if (error.response?.status === 403) {
+        toast.error('You do not have permission to update user status');
+      } else if (error.response?.status === 404) {
+        toast.error('User not found');
+      } else {
+        toast.error('Failed to update user status');
+      }
     }
   };
 
