@@ -32,6 +32,16 @@ ChartJS.register(
 );
 
 interface AnalyticsData {
+  summary?: {
+    totalPatients: number;
+    patientsChange: number;
+    monthlyRevenue: number;
+    revenueChange: number;
+    totalAppointments: number;
+    appointmentsChange: number;
+    newPatients: number;
+    newPatientsChange: number;
+  };
   patientGrowth: {
     labels: string[];
     data: number[];
@@ -97,42 +107,18 @@ const Analytics: React.FC = () => {
         // const response = await api.get(`/api/analytics?timeRange=${timeRange}`);
         // setAnalyticsData(response.data);
         
-        // For now, we'll use mock data
-        const mockData: AnalyticsData = {
-          patientGrowth: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            data: [25, 30, 35, 40, 45, 55, 60, 65, 70, 75, 80, 85]
-          },
-          revenue: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            data: [50000, 60000, 55000, 65000, 70000, 75000, 80000, 85000, 90000, 95000, 100000, 110000]
-          },
-          appointmentsByStatus: {
-            labels: ['Completed', 'Scheduled', 'Cancelled', 'No-Show'],
-            data: [65, 25, 5, 5]
-          },
-          appointmentsByDoctor: {
-            labels: ['Dr. Fatima Ali', 'Dr. Imran Ahmed', 'Dr. Zainab Khan'],
-            data: [45, 35, 20]
-          },
-          topTreatments: {
-            labels: ['Acne Treatment', 'Eczema Treatment', 'Psoriasis Treatment', 'Skin Tag Removal', 'Mole Examination'],
-            data: [30, 25, 20, 15, 10]
-          },
-          patientDemographics: {
-            labels: ['0-18', '19-35', '36-50', '51-65', '65+'],
-            data: [15, 35, 25, 15, 10]
-          }
-        };
+        // Fetch analytics data from API
+        const response = await api.get('/analytics');
+        const analyticsData = response.data.data;
+
+        setAnalyticsData(analyticsData);
         
-        setAnalyticsData(mockData);
-        
-        // Set summary cards data
-        const mockSummaryCards: SummaryCard[] = [
+        // Set summary cards data from API response
+        const summaryCardsData: SummaryCard[] = [
           {
             title: 'Total Patients',
-            value: '850',
-            change: 12.5,
+            value: analyticsData.summary?.totalPatients?.toString() || '0',
+            change: analyticsData.summary?.patientsChange || 0,
             icon: (
               <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -141,8 +127,8 @@ const Analytics: React.FC = () => {
           },
           {
             title: 'Monthly Revenue',
-            value: 'PKR 110,000',
-            change: 8.3,
+            value: `PKR ${analyticsData.summary?.monthlyRevenue?.toLocaleString() || '0'}`,
+            change: analyticsData.summary?.revenueChange || 0,
             icon: (
               <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -151,8 +137,8 @@ const Analytics: React.FC = () => {
           },
           {
             title: 'Appointments',
-            value: '120',
-            change: 5.2,
+            value: analyticsData.summary?.totalAppointments?.toString() || '0',
+            change: analyticsData.summary?.appointmentsChange || 0,
             icon: (
               <svg className="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -161,8 +147,8 @@ const Analytics: React.FC = () => {
           },
           {
             title: 'New Patients',
-            value: '35',
-            change: 15.0,
+            value: analyticsData.summary?.newPatients?.toString() || '0',
+            change: analyticsData.summary?.newPatientsChange || 0,
             icon: (
               <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
@@ -170,8 +156,8 @@ const Analytics: React.FC = () => {
             )
           }
         ];
-        
-        setSummaryCards(mockSummaryCards);
+
+        setSummaryCards(summaryCardsData);
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching analytics data:', error);

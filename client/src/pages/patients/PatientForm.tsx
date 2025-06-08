@@ -103,42 +103,7 @@ const PatientForm: React.FC = () => {
             toast.error('Access denied');
             return;
           } else {
-            console.log('API endpoint not available, using mock data as fallback');
-            // Fallback to mock data if API is not available
-            const mockPatient = {
-              _id: id,
-              firstName: 'Ahmed',
-              lastName: 'Khan',
-              email: 'ahmed.khan@example.com',
-              phoneNumber: '+92 300 1234567',
-              dateOfBirth: '1985-05-15',
-              gender: 'male',
-              address: 'House 123, Street 4, Islamabad, Pakistan',
-              medicalHistory: 'Patient has a history of eczema and mild psoriasis. No other significant medical conditions.',
-              allergies: ['Penicillin', 'Dust mites'],
-              bloodGroup: 'O+',
-              emergencyContact: {
-                name: 'Fatima Khan',
-                relationship: 'Wife',
-                phoneNumber: '+92 300 7654321'
-              }
-            };
-
-            setFormData({
-              firstName: mockPatient.firstName,
-              lastName: mockPatient.lastName,
-              email: mockPatient.email,
-              phoneNumber: mockPatient.phoneNumber,
-              dateOfBirth: mockPatient.dateOfBirth,
-              gender: mockPatient.gender,
-              address: mockPatient.address,
-              medicalHistory: mockPatient.medicalHistory,
-              allergies: mockPatient.allergies.join(', '),
-              bloodGroup: mockPatient.bloodGroup,
-              emergencyContactName: mockPatient.emergencyContact.name,
-              emergencyContactRelationship: mockPatient.emergencyContact.relationship,
-              emergencyContactPhone: mockPatient.emergencyContact.phoneNumber
-            });
+            toast.error('Failed to load patient data');
           }
         }
       } catch (error) {
@@ -270,11 +235,7 @@ const PatientForm: React.FC = () => {
         } else if (apiError.response?.status === 400) {
           toast.error(apiError.response?.data?.message || 'Invalid patient data');
         } else {
-          console.log('API endpoint not available, simulating success');
-          // Fallback: simulate success for development
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          toast.success(`Patient ${isEditMode ? 'updated' : 'created'} successfully (simulated)`);
-          navigate(`/patients${isEditMode ? `/${id}` : ''}`);
+          toast.error(`Failed to ${isEditMode ? 'update' : 'create'} patient`);
         }
       }
     } catch (error) {

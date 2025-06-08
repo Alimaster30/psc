@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import Card from '../common/Card';
+import api from '../../services/api';
 
 interface PatientImage {
   _id: string;
@@ -34,12 +35,8 @@ const BeforeAfterComparison: React.FC<BeforeAfterComparisonProps> = ({ patientId
         setIsLoading(true);
 
         try {
-          // Try to fetch from API
-          const response = await axios.get(`https://prime-skin-clinic-api.onrender.com/api/patient-images/patient/${patientId}/before-after`, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          });
+          // Fetch from API
+          const response = await api.get(`/patient-images/patient/${patientId}/before-after`);
           if (response.data && response.data.data) {
             setImagePairs(response.data.data);
 
@@ -52,12 +49,13 @@ const BeforeAfterComparison: React.FC<BeforeAfterComparisonProps> = ({ patientId
               }
             }
           } else {
-            // If API response doesn't have the expected format, use mock data
-            useMockData();
+            console.log('No before/after image pairs found');
+            setImagePairs([]);
           }
         } catch (apiError) {
-          console.log('API endpoint not available, using mock data');
-          useMockData();
+          console.error('Error fetching before/after images:', apiError);
+          toast.error('Failed to load before/after images');
+          setImagePairs([]);
         }
       } catch (error) {
         console.error('Error in BeforeAfterComparison:', error);
@@ -67,62 +65,7 @@ const BeforeAfterComparison: React.FC<BeforeAfterComparisonProps> = ({ patientId
       }
     };
 
-    // Function to set mock data
-    const useMockData = () => {
-      // Create mock data for before/after image pairs
-      const mockImagePairs: ImagePair[] = [
-        {
-          before: {
-            _id: 'before-1',
-            imageUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80',
-            thumbnailUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80',
-            category: 'acne',
-            description: 'Acne before treatment',
-            uploadedAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days ago
-            isBefore: true
-          },
-          after: [
-            {
-              _id: 'after-1',
-              imageUrl: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80',
-              thumbnailUrl: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80',
-              category: 'acne',
-              description: 'Acne after 4 weeks of treatment',
-              uploadedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
-              isBefore: false
-            }
-          ]
-        },
-        {
-          before: {
-            _id: 'before-2',
-            imageUrl: 'https://images.unsplash.com/photo-1603570388466-eb4fe5617f0d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80',
-            thumbnailUrl: 'https://images.unsplash.com/photo-1603570388466-eb4fe5617f0d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80',
-            category: 'eczema',
-            description: 'Eczema before treatment',
-            uploadedAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(), // 90 days ago
-            isBefore: true
-          },
-          after: [
-            {
-              _id: 'after-2',
-              imageUrl: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80',
-              thumbnailUrl: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80',
-              category: 'eczema',
-              description: 'Eczema after 8 weeks of treatment',
-              uploadedAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(), // 45 days ago
-              isBefore: false
-            }
-          ]
-        }
-      ];
 
-      setImagePairs(mockImagePairs);
-
-      // Set default selections
-      setSelectedPair(0);
-      setSelectedAfterImage('after-1');
-    };
 
     if (patientId) {
       fetchImagePairs();

@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
+import api from '../../services/api';
 
 interface Patient {
   _id: string;
@@ -62,86 +63,30 @@ const PatientImageUpload: React.FC = () => {
         setIsLoadingImages(true);
 
         try {
-          // Try to fetch patient details from API
-          const patientResponse = await axios.get(`/api/patients/${patientId}`);
+          // Fetch patient details from API
+          const patientResponse = await api.get(`/patients/${patientId}`);
           setPatient(patientResponse.data.data);
         } catch (apiError) {
-          console.log('API endpoint for patient not available, using mock data');
-          // Use mock patient data
-          setPatient({
-            _id: patientId || '1',
-            firstName: 'John',
-            lastName: 'Doe',
-            email: 'john.doe@example.com'
-          });
+          console.error('Error fetching patient:', apiError);
+          toast.error('Failed to load patient information');
         }
 
         try {
-          // Try to fetch existing images from API
-          const imagesResponse = await axios.get(`/api/patient-images?patient=${patientId}`);
-          setExistingImages(imagesResponse.data.data);
+          // Fetch existing images from API
+          const imagesResponse = await api.get(`/patient-images?patient=${patientId}`);
+          setExistingImages(imagesResponse.data.data || []);
 
           // Filter out "before" images for the dropdown
-          const beforeImgs = imagesResponse.data.data.filter((img: PatientImage) => img.isBefore);
+          const beforeImgs = (imagesResponse.data.data || []).filter((img: PatientImage) => img.isBefore);
           setBeforeImages(beforeImgs);
         } catch (apiError) {
-          console.log('API endpoint for images not available, using mock data');
-          // Use mock image data
-          const mockImages: PatientImage[] = [
-            {
-              _id: 'before-1',
-              imageUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80',
-              thumbnailUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80',
-              category: 'acne',
-              description: 'Acne before treatment',
-              uploadedAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days ago
-              isBefore: true
-            },
-            {
-              _id: 'before-2',
-              imageUrl: 'https://images.unsplash.com/photo-1603570388466-eb4fe5617f0d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80',
-              thumbnailUrl: 'https://images.unsplash.com/photo-1603570388466-eb4fe5617f0d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80',
-              category: 'eczema',
-              description: 'Eczema before treatment',
-              uploadedAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(), // 90 days ago
-              isBefore: true
-            }
-          ];
-
-          setExistingImages(mockImages);
-
-          // Filter out "before" images for the dropdown
-          const beforeImgs = mockImages.filter(img => img.isBefore);
-          setBeforeImages(beforeImgs);
+          console.error('Error fetching images:', apiError);
+          toast.error('Failed to load existing images');
+          setExistingImages([]);
+          setBeforeImages([]);
         }
 
-        // In demo mode, set a default mock file and preview
-        // This ensures the upload button is not disabled
-        const mockImageUrl = 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80';
 
-        // Create a mock file object
-        fetch(mockImageUrl)
-          .then(res => res.blob())
-          .then(blob => {
-            const mockFile = new File([blob], 'demo-image.jpg', { type: 'image/jpeg' });
-
-            // Set the mock file and preview in the state
-            setImageData(prev => ({
-              ...prev,
-              file: mockFile,
-              preview: mockImageUrl,
-              category: 'acne' // Set a default category
-            }));
-          })
-          .catch(err => {
-            console.error('Error creating mock file:', err);
-            // If fetch fails, create a simple mock file
-            const mockFile = new File([''], 'demo-image.jpg', { type: 'image/jpeg' });
-            setImageData(prev => ({
-              ...prev,
-              file: mockFile
-            }));
-          });
       } catch (error) {
         console.error('Error fetching data:', error);
         toast.error('Failed to load data');
@@ -201,8 +146,12 @@ const PatientImageUpload: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // In demo mode, we don't need to check for a file
-    // But we'll still check for category
+    // Validate required fields
+    if (!imageData.file) {
+      toast.error('Please select an image file');
+      return;
+    }
+
     if (!imageData.category) {
       toast.error('Please specify the category');
       return;
@@ -217,32 +166,12 @@ const PatientImageUpload: React.FC = () => {
     try {
       setIsLoading(true);
 
-      // If we have a file, log its name
-      if (imageData.file) {
-        console.log('Uploading image:', imageData.file.name);
-      } else {
-        console.log('No file selected, using demo mode');
-
-        // Create a mock file for demo mode if none exists
-        const mockFile = new File([''], 'demo-image.jpg', { type: 'image/jpeg' });
-        setImageData(prev => ({
-          ...prev,
-          file: mockFile
-        }));
-      }
+      console.log('Uploading image:', imageData.file.name);
 
       // Create form data
       const formData = new FormData();
       formData.append('patientId', patientId || '');
-
-      // If we have a file, append it, otherwise append a mock file
-      if (imageData.file) {
-        formData.append('image', imageData.file);
-      } else {
-        // Create a simple mock file
-        const mockFile = new File([''], 'demo-image.jpg', { type: 'image/jpeg' });
-        formData.append('image', mockFile);
-      }
+      formData.append('image', imageData.file);
 
       formData.append('category', imageData.category);
       formData.append('description', imageData.description);
@@ -253,34 +182,15 @@ const PatientImageUpload: React.FC = () => {
         formData.append('relatedImageId', imageData.relatedImageId);
       }
 
-      try {
-        // Try to upload image via API
-        await axios.post('https://prime-skin-clinic-api.onrender.com/api/patient-images', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-        });
+      // Upload image via API
+      await api.post('/patient-images', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
-        toast.success('Image uploaded successfully');
-        navigate(`/patients/${patientId}`);
-      } catch (apiError) {
-        console.log('API endpoint for image upload not available, simulating success');
-
-        // In demo mode, we'll simulate a successful upload
-        // First show a loading message
-        toast.loading('Processing image...', { duration: 1000 });
-
-        // Then simulate a successful upload after a short delay
-        setTimeout(() => {
-          toast.success('Image uploaded successfully (demo mode)');
-
-          // Add a small delay before navigating to make the success message visible
-          setTimeout(() => {
-            navigate(`/patients/${patientId}`);
-          }, 500);
-        }, 1500);
-      }
+      toast.success('Image uploaded successfully');
+      navigate(`/patients/${patientId}`);
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error('Failed to upload image');

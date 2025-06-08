@@ -102,18 +102,7 @@ const Dashboard: React.FC = () => {
             setRevenue(revenueResponse.data.data);
           } catch (error) {
             console.error('Error fetching revenue data:', error);
-            // Generate fallback data for revenue
-            const currentMonth = new Date().getMonth() + 1;
-            const revenueData = [];
-            for (let i = 0; i < 6; i++) {
-              const month = currentMonth - i <= 0 ? currentMonth - i + 12 : currentMonth - i;
-              // Create a pattern that shows growth over time
-              const baseRevenue = 200000; // Base revenue
-              const growthFactor = 50000; // Growth per month
-              const revenue = baseRevenue + (i * growthFactor);
-              revenueData.push({ month, revenue });
-            }
-            setRevenue(revenueData.reverse());
+            setRevenue([]);
           }
         } else if (user?.role === 'dermatologist') {
           // Dermatologist dashboard data - fetch from API

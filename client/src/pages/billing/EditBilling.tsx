@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import { useAuth } from '../../context/AuthContext';
-import { getBillingById } from '../../services/mockData';
+import api from '../../services/api';
 
 interface Patient {
   _id: string;
@@ -106,47 +106,56 @@ const EditBilling: React.FC = () => {
       try {
         setIsLoading(true);
 
-        // Get billing data by ID from mock data
-        const mockBillingData = getBillingById(id);
+        // Fetch billing data from API
+        const response = await api.get(`/billing/${id}`);
+        const billingData = response.data.data;
 
-        if (!mockBillingData) {
+        if (!billingData) {
           toast.error('Billing record not found');
           navigate('/billing');
           return;
         }
 
-        setBilling(mockBillingData as any);
+        setBilling(billingData);
 
         // Convert billing data to form format
         setFormData({
-          patient: mockBillingData.patient._id,
-          appointment: (mockBillingData as any).appointment || '',
-          services: mockBillingData.services.map((service: any) => ({
+          patient: billingData.patient._id,
+          appointment: billingData.appointment || '',
+          services: billingData.services.map((service: any) => ({
             name: service.name,
             description: service.description || '',
-            amount: service.totalPrice || service.unitPrice || service.price || 0,
+            amount: service.totalPrice || service.unitPrice || service.amount || 0,
           })),
-          subtotal: mockBillingData.subtotal,
-          tax: mockBillingData.tax,
-          discount: mockBillingData.discount,
+          subtotal: billingData.subtotal,
+          tax: billingData.tax,
+          discount: billingData.discount,
           discountType: 'amount',
-          discountReason: mockBillingData.notes?.includes('Discount:')
-            ? mockBillingData.notes.split('Discount:')[1]?.split('\n')[0]?.trim() || ''
+          discountReason: billingData.notes?.includes('Discount:')
+            ? billingData.notes.split('Discount:')[1]?.split('\n')[0]?.trim() || ''
             : '',
-          total: mockBillingData.total,
-          amountPaid: mockBillingData.amountPaid,
-          paymentStatus: mockBillingData.paymentStatus,
-          paymentMethod: mockBillingData.paymentMethod || 'cash',
-          paymentDate: mockBillingData.paymentDate
-            ? new Date(mockBillingData.paymentDate).toISOString().split('T')[0]
+          total: billingData.total,
+          amountPaid: billingData.amountPaid,
+          paymentStatus: billingData.paymentStatus,
+          paymentMethod: billingData.paymentMethod || 'cash',
+          paymentDate: billingData.paymentDate
+            ? new Date(billingData.paymentDate).toISOString().split('T')[0]
             : new Date().toISOString().split('T')[0],
-          notes: mockBillingData.notes || '',
+          notes: billingData.notes || '',
         });
 
         setIsLoading(false);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching billing:', error);
-        toast.error('Failed to load billing information');
+
+        if (error.response?.status === 404) {
+          toast.error('Billing record not found');
+        } else if (error.response?.status === 403) {
+          toast.error('You do not have permission to view this billing record');
+        } else {
+          toast.error('Failed to load billing information');
+        }
+
         navigate('/billing');
       }
     };
@@ -252,8 +261,8 @@ const EditBilling: React.FC = () => {
           : formData.notes,
       };
 
-      // Simulate API call for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Update billing via API
+      await api.put(`/billing/${id}`, updateData);
       toast.success('Billing updated successfully');
       navigate('/billing');
     } catch (error: any) {

@@ -4,6 +4,7 @@ import axios from 'axios';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import DataTable from '../../components/common/DataTable';
+import api from '../../services/api';
 
 interface Backup {
   _id: string;
@@ -19,58 +20,17 @@ const BackupManagement: React.FC = () => {
   const [isCreatingBackup, setIsCreatingBackup] = useState(false);
   const [backups, setBackups] = useState<Backup[]>([]);
 
-  // Mock backups data (in a real app, this would come from the API)
-  const mockBackups: Backup[] = [
-    {
-      _id: '1',
-      backupId: 'backup-1683456789',
-      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      size: '42.5 MB',
-      status: 'completed',
-      downloadUrl: '#',
-    },
-    {
-      _id: '2',
-      backupId: 'backup-1683356789',
-      timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-      size: '41.2 MB',
-      status: 'completed',
-      downloadUrl: '#',
-    },
-    {
-      _id: '3',
-      backupId: 'backup-1683256789',
-      timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-      size: '40.8 MB',
-      status: 'completed',
-      downloadUrl: '#',
-    },
-  ];
-
-  // Fetch backups
+  // Fetch backups from API
   useEffect(() => {
     const fetchBackups = async () => {
       try {
         setIsLoading(true);
-
-        try {
-          // Try to fetch from API
-          const response = await axios.get('/api/backups');
-          if (response.data && response.data.data) {
-            setBackups(response.data.data);
-          } else {
-            // If API response doesn't have the expected format, use mock data
-            console.log('API response format unexpected, using mock data');
-            setBackups(mockBackups);
-          }
-        } catch (apiError) {
-          console.log('API endpoint not available, using mock data');
-          // Use mock data when API is not available
-          setBackups(mockBackups);
-        }
+        const response = await api.get('/admin/backups');
+        setBackups(response.data.data || []);
       } catch (error) {
-        console.error('Error in fetchBackups:', error);
-        toast.error('Failed to load backup history');
+        console.error('Error fetching backups:', error);
+        toast.error('Failed to load backup data');
+        setBackups([]);
       } finally {
         setIsLoading(false);
       }
@@ -79,13 +39,15 @@ const BackupManagement: React.FC = () => {
     fetchBackups();
   }, []);
 
+
+
   const createBackup = async () => {
     try {
       setIsCreatingBackup(true);
       toast.loading('Initiating backup process...');
 
       // Call the API to create a backup
-      const response = await axios.get('/api/backups/create');
+      const response = await api.post('/admin/backups');
 
       if (response.data && response.data.success) {
         // Add the new backup to the list
@@ -139,7 +101,7 @@ const BackupManagement: React.FC = () => {
 
       try {
         // Try to call the API
-        const response = await axios.get(`/api/backups/download/${backupId}`, {
+        const response = await api.get(`/admin/backups/${backupId}/download`, {
           responseType: 'blob' // Important for file downloads
         });
 

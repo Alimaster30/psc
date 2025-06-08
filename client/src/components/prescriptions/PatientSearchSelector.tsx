@@ -39,38 +39,7 @@ const PatientSearchSelector: React.FC<PatientSearchSelectorProps> = ({
       } catch (error) {
         console.error('Error fetching patients:', error);
         toast.error('Failed to load patients');
-
-        // Fallback to mock data if API fails
-        const mockPatients = [
-          {
-            _id: '1',
-            firstName: 'Ahmed',
-            lastName: 'Khan',
-            email: 'ahmed.khan@example.com',
-            phoneNumber: '+92 300 1234567',
-            dateOfBirth: '1985-05-15',
-            gender: 'male'
-          },
-          {
-            _id: '2',
-            firstName: 'Fatima',
-            lastName: 'Ali',
-            email: 'fatima.ali@example.com',
-            phoneNumber: '+92 321 9876543',
-            dateOfBirth: '1990-08-22',
-            gender: 'female'
-          },
-          {
-            _id: '3',
-            firstName: 'Imran',
-            lastName: 'Ahmed',
-            email: 'imran.ahmed@example.com',
-            phoneNumber: '+92 333 5556666',
-            dateOfBirth: '1978-12-10',
-            gender: 'male'
-          }
-        ];
-        setPatients(mockPatients);
+        setPatients([]);
       } finally {
         setIsLoading(false);
       }

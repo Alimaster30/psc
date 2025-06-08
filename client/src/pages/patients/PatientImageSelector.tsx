@@ -36,51 +36,9 @@ const PatientImageSelector: React.FC = () => {
           });
           setPatients(response.data.data);
         } catch (apiError) {
-          console.log('API endpoint for patients not available, using mock data');
-          // Use mock patient data
-          const mockPatients: Patient[] = [
-            {
-              _id: '1',
-              firstName: 'Ahmed',
-              lastName: 'Khan',
-              email: 'ahmed.khan@example.com',
-              phoneNumber: '+92 300 1234567',
-              dateOfBirth: '1985-05-15'
-            },
-            {
-              _id: '2',
-              firstName: 'Fatima',
-              lastName: 'Ali',
-              email: 'fatima.ali@example.com',
-              phoneNumber: '+92 301 2345678',
-              dateOfBirth: '1990-08-20'
-            },
-            {
-              _id: '3',
-              firstName: 'Muhammad',
-              lastName: 'Raza',
-              email: 'muhammad.raza@example.com',
-              phoneNumber: '+92 302 3456789',
-              dateOfBirth: '1978-12-10'
-            },
-            {
-              _id: '4',
-              firstName: 'Ayesha',
-              lastName: 'Malik',
-              email: 'ayesha.malik@example.com',
-              phoneNumber: '+92 303 4567890',
-              dateOfBirth: '1995-03-25'
-            },
-            {
-              _id: '5',
-              firstName: 'Imran',
-              lastName: 'Ahmed',
-              email: 'imran.ahmed@example.com',
-              phoneNumber: '+92 304 5678901',
-              dateOfBirth: '1982-07-30'
-            }
-          ];
-          setPatients(mockPatients);
+          console.error('Error fetching patients:', apiError);
+          toast.error('Failed to load patients');
+          setPatients([]);
         }
       } catch (error) {
         console.error('Error fetching patients:', error);

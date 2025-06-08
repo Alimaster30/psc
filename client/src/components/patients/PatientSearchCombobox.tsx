@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
+import api from '../../services/api';
 
 interface Patient {
   _id: string;
@@ -48,67 +49,14 @@ const PatientSearchCombobox: React.FC<PatientSearchComboboxProps> = ({
     const fetchPatients = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get('https://prime-skin-clinic-api.onrender.com/api/patients', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
+        const response = await api.get('/patients');
         setPatients(response.data.data);
         setFilteredPatients(response.data.data);
       } catch (error) {
         console.error('Error fetching patients:', error);
         toast.error('Failed to load patients');
-
-        // Fallback to mock data if API fails
-        const mockPatients = [
-          {
-            _id: '1',
-            firstName: 'Ahmed',
-            lastName: 'Khan',
-            email: 'ahmed.khan@example.com',
-            phoneNumber: '+92 300 1234567',
-            dateOfBirth: '1985-05-15',
-            gender: 'male'
-          },
-          {
-            _id: '2',
-            firstName: 'Fatima',
-            lastName: 'Ali',
-            email: 'fatima.ali@example.com',
-            phoneNumber: '+92 321 9876543',
-            dateOfBirth: '1990-08-22',
-            gender: 'female'
-          },
-          {
-            _id: '3',
-            firstName: 'Imran',
-            lastName: 'Ahmed',
-            email: 'imran.ahmed@example.com',
-            phoneNumber: '+92 333 5556666',
-            dateOfBirth: '1978-12-10',
-            gender: 'male'
-          },
-          {
-            _id: '4',
-            firstName: 'Ayesha',
-            lastName: 'Malik',
-            email: 'ayesha.malik@example.com',
-            phoneNumber: '+92 311 2223333',
-            dateOfBirth: '1995-03-25',
-            gender: 'female'
-          },
-          {
-            _id: '5',
-            firstName: 'Zainab',
-            lastName: 'Hussain',
-            email: 'zainab.h@example.com',
-            phoneNumber: '+92 345 6789012',
-            dateOfBirth: '1988-11-30',
-            gender: 'female'
-          }
-        ];
-        setPatients(mockPatients);
-        setFilteredPatients(mockPatients);
+        setPatients([]);
+        setFilteredPatients([]);
       } finally {
         setIsLoading(false);
       }

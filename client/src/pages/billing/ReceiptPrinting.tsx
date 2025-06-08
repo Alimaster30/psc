@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
+import api from '../../services/api';
 
 interface Patient {
   _id: string;
@@ -53,94 +54,51 @@ const ReceiptPrinting: React.FC = () => {
   const [billing, setBilling] = useState<Billing | null>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
 
-  // Mock data for preview (in a real app, this would come from the API)
-  const mockBilling: Billing = {
-    _id: '1',
-    invoiceNumber: 'INV-20230501-001',
-    date: new Date().toISOString(),
-    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    patient: {
-      _id: '1',
-      firstName: 'Ahmed',
-      lastName: 'Khan',
-      email: 'ahmed.khan@example.com',
-      phoneNumber: '+92 300 1234567',
-    },
-    services: [
-      {
-        name: 'Initial Consultation',
-        description: 'First-time dermatology consultation',
-        amount: 2500,
-      },
-      {
-        name: 'Skin Analysis',
-        description: 'Comprehensive skin analysis and assessment',
-        amount: 1500,
-      },
-    ],
-    subtotal: 4000,
-    tax: 200,
-    discount: 0,
-    total: 4200,
-    amountPaid: 4200,
-    balance: 0,
-    paymentStatus: 'paid',
-    paymentMethod: 'cash',
-    paymentDate: new Date().toISOString(),
-    notes: '',
-    createdBy: {
-      _id: '1',
-      firstName: 'Fatima',
-      lastName: 'Ali',
-    },
-  };
+
 
   // Fetch billing details
   useEffect(() => {
     const fetchBilling = async () => {
+      if (!billingId) {
+        toast.error('No billing ID provided');
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
         console.log('Fetching billing data for ID:', billingId);
 
-        try {
-          // Try to fetch from API
-          const response = await axios.get(`https://prime-skin-clinic-api.onrender.com/api/billing/${billingId}`, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          });
+        // Fetch from API using the api service
+        const response = await api.get(`/billing/${billingId}`);
+        console.log('API Response:', response.data);
 
-          console.log('API Response:', response.data);
-
-          if (response.data && response.data.data) {
-            console.log('Setting billing data:', response.data.data);
-            setBilling(response.data.data);
-          } else {
-            console.log('API response format unexpected, using mock data');
-            toast.error('Failed to load receipt data');
-            setBilling(mockBilling);
-          }
-        } catch (apiError) {
-          console.error('API Error:', apiError);
-          toast.error('Failed to load receipt from server');
-          setBilling(mockBilling);
+        if (response.data && response.data.data) {
+          console.log('Setting billing data:', response.data.data);
+          setBilling(response.data.data);
+        } else {
+          console.log('API response format unexpected');
+          toast.error('Failed to load receipt data');
+          setBilling(null);
         }
-      } catch (error) {
-        console.error('Error in fetchBilling:', error);
-        toast.error('Failed to load receipt');
-        setBilling(mockBilling);
+      } catch (error: any) {
+        console.error('API Error:', error);
+
+        if (error.response?.status === 404) {
+          toast.error('Billing record not found');
+        } else if (error.response?.status === 403) {
+          toast.error('You do not have permission to view this receipt');
+        } else {
+          toast.error('Failed to load receipt from server');
+        }
+
+        setBilling(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (billingId) {
-      fetchBilling();
-    } else {
-      console.log('No billing ID provided, using mock data');
-      setBilling(mockBilling);
-      setIsLoading(false);
-    }
+    fetchBilling();
   }, [billingId]);
 
   // Handle print functionality

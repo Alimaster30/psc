@@ -221,46 +221,13 @@ const CreatePrescription: React.FC = () => {
     const fetchPatients = async () => {
       try {
         setIsLoadingPatients(true);
-        // In a real implementation, we would fetch from the API
-        // const response = await axios.get('/api/patients');
-        // setPatients(response.data.data);
-
-        // For now, we'll use mock data
-        const mockPatients = [
-          {
-            _id: '1',
-            firstName: 'Ahmed',
-            lastName: 'Khan',
-            email: 'ahmed.khan@example.com',
-            phoneNumber: '+92 300 1234567',
-            dateOfBirth: '1985-05-15',
-            gender: 'male'
-          },
-          {
-            _id: '2',
-            firstName: 'Fatima',
-            lastName: 'Ali',
-            email: 'fatima.ali@example.com',
-            phoneNumber: '+92 321 9876543',
-            dateOfBirth: '1990-08-22',
-            gender: 'female'
-          },
-          {
-            _id: '3',
-            firstName: 'Imran',
-            lastName: 'Ahmed',
-            email: 'imran.ahmed@example.com',
-            phoneNumber: '+92 333 5556666',
-            dateOfBirth: '1978-12-10',
-            gender: 'male'
-          }
-        ];
-
-        setPatients(mockPatients);
+        const response = await api.get('/patients');
+        const patientsData = response.data.data || [];
+        setPatients(patientsData);
 
         // If patientId is provided in URL, select that patient
         if (patientIdFromUrl) {
-          const patient = mockPatients.find(p => p._id === patientIdFromUrl);
+          const patient = patientsData.find((p: any) => p._id === patientIdFromUrl);
           if (patient) {
             setFormData(prev => ({
               ...prev,
@@ -272,6 +239,7 @@ const CreatePrescription: React.FC = () => {
       } catch (error) {
         console.error('Error fetching patients:', error);
         toast.error('Failed to load patients');
+        setPatients([]);
       } finally {
         setIsLoadingPatients(false);
       }
@@ -287,56 +255,9 @@ const CreatePrescription: React.FC = () => {
     try {
       setIsLoadingHistory(true);
 
-      // In a real implementation, we would fetch from the API
-      // const response = await axios.get(`/api/patients/${patientId}/prescriptions`);
-      // setPatientPrescriptions(response.data.data);
-
-      // For now, we'll use mock data
-      const mockPrescriptions = [
-        {
-          _id: 'p1',
-          date: '2023-06-10',
-          diagnosis: 'Contact dermatitis',
-          medications: [
-            {
-              name: 'Hydrocortisone Cream 1%',
-              dosage: 'Apply thin layer',
-              frequency: 'Twice daily',
-              duration: '2 weeks',
-              instructions: 'Apply after washing and drying the affected area'
-            },
-            {
-              name: 'Cetirizine 10mg',
-              dosage: '1 tablet',
-              frequency: 'Once daily',
-              duration: '1 week',
-              instructions: 'Take before bedtime'
-            }
-          ],
-          notes: 'Avoid contact with irritants. Use mild soap for bathing.',
-          followUpDate: '2023-06-24'
-        },
-        {
-          _id: 'p2',
-          date: '2023-07-15',
-          diagnosis: 'Resolving contact dermatitis',
-          medications: [
-            {
-              name: 'Hydrocortisone Cream 1%',
-              dosage: 'Apply thin layer',
-              frequency: 'Once daily',
-              duration: '1 week',
-              instructions: 'Apply only to remaining affected areas'
-            }
-          ],
-          notes: 'Condition improving. Continue avoiding irritants.',
-          followUpDate: '2023-08-05'
-        }
-      ];
-
-      // Filter prescriptions for the selected patient
-      // In a real app, this would be done by the API
-      const patientPrescriptions = patientId === '1' ? mockPrescriptions : [];
+      // Fetch prescriptions for this patient from API
+      const response = await api.get(`/prescriptions?patient=${patientId}`);
+      const patientPrescriptions = response.data.data || [];
 
       setPatientPrescriptions(patientPrescriptions);
 
@@ -356,6 +277,7 @@ const CreatePrescription: React.FC = () => {
     } catch (error) {
       console.error('Error fetching patient history:', error);
       toast.error('Failed to load patient prescription history');
+      setPatientPrescriptions([]);
     } finally {
       setIsLoadingHistory(false);
     }
