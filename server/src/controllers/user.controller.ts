@@ -1,10 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import User, { UserRole } from '../models/user.model';
 import Patient from '../models/patient.model';
 import Appointment from '../models/appointment.model';
 import Prescription from '../models/prescription.model';
 import { AppError } from '../middlewares/error.middleware';
 import { generateToken } from '../utils/jwt';
+
+/**
+ * Helper function to validate MongoDB ObjectId
+ */
+const isValidObjectId = (id: string): boolean => {
+  return mongoose.Types.ObjectId.isValid(id) && (String)(new mongoose.Types.ObjectId(id)) === id;
+};
 
 /**
  * Create a new user (Admin only)
@@ -138,9 +146,15 @@ export const getUserById = async (req: Request, res: Response, next: NextFunctio
     console.log('getUserById called with ID:', req.params.id);
 
     // Check if ID is valid
-    if (!req.params.id || req.params.id === 'undefined') {
+    if (!req.params.id || req.params.id === 'undefined' || req.params.id === 'null') {
       console.log('Invalid user ID provided:', req.params.id);
       return next(new AppError('Invalid user ID', 400));
+    }
+
+    // Validate ObjectId format
+    if (!isValidObjectId(req.params.id)) {
+      console.log('Invalid ObjectId format:', req.params.id);
+      return next(new AppError('Invalid user ID format', 400));
     }
 
     const user = await User.findById(req.params.id).select('-password');
@@ -168,6 +182,11 @@ export const getUserById = async (req: Request, res: Response, next: NextFunctio
  */
 export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // Validate ObjectId format
+    if (!isValidObjectId(req.params.id)) {
+      return next(new AppError('Invalid user ID format', 400));
+    }
+
     const { firstName, lastName, email, role, phoneNumber, isActive } = req.body;
 
     // Check if email is already taken by another user
@@ -211,6 +230,11 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
  */
 export const updateUserStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // Validate ObjectId format
+    if (!isValidObjectId(req.params.id)) {
+      return next(new AppError('Invalid user ID format', 400));
+    }
+
     const { isActive } = req.body;
 
     if (typeof isActive !== 'boolean') {
@@ -261,6 +285,11 @@ export const updateUserStatus = async (req: Request, res: Response, next: NextFu
  */
 export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // Validate ObjectId format
+    if (!isValidObjectId(req.params.id)) {
+      return next(new AppError('Invalid user ID format', 400));
+    }
+
     const user = await User.findById(req.params.id);
 
     if (!user) {
