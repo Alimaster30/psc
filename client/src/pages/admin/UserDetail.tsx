@@ -28,15 +28,26 @@ const UserDetail: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('info');
 
+  // Helper function to validate MongoDB ObjectId format
+  const isValidObjectId = (id: string): boolean => {
+    return /^[0-9a-fA-F]{24}$/.test(id);
+  };
+
   useEffect(() => {
     console.log('UserDetail useEffect triggered with ID:', id);
 
     // Don't fetch if ID is undefined, empty, or invalid
-    if (!id || id === 'undefined' || id === 'null' || id.length < 10) {
-      console.log('Skipping fetch due to invalid ID:', id);
+    if (!id || id === 'undefined' || id === 'null') {
+      console.log('Skipping fetch due to undefined ID:', id);
       setIsLoading(false);
-      toast.error('Invalid user ID');
-      navigate('/users');
+      return;
+    }
+
+    // Validate ObjectId format
+    if (!isValidObjectId(id)) {
+      console.log('Invalid ObjectId format:', id);
+      setIsLoading(false);
+      setUser(null);
       return;
     }
 
@@ -52,7 +63,10 @@ const UserDetail: React.FC = () => {
         console.error('Error fetching user:', error);
 
         if (error.response?.status === 404) {
-          toast.error('User not found');
+          console.log('User not found for ID:', id);
+          setUser(null);
+        } else if (error.response?.status === 400) {
+          console.log('Invalid user ID format:', id);
           setUser(null);
         } else if (error.response?.status === 401) {
           toast.error('Please log in to view user details');
@@ -110,7 +124,12 @@ const UserDetail: React.FC = () => {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
         </svg>
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">User Not Found</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">The user you're looking for doesn't exist or has been removed.</p>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
+          {id && !isValidObjectId(id)
+            ? 'Invalid user ID format. Please check the URL and try again.'
+            : 'The user you\'re looking for doesn\'t exist or has been removed.'
+          }
+        </p>
         <Link to="/users">
           <Button variant="primary">
             Return to User List
