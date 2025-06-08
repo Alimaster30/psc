@@ -15,6 +15,7 @@ dotenv.config();
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import patientRoutes from './routes/patient.routes';
+import patientImageRoutes from './routes/patientImage.routes';
 import appointmentRoutes from './routes/appointment.routes';
 import prescriptionRoutes from './routes/prescription.routes';
 import billingRoutes from './routes/billing.routes';
@@ -63,6 +64,9 @@ app.use(helmet());
 app.use(morgan('dev'));
 app.use(compression());
 
+// Serve static files for uploads
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Rate limiting - Increased limits for development
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
@@ -94,6 +98,7 @@ app.get('/api/health', (req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/patients', patientRoutes);
+app.use('/api/patient-images', patientImageRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/prescriptions', prescriptionRoutes);
 app.use('/api/billing', billingRoutes);

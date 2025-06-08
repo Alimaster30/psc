@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
-import api from '../../services/api';
+import api, { patientImageAPI } from '../../services/api';
 
 interface Patient {
   _id: string;
@@ -73,7 +73,7 @@ const PatientImageUpload: React.FC = () => {
 
         try {
           // Fetch existing images from API
-          const imagesResponse = await api.get(`/patient-images?patient=${patientId}`);
+          const imagesResponse = await patientImageAPI.getPatientImages({ patient: patientId });
           setExistingImages(imagesResponse.data.data || []);
 
           // Filter out "before" images for the dropdown
@@ -183,11 +183,7 @@ const PatientImageUpload: React.FC = () => {
       }
 
       // Upload image via API
-      await api.post('/patient-images', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      await patientImageAPI.uploadPatientImage(formData);
 
       toast.success('Image uploaded successfully');
       navigate(`/patients/${patientId}`);

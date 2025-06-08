@@ -89,6 +89,10 @@ api.interceptors.response.use(
         clearCache('/users');
       } else if (url.includes('/patients')) {
         clearCache('/patients');
+        clearCache('/patient-images'); // Clear patient images cache when patients are modified
+      } else if (url.includes('/patient-images')) {
+        clearCache('/patient-images');
+        clearCache('/patients'); // Clear patients cache when images are modified
       } else if (url.includes('/appointments')) {
         clearCache('/appointments');
       } else if (url.includes('/services')) {
@@ -124,6 +128,7 @@ api.interceptors.response.use(
     // Don't show toast for specific endpoints and status codes that are handled by components
     const isUserEndpoint = error.config?.url?.includes('/users');
     const isPatientEndpoint = error.config?.url?.includes('/patients');
+    const isPatientImageEndpoint = error.config?.url?.includes('/patient-images');
     const isAppointmentEndpoint = error.config?.url?.includes('/appointments');
     const isServiceEndpoint = error.config?.url?.includes('/services');
     const isBillingEndpoint = error.config?.url?.includes('/billing');
@@ -132,7 +137,7 @@ api.interceptors.response.use(
 
     // Only show toast for critical errors, not for expected 400/404 errors
     const shouldShowToast = !(
-      (isUserEndpoint || isPatientEndpoint || isAppointmentEndpoint ||
+      (isUserEndpoint || isPatientEndpoint || isPatientImageEndpoint || isAppointmentEndpoint ||
        isServiceEndpoint || isBillingEndpoint || isDashboardEndpoint) &&
       is404or400
     );
@@ -247,6 +252,43 @@ export const patientAPI = {
 
   deletePatient: async (id: string) => {
     const response = await api.delete(`/patients/${id}`);
+    return response;
+  },
+};
+
+// Patient Image API
+export const patientImageAPI = {
+  getPatientImages: async (params?: any) => {
+    const response = await api.get('/patient-images', { params });
+    return response;
+  },
+
+  getPatientImage: async (id: string) => {
+    const response = await api.get(`/patient-images/${id}`);
+    return response;
+  },
+
+  uploadPatientImage: async (formData: FormData) => {
+    const response = await api.post('/patient-images', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response;
+  },
+
+  updatePatientImage: async (id: string, imageData: any) => {
+    const response = await api.put(`/patient-images/${id}`, imageData);
+    return response;
+  },
+
+  deletePatientImage: async (id: string) => {
+    const response = await api.delete(`/patient-images/${id}`);
+    return response;
+  },
+
+  getBeforeAfterPairs: async (patientId: string) => {
+    const response = await api.get(`/patient-images/patient/${patientId}/before-after`);
     return response;
   },
 };
