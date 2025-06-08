@@ -44,6 +44,7 @@ const BeforeAfterComparison: React.FC<BeforeAfterComparisonProps> = ({ patientId
         try {
           // Fetch from API
           const response = await api.get(`/patient-images/patient/${patientId}/before-after`);
+
           if (response.data && response.data.data) {
             setImagePairs(response.data.data);
 

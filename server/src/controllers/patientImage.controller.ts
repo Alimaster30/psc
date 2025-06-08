@@ -114,13 +114,27 @@ export const uploadPatientImage = async (req: Request, res: Response) => {
 
     // Save original image
     const imagePath = path.join(patientImagesDir, filename);
-    fs.writeFileSync(imagePath, req.file.buffer);
+    try {
+      fs.writeFileSync(imagePath, req.file.buffer);
+    } catch (error) {
+      console.error('Error saving image file:', error);
+      throw new Error('Failed to save image file');
+    }
 
     // Generate thumbnail
     const thumbnailPath = path.join(patientImagesDir, thumbnailFilename);
-    await sharp(req.file.buffer)
-      .resize(200, 200, { fit: 'inside' })
-      .toFile(thumbnailPath);
+    try {
+      await sharp(req.file.buffer)
+        .resize(200, 200, { fit: 'inside' })
+        .toFile(thumbnailPath);
+    } catch (error) {
+      console.error('Error generating thumbnail:', error);
+      // Clean up the original image if thumbnail generation fails
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+      throw new Error('Failed to generate thumbnail');
+    }
 
     // Get image dimensions
     const metadata = await sharp(req.file.buffer).metadata();
