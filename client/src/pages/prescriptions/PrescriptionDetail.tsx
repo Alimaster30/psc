@@ -23,16 +23,16 @@ interface Prescription {
     email: string;
     phoneNumber: string;
   };
-  doctor: {
+  dermatologist: {
     _id: string;
     firstName: string;
     lastName: string;
-    specialization: string;
+    email?: string;
   };
   diagnosis: string;
   medications: Medication[];
-  notes: string;
-  followUpDate: string;
+  notes?: string;
+  followUpDate?: string;
   createdAt: string;
 }
 
@@ -49,60 +49,21 @@ const PrescriptionDetail: React.FC = () => {
       try {
         setIsLoading(true);
 
-        // In a real implementation, we would fetch from the API
-        // const response = await api.get(`/api/prescriptions/${id}`);
-        // setPrescription(response.data);
-
-        // For now, we'll use mock data
-        const mockPrescription = {
-          _id: id || '1',
-          patient: {
-            _id: '1',
-            firstName: 'Ahmed',
-            lastName: 'Khan',
-            email: 'ahmed.khan@example.com',
-            phoneNumber: '+92 300 1234567'
-          },
-          doctor: {
-            _id: '1',
-            firstName: 'Dr. Fatima',
-            lastName: 'Ali',
-            specialization: 'Dermatologist'
-          },
-          diagnosis: 'Contact dermatitis with secondary bacterial infection on both arms',
-          medications: [
-            {
-              name: 'Hydrocortisone Cream 1%',
-              dosage: 'Apply thin layer',
-              frequency: 'Twice daily',
-              duration: '2 weeks',
-              instructions: 'Apply to affected areas after washing and drying the skin'
-            },
-            {
-              name: 'Cetirizine 10mg',
-              dosage: '1 tablet',
-              frequency: 'Once daily',
-              duration: '1 week',
-              instructions: 'Take at bedtime'
-            },
-            {
-              name: 'Fusidic Acid Cream',
-              dosage: 'Apply small amount',
-              frequency: 'Three times daily',
-              duration: '1 week',
-              instructions: 'Apply to areas with signs of infection (redness, swelling)'
-            }
-          ],
-          notes: 'Patient should avoid contact with irritants. Wear cotton clothing and avoid scratching. Return if symptoms worsen or do not improve within 5 days.',
-          followUpDate: '2023-08-15',
-          createdAt: '2023-08-01T10:30:00.000Z'
-        };
-
-        setPrescription(mockPrescription);
+        // Fetch prescription from the API
+        const response = await api.get(`/prescriptions/${id}`);
+        setPrescription(response.data.data);
         setIsLoading(false);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching prescription:', error);
-        toast.error('Failed to load prescription');
+
+        if (error.response?.status === 404) {
+          toast.error('Prescription not found');
+        } else if (error.response?.status === 403) {
+          toast.error('You do not have permission to view this prescription');
+        } else {
+          toast.error('Failed to load prescription');
+        }
+
         setIsLoading(false);
       }
     };
@@ -236,8 +197,8 @@ const PrescriptionDetail: React.FC = () => {
               <div></div>
               <div>
                 <div class="signature">
-                  ${prescription.doctor.firstName} ${prescription.doctor.lastName}<br>
-                  ${prescription.doctor.specialization}
+                  ${prescription.dermatologist.firstName} ${prescription.dermatologist.lastName}<br>
+                  Dermatologist
                 </div>
               </div>
             </div>
@@ -357,7 +318,7 @@ const PrescriptionDetail: React.FC = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Prescribed By</p>
                   <p className="text-gray-900 dark:text-white">
-                    {prescription.doctor.firstName} {prescription.doctor.lastName} ({prescription.doctor.specialization})
+                    {prescription.dermatologist.firstName} {prescription.dermatologist.lastName} (Dermatologist)
                   </p>
                 </div>
                 <div>

@@ -11,6 +11,7 @@ import MedicalFormField from '../../components/common/MedicalFormField';
 import { userSpecificTerms, commonMedicalTerms } from '../../utils/medicalTerms';
 import ConfirmationDialog from '../../components/common/ConfirmationDialog';
 import PatientMedicalHistory from '../../components/prescriptions/PatientMedicalHistory';
+import api from '../../services/api';
 // Create simple components directly in this file since the imported file doesn't exist
 // We'll use inline styles instead of importing the missing CSS file
 // PatientInfoCard component
@@ -71,16 +72,16 @@ interface Prescription {
     email: string;
     phoneNumber: string;
   };
-  doctor: {
+  dermatologist: {
     _id: string;
     firstName: string;
     lastName: string;
-    specialization: string;
+    email?: string;
   };
   diagnosis: string;
   medications: Medication[];
-  notes: string;
-  followUpDate: string;
+  notes?: string;
+  followUpDate?: string;
   createdAt: string;
 }
 
@@ -158,68 +159,38 @@ const EditPrescription: React.FC = () => {
       try {
         setIsLoading(true);
 
-        // In a real implementation, we would fetch from the API
-        // const response = await axios.get(`/api/prescriptions/${id}`);
-        // const prescriptionData = response.data;
+        // Fetch prescription from the API
+        const response = await api.get(`/prescriptions/${id}`);
+        const prescriptionData = response.data.data;
 
-        // For now, we'll use mock data
-        const mockPrescription = {
-          _id: id || '1',
-          patient: {
-            _id: '1',
-            firstName: 'Ahmed',
-            lastName: 'Khan',
-            email: 'ahmed.khan@example.com',
-            phoneNumber: '+92 300 1234567'
-          },
-          doctor: {
-            _id: '1',
-            firstName: 'Dr. Fatima',
-            lastName: 'Ali',
-            specialization: 'Dermatologist'
-          },
-          diagnosis: 'Contact dermatitis with secondary bacterial infection on both arms',
-          medications: [
-            {
-              name: 'Hydrocortisone Cream 1%',
-              dosage: 'Apply thin layer',
-              frequency: 'Twice daily',
-              duration: '2 weeks',
-              instructions: 'Apply to affected areas after washing and drying the skin'
-            },
-            {
-              name: 'Cetirizine 10mg',
-              dosage: '1 tablet',
-              frequency: 'Once daily',
-              duration: '1 week',
-              instructions: 'Take at bedtime'
-            }
-          ],
-          notes: 'Patient should avoid contact with irritants. Wear cotton clothing and avoid scratching.',
-          followUpDate: '2023-08-15',
-          createdAt: '2023-08-01T10:30:00.000Z'
-        };
-
-        setPrescription(mockPrescription);
+        setPrescription(prescriptionData);
 
         // Set form data from prescription
         setFormData({
-          patient: mockPrescription.patient._id,
-          diagnosis: mockPrescription.diagnosis,
-          medications: mockPrescription.medications,
-          notes: mockPrescription.notes,
-          followUpDate: mockPrescription.followUpDate,
+          patient: prescriptionData.patient._id,
+          diagnosis: prescriptionData.diagnosis,
+          medications: prescriptionData.medications,
+          notes: prescriptionData.notes || '',
+          followUpDate: prescriptionData.followUpDate || '',
           medicalHistory: '',
           allergies: '',
         });
 
         // Fetch patient history
-        fetchPatientHistory(mockPrescription.patient._id);
+        fetchPatientHistory(prescriptionData.patient._id);
 
         setIsLoading(false);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching prescription:', error);
-        toast.error('Failed to load prescription');
+
+        if (error.response?.status === 404) {
+          toast.error('Prescription not found');
+        } else if (error.response?.status === 403) {
+          toast.error('You do not have permission to edit this prescription');
+        } else {
+          toast.error('Failed to load prescription');
+        }
+
         setIsLoading(false);
       }
     };
@@ -227,33 +198,9 @@ const EditPrescription: React.FC = () => {
     // Fetch patients for reference
     const fetchPatients = async () => {
       try {
-        // In a real implementation, we would fetch from the API
-        // const response = await axios.get('/api/patients');
-        // setPatients(response.data);
-
-        // For now, we'll use mock data
-        const mockPatients = [
-          {
-            _id: '1',
-            firstName: 'Ahmed',
-            lastName: 'Khan',
-            email: 'ahmed.khan@example.com',
-            phoneNumber: '+92 300 1234567',
-            dateOfBirth: '1985-05-15',
-            gender: 'male'
-          },
-          {
-            _id: '2',
-            firstName: 'Fatima',
-            lastName: 'Ali',
-            email: 'fatima.ali@example.com',
-            phoneNumber: '+92 321 9876543',
-            dateOfBirth: '1990-08-22',
-            gender: 'female'
-          }
-        ];
-
-        setPatients(mockPatients);
+        // Fetch patients from the API
+        const response = await api.get('/patients');
+        setPatients(response.data.data);
       } catch (error) {
         console.error('Error fetching patients:', error);
         toast.error('Failed to load patients');
@@ -273,55 +220,12 @@ const EditPrescription: React.FC = () => {
     try {
       setIsLoadingHistory(true);
 
-      // In a real implementation, we would fetch from the API
-      // const response = await axios.get(`/api/patients/${patientId}/prescriptions`);
-      // setPatientPrescriptions(response.data);
-
-      // For now, we'll use mock data
-      const mockPrescriptions = [
-        {
-          _id: 'p1',
-          date: '2023-06-10',
-          diagnosis: 'Contact dermatitis',
-          medications: [
-            {
-              name: 'Hydrocortisone Cream 1%',
-              dosage: 'Apply thin layer',
-              frequency: 'Twice daily',
-              duration: '2 weeks',
-              instructions: 'Apply after washing and drying the affected area'
-            },
-            {
-              name: 'Cetirizine 10mg',
-              dosage: '1 tablet',
-              frequency: 'Once daily',
-              duration: '1 week',
-              instructions: 'Take before bedtime'
-            }
-          ],
-          notes: 'Avoid contact with irritants. Use mild soap for bathing.',
-          followUpDate: '2023-06-24'
-        },
-        {
-          _id: 'p2',
-          date: '2023-07-15',
-          diagnosis: 'Resolving contact dermatitis',
-          medications: [
-            {
-              name: 'Hydrocortisone Cream 1%',
-              dosage: 'Apply thin layer',
-              frequency: 'Once daily',
-              duration: '1 week',
-              instructions: 'Apply only to remaining affected areas'
-            }
-          ],
-          notes: 'Condition improving. Continue avoiding irritants.',
-          followUpDate: '2023-08-05'
-        }
-      ];
+      // Fetch patient prescriptions from the API
+      const response = await api.get(`/prescriptions?patient=${patientId}`);
+      const prescriptions = response.data.data;
 
       // Filter out the current prescription from history
-      const filteredPrescriptions = mockPrescriptions.filter(p => p._id !== id);
+      const filteredPrescriptions = prescriptions.filter((p: any) => p._id !== id);
       setPatientPrescriptions(filteredPrescriptions);
     } catch (error) {
       console.error('Error fetching patient history:', error);
@@ -440,17 +344,35 @@ const EditPrescription: React.FC = () => {
     try {
       setIsSaving(true);
 
-      // In a real implementation, we would update via the API
-      // const response = await axios.put(`/api/prescriptions/${id}`, formData);
+      // Prepare the data for API submission
+      const updateData = {
+        diagnosis: formData.diagnosis,
+        medications: formData.medications.map(med => ({
+          name: med.name,
+          dosage: med.dosage,
+          frequency: med.frequency,
+          duration: med.duration,
+          instructions: med.instructions || ''
+        })),
+        notes: formData.notes || '',
+        followUpDate: formData.followUpDate || undefined
+      };
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Update prescription via the API
+      await api.put(`/prescriptions/${id}`, updateData);
 
       toast.success('Prescription updated successfully');
       navigate(`/prescriptions/${id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating prescription:', error);
-      toast.error('Failed to update prescription');
+
+      if (error.response?.status === 403) {
+        toast.error('You do not have permission to update this prescription');
+      } else if (error.response?.status === 404) {
+        toast.error('Prescription not found');
+      } else {
+        toast.error('Failed to update prescription');
+      }
     } finally {
       setIsSaving(false);
     }
