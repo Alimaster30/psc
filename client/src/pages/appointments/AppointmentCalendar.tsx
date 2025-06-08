@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import { useAuth } from '../../context/AuthContext';
-import { appointmentAPI } from '../../services/api';
+import api, { appointmentAPI } from '../../services/api';
 
 interface Doctor {
   _id: string;

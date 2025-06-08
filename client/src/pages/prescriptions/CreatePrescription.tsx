@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
+import api from '../../services/api';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Breadcrumb from '../../components/common/Breadcrumb';
