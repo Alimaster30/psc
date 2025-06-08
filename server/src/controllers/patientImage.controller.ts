@@ -289,7 +289,10 @@ export const getBeforeAfterPairs = async (req: Request, res: Response) => {
     const beforeImages = await PatientImage.find({
       patient: patientId,
       isBefore: true,
-    }).populate('relatedImages');
+    }).populate({
+      path: 'relatedImages',
+      model: 'PatientImage'
+    });
 
     // Create pairs
     const pairs = beforeImages.map(beforeImage => {
