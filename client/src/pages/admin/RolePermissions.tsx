@@ -98,77 +98,93 @@ const RolePermissions: React.FC = () => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
+        console.log('Starting to fetch permissions data...');
 
-        // Fetch permissions from API
-        const [permissionsResponse, rolePermissionsResponse] = await Promise.all([
-          permissionAPI.getPermissions(),
-          permissionAPI.getRolePermissions()
-        ]);
+        // First, set fallback data immediately to ensure something is always shown
+        setPermissions(defaultPermissions);
+        setRolePermissions(defaultRolePermissions);
+        const uniqueModules = Array.from(new Set(defaultPermissions.map(p => p.module))) as string[];
+        setModules(uniqueModules);
 
-        if (permissionsResponse.data.success && rolePermissionsResponse.data.success) {
-          const fetchedPermissions = permissionsResponse.data.data;
-          const fetchedRolePermissions = rolePermissionsResponse.data.data;
-
-          setPermissions(fetchedPermissions);
-          setRolePermissions(fetchedRolePermissions);
-
-          // Extract unique modules
-          const uniqueModules = Array.from(new Set(fetchedPermissions.map((p: Permission) => p.module))) as string[];
-          setModules(uniqueModules);
-          setIsLoading(false);
-          return;
-        }
-
-        // If we reach here, there was an issue with the API response
-        throw new Error('Invalid API response');
-      } catch (error: any) {
-        console.error('Error fetching permissions data:', error);
-
-        // Try to initialize permissions first
+        // Try to fetch from API to override defaults if available
         try {
-          console.log('Attempting to initialize permissions system...');
-          toast.loading('Initializing permissions system...');
-
-          const initResponse = await permissionAPI.initializePermissions();
-          console.log('Initialize response:', initResponse);
-
-          toast.dismiss();
-          toast.success('Permissions system initialized successfully');
-
-          // Retry fetching data after initialization
           const [permissionsResponse, rolePermissionsResponse] = await Promise.all([
             permissionAPI.getPermissions(),
             permissionAPI.getRolePermissions()
           ]);
 
+          console.log('API responses:', { permissionsResponse, rolePermissionsResponse });
+
           if (permissionsResponse.data.success && rolePermissionsResponse.data.success) {
             const fetchedPermissions = permissionsResponse.data.data;
             const fetchedRolePermissions = rolePermissionsResponse.data.data;
 
-            setPermissions(fetchedPermissions);
-            setRolePermissions(fetchedRolePermissions);
+            if (fetchedPermissions.length > 0 && fetchedRolePermissions.length > 0) {
+              console.log('Using API data');
+              setPermissions(fetchedPermissions);
+              setRolePermissions(fetchedRolePermissions);
 
-            // Extract unique modules
-            const uniqueModules = Array.from(new Set(fetchedPermissions.map((p: Permission) => p.module))) as string[];
-            setModules(uniqueModules);
+              // Extract unique modules
+              const apiModules = Array.from(new Set(fetchedPermissions.map((p: Permission) => p.module))) as string[];
+              setModules(apiModules);
+              toast.success('Permissions loaded from server');
+            } else {
+              console.log('API returned empty data, using defaults');
+              toast.success('Using default permissions configuration');
+            }
           } else {
-            throw new Error('Failed to fetch data after initialization');
+            throw new Error('Invalid API response format');
           }
-        } catch (initError: any) {
-          console.error('Error initializing permissions:', initError);
-          toast.dismiss();
-          toast.error('Using default permissions. Please check server connection.');
+        } catch (apiError: any) {
+          console.log('API fetch failed, trying initialization...', apiError);
 
-          // Use fallback data
-          setPermissions(defaultPermissions);
-          setRolePermissions(defaultRolePermissions);
+          // Try to initialize permissions
+          try {
+            toast.loading('Initializing permissions system...');
+            const initResponse = await permissionAPI.initializePermissions();
+            console.log('Initialize response:', initResponse);
 
-          // Extract unique modules from default data
-          const uniqueModules = Array.from(new Set(defaultPermissions.map(p => p.module))) as string[];
-          setModules(uniqueModules);
+            // Retry fetching after initialization
+            const [permissionsResponse, rolePermissionsResponse] = await Promise.all([
+              permissionAPI.getPermissions(),
+              permissionAPI.getRolePermissions()
+            ]);
+
+            if (permissionsResponse.data.success && rolePermissionsResponse.data.success) {
+              const fetchedPermissions = permissionsResponse.data.data;
+              const fetchedRolePermissions = rolePermissionsResponse.data.data;
+
+              if (fetchedPermissions.length > 0 && fetchedRolePermissions.length > 0) {
+                setPermissions(fetchedPermissions);
+                setRolePermissions(fetchedRolePermissions);
+                const apiModules = Array.from(new Set(fetchedPermissions.map((p: Permission) => p.module))) as string[];
+                setModules(apiModules);
+                toast.dismiss();
+                toast.success('Permissions system initialized successfully');
+              } else {
+                throw new Error('Initialization returned empty data');
+              }
+            } else {
+              throw new Error('Failed to fetch after initialization');
+            }
+          } catch (initError: any) {
+            console.log('Initialization failed, using defaults:', initError);
+            toast.dismiss();
+            toast.success('Using default permissions configuration');
+            // Defaults are already set above
+          }
         }
 
         setIsLoading(false);
+      } catch (error: any) {
+        console.error('Unexpected error in fetchData:', error);
+        // Ensure defaults are set even in case of unexpected errors
+        setPermissions(defaultPermissions);
+        setRolePermissions(defaultRolePermissions);
+        const uniqueModules = Array.from(new Set(defaultPermissions.map(p => p.module))) as string[];
+        setModules(uniqueModules);
+        setIsLoading(false);
+        toast.error('Using default permissions due to error');
       }
     };
 
@@ -256,55 +272,14 @@ const RolePermissions: React.FC = () => {
     return currentRolePermission?.permissions.includes(permissionId) || false;
   };
 
-  if (isLoading) {
+  // Show loading overlay only for initial load
+  if (isLoading && permissions.length === 0) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Loading permissions...</p>
         </div>
-      </div>
-    );
-  }
-
-  // Show message if no data is available
-  if (permissions.length === 0 || rolePermissions.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Role Permissions</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Configure access permissions for each user role
-            </p>
-          </div>
-          <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              onClick={() => navigate('/users')}
-            >
-              Back to Users
-            </Button>
-          </div>
-        </div>
-
-        <Card>
-          <div className="text-center py-12">
-            <svg className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Permissions Data</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Unable to load permissions data. This might be due to server connectivity issues.
-            </p>
-            <Button
-              variant="primary"
-              onClick={() => window.location.reload()}
-            >
-              Retry Loading
-            </Button>
-          </div>
-        </Card>
       </div>
     );
   }
