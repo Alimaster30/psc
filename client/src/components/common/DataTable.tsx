@@ -11,6 +11,7 @@ interface DataTableColumn<T> {
   render: (item: T) => ReactNode;
   hideOnMobile?: boolean;
   mobileLabel?: string;
+  sortValue?: (item: T) => string | number; // Function to extract sortable value
 }
 
 // Define data table props for the new interface
@@ -89,12 +90,34 @@ function DataTable<T>({
     const column = columns.find(col => col.key === currentSortField);
     if (!column) return 0;
 
-    // For sorting, we need to extract comparable values
-    // This is a simplified approach - in practice, you might want more sophisticated sorting
-    const aValue = String(column.render(a)).toLowerCase();
-    const bValue = String(column.render(b)).toLowerCase();
+    // Use sortValue function if provided, otherwise try to extract from object property
+    let aValue: string | number;
+    let bValue: string | number;
 
-    const comparison = aValue.localeCompare(bValue);
+    if (column.sortValue) {
+      aValue = column.sortValue(a);
+      bValue = column.sortValue(b);
+    } else {
+      // Fallback: try to get value from object property matching the key
+      aValue = (a as any)[currentSortField] || '';
+      bValue = (b as any)[currentSortField] || '';
+    }
+
+    // Convert to strings for comparison if they're not numbers
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      const comparison = aValue.toLowerCase().localeCompare(bValue.toLowerCase());
+      return currentSortDirection === 'asc' ? comparison : -comparison;
+    }
+
+    // Handle numeric comparison
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return currentSortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+    }
+
+    // Mixed types - convert to strings
+    const aStr = String(aValue).toLowerCase();
+    const bStr = String(bValue).toLowerCase();
+    const comparison = aStr.localeCompare(bStr);
     return currentSortDirection === 'asc' ? comparison : -comparison;
   });
 

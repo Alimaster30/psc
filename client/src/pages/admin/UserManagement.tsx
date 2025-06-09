@@ -224,6 +224,7 @@ const UserManagement: React.FC = () => {
             key: 'name',
             label: 'Name',
             sortable: true,
+            sortValue: (user: User) => `${user.firstName} ${user.lastName}`,
             render: (user: User) => (
               <div className="flex items-center">
                 <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-600 dark:text-primary-400 font-semibold shadow-sm">
@@ -244,6 +245,8 @@ const UserManagement: React.FC = () => {
           {
             key: 'email',
             label: 'Email',
+            sortable: true,
+            sortValue: (user: User) => user.email,
             render: (user: User) => (
               <div className="text-sm text-gray-500 dark:text-gray-400">{user.email}</div>
             )
@@ -252,6 +255,7 @@ const UserManagement: React.FC = () => {
             key: 'role',
             label: 'Role',
             sortable: true,
+            sortValue: (user: User) => user.role,
             render: (user: User) => (
               <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
                 ${user.role === 'admin' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
@@ -271,6 +275,8 @@ const UserManagement: React.FC = () => {
           {
             key: 'status',
             label: 'Status',
+            sortable: true,
+            sortValue: (user: User) => user.isActive ? 'Active' : 'Inactive',
             render: (user: User) => (
               <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
                 ${user.isActive ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
@@ -286,6 +292,7 @@ const UserManagement: React.FC = () => {
             key: 'lastLogin',
             label: 'Last Login',
             sortable: true,
+            sortValue: (user: User) => user.lastLogin ? new Date(user.lastLogin).getTime() : 0,
             render: (user: User) => (
               <div className="text-sm text-gray-500 dark:text-gray-400">
                 {user.lastLogin ? (
