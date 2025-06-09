@@ -446,6 +446,11 @@ export const permissionAPI = {
     const response = await api.post('/permissions/initialize');
     return response;
   },
+
+  initializePermissions: async () => {
+    const response = await api.post('/permissions/initialize');
+    return response;
+  },
 };
 
 export default api;

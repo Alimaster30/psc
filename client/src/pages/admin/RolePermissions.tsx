@@ -57,37 +57,46 @@ const RolePermissions: React.FC = () => {
       } catch (error: any) {
         console.error('Error fetching permissions data:', error);
 
-        // Check if permissions need to be initialized
-        if (error.response?.status === 404 || error.response?.data?.message?.includes('not found')) {
-          try {
-            toast.loading('Initializing permissions system...');
-            await permissionAPI.initializePermissions();
-            toast.dismiss();
-            toast.success('Permissions system initialized successfully');
+        // Always try to initialize permissions if there's any error
+        try {
+          console.log('Attempting to initialize permissions system...');
+          toast.loading('Initializing permissions system...');
 
-            // Retry fetching data
-            const [permissionsResponse, rolePermissionsResponse] = await Promise.all([
-              permissionAPI.getPermissions(),
-              permissionAPI.getRolePermissions()
-            ]);
+          const initResponse = await permissionAPI.initializePermissions();
+          console.log('Initialize response:', initResponse);
 
-            if (permissionsResponse.data.success && rolePermissionsResponse.data.success) {
-              const fetchedPermissions = permissionsResponse.data.data;
-              const fetchedRolePermissions = rolePermissionsResponse.data.data;
+          toast.dismiss();
+          toast.success('Permissions system initialized successfully');
 
-              setPermissions(fetchedPermissions);
-              setRolePermissions(fetchedRolePermissions);
+          // Retry fetching data after initialization
+          const [permissionsResponse, rolePermissionsResponse] = await Promise.all([
+            permissionAPI.getPermissions(),
+            permissionAPI.getRolePermissions()
+          ]);
 
-              // Extract unique modules
-              const uniqueModules = Array.from(new Set(fetchedPermissions.map((p: Permission) => p.module))) as string[];
-              setModules(uniqueModules);
-            }
-          } catch (initError) {
-            console.error('Error initializing permissions:', initError);
-            toast.error('Failed to initialize permissions system');
+          console.log('Permissions response:', permissionsResponse);
+          console.log('Role permissions response:', rolePermissionsResponse);
+
+          if (permissionsResponse.data.success && rolePermissionsResponse.data.success) {
+            const fetchedPermissions = permissionsResponse.data.data;
+            const fetchedRolePermissions = rolePermissionsResponse.data.data;
+
+            console.log('Fetched permissions:', fetchedPermissions);
+            console.log('Fetched role permissions:', fetchedRolePermissions);
+
+            setPermissions(fetchedPermissions);
+            setRolePermissions(fetchedRolePermissions);
+
+            // Extract unique modules
+            const uniqueModules = Array.from(new Set(fetchedPermissions.map((p: Permission) => p.module))) as string[];
+            setModules(uniqueModules);
+          } else {
+            console.error('Invalid response format after initialization');
+            toast.error('Invalid response format from server');
           }
-        } else {
-          toast.error('Failed to load permissions data');
+        } catch (initError: any) {
+          console.error('Error initializing permissions:', initError);
+          toast.error(`Failed to initialize permissions: ${initError.response?.data?.message || initError.message}`);
         }
 
         setIsLoading(false);
@@ -287,7 +296,7 @@ const RolePermissions: React.FC = () => {
                       id={`module-${module}`}
                       checked={isModuleFullySelected(module)}
                       onChange={() => handleModuleToggle(module)}
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-700 rounded"
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:checked:bg-primary-600 dark:checked:border-primary-600 rounded"
                     />
                     <label htmlFor={`module-${module}`} className="ml-2 block text-lg font-medium text-gray-900 dark:text-white">
                       {module}
@@ -304,7 +313,7 @@ const RolePermissions: React.FC = () => {
                             id={`permission-${permission.id}`}
                             checked={isPermissionSelected(permission.id)}
                             onChange={() => handlePermissionToggle(permission.id)}
-                            className="h-4 w-4 mt-1 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-700 rounded"
+                            className="h-4 w-4 mt-1 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:checked:bg-primary-600 dark:checked:border-primary-600 rounded"
                           />
                           <label htmlFor={`permission-${permission.id}`} className="ml-2 block">
                             <span className="text-sm font-medium text-gray-900 dark:text-white">{permission.name}</span>
