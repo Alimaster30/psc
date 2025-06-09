@@ -16,23 +16,24 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     // Determine the input type based on showPassword state if it's a password field
     const inputType = rest.type === 'password' && showPassword ? 'text' : rest.type;
 
-    // Base classes - mobile-first with proper touch targets
-    const baseClasses = 'block w-full px-4 py-3 sm:px-3 sm:py-2 border rounded-lg sm:rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 text-gray-900 text-base min-h-[44px] sm:min-h-[36px] transition-colors duration-200 relative z-0';
+    // Build custom CSS classes
+    let inputClasses = 'custom-input';
 
-    // Error classes
-    const errorClasses = error ? 'border-red-500 focus:ring-red-500 focus:border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600';
+    if (icon) {
+      inputClasses += ' has-icon';
+    }
 
-    // Width classes
-    const widthClasses = fullWidth ? 'w-full' : '';
+    if (showPasswordToggle && rest.type === 'password') {
+      inputClasses += ' has-toggle';
+    }
 
-    // Icon classes - increase padding to prevent overlap
-    const iconClasses = icon ? 'pl-14' : '';
+    if (error) {
+      inputClasses += ' error';
+    }
 
-    // Password toggle classes - increase padding to prevent overlap
-    const passwordToggleClasses = showPasswordToggle && rest.type === 'password' ? 'pr-14' : '';
-
-    // Combine all classes
-    const inputClasses = `${baseClasses} ${errorClasses} ${widthClasses} ${iconClasses} ${passwordToggleClasses} ${className}`;
+    if (className) {
+      inputClasses += ` ${className}`;
+    }
 
     // Toggle password visibility
     const togglePasswordVisibility = () => {
@@ -46,9 +47,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {label}
           </label>
         )}
-        <div className="relative">
+        <div className="input-container">
           {icon && (
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 dark:text-gray-400 z-10">
+            <div className="input-icon">
               {icon}
             </div>
           )}
@@ -62,7 +63,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {showPasswordToggle && rest.type === 'password' && (
             <button
               type="button"
-              className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 focus:outline-none z-10"
+              className="input-toggle"
               onClick={togglePasswordVisibility}
               tabIndex={-1}
             >

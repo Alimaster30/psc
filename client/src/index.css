@@ -38,11 +38,105 @@
     @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-primary-400 dark:focus:border-primary-400;
   }
 
-  /* Input field styling */
-  input[type="text"], input[type="email"], input[type="password"] {
-    @apply appearance-none;
+  /* Custom Input Field Styling */
+  .custom-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 16px;
+    line-height: 1.5;
+    background-color: white;
+    color: #111827;
+    transition: all 0.2s ease-in-out;
+    outline: none;
+    appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
+    min-height: 44px;
+  }
+
+  .custom-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  .custom-input.has-icon {
+    padding-left: 48px;
+  }
+
+  .custom-input.has-toggle {
+    padding-right: 48px;
+  }
+
+  .custom-input.error {
+    border-color: #ef4444;
+  }
+
+  .custom-input.error:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  }
+
+  /* Dark mode styles */
+  .dark .custom-input {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: white;
+  }
+
+  .dark .custom-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  .dark .custom-input::placeholder {
+    color: #9ca3af;
+  }
+
+  /* Input container styling */
+  .input-container {
+    position: relative;
+    width: 100%;
+  }
+
+  .input-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .dark .input-icon {
+    color: #9ca3af;
+  }
+
+  .input-toggle {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 10;
+  }
+
+  .input-toggle:hover {
+    color: #374151;
+  }
+
+  .dark .input-toggle {
+    color: #9ca3af;
+  }
+
+  .dark .input-toggle:hover {
+    color: #d1d5db;
   }
 
   /* Checkbox styling for dark mode */
