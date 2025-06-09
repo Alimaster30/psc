@@ -23,6 +23,7 @@ import settingsRoutes from './routes/settings.routes';
 import backupRoutes from './routes/backup.routes';
 import serviceRoutes from './routes/service.routes';
 import auditLogRoutes from './routes/auditLog.routes';
+import permissionRoutes from './routes/permission.routes';
 
 // Import error handler
 import { errorHandler } from './middlewares/error.middleware';
@@ -110,6 +111,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/backups', backupRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
+app.use('/api/permissions', permissionRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

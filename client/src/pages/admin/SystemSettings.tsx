@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
+import api from '../../services/api';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 
@@ -55,6 +55,7 @@ interface Settings {
 const SystemSettings: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [settings, setSettings] = useState<Settings>({
     clinicName: '',
     address: '',
@@ -103,127 +104,46 @@ const SystemSettings: React.FC = () => {
       try {
         setIsLoading(true);
 
-        try {
-          // Try to fetch from API
-          const response = await axios.get('/api/settings');
+        // Fetch from API using the configured api instance
+        const response = await api.get('/settings');
 
-          // Check if we have data in the expected format
-          if (response.data && (response.data.data || response.data.success)) {
-            // Handle both possible response formats
-            const settingsData = response.data.data || response.data;
+        if (response.data && response.data.success) {
+          const settingsData = response.data.data;
 
-            // Ensure all required properties exist
-            const updatedSettings = {
-              ...settings,
-              ...settingsData,
-              // Ensure nested objects exist
-              workingHours: {
-                ...settings.workingHours,
-                ...(settingsData.workingHours || {})
-              },
-              consultationFees: {
-                ...settings.consultationFees,
-                ...(settingsData.consultationFees || {})
-              },
-              notifications: {
-                ...settings.notifications,
-                ...(settingsData.notifications || {})
-              },
-              backup: {
-                ...settings.backup,
-                ...(settingsData.backup || {})
-              }
-            };
-
-            setSettings(updatedSettings);
-          } else {
-            // Use default settings if response format is unexpected
-            setSettings({
-              clinicName: 'Pak Skin Care',
-              address: '123 Medical Plaza, Islamabad, Pakistan',
-              phoneNumber: '+92 51 1234567',
-              email: 'info@psc.com',
-              website: 'www.psc.com',
-              workingHours: {
-                monday: { start: '09:00', end: '17:00' },
-                tuesday: { start: '09:00', end: '17:00' },
-                wednesday: { start: '09:00', end: '17:00' },
-                thursday: { start: '09:00', end: '17:00' },
-                friday: { start: '09:00', end: '17:00' },
-                saturday: { start: '10:00', end: '15:00' },
-                sunday: { start: '', end: '' },
-              },
-              consultationFees: {
-                initial: 2500,
-                followUp: 1500,
-              },
-              currency: 'PKR',
-              taxRate: 5,
-              notifications: {
-                appointmentReminders: true,
-                reminderHours: 24,
-                smsEnabled: true,
-                emailEnabled: true,
-                prescriptionReady: true,
-                paymentReceived: true
-              },
-              backup: {
-                autoBackup: true,
-                backupFrequency: 'daily',
-                backupTime: '00:00',
-                retentionDays: 30
-              },
-              appointmentDuration: 30,
-              appointmentBuffer: 5,
-              logo: ''
-            });
-          }
-        } catch (apiError) {
-          console.error('API error:', apiError);
-          // Use default settings if API call fails
-          setSettings({
-            clinicName: 'Pak Skin Care',
-            address: '123 Medical Plaza, Islamabad, Pakistan',
-            phoneNumber: '+92 51 1234567',
-            email: 'info@psc.com',
-            website: 'www.psc.com',
+          // Ensure all required properties exist
+          const updatedSettings = {
+            ...settings,
+            ...settingsData,
+            // Ensure nested objects exist
             workingHours: {
-              monday: { start: '09:00', end: '17:00' },
-              tuesday: { start: '09:00', end: '17:00' },
-              wednesday: { start: '09:00', end: '17:00' },
-              thursday: { start: '09:00', end: '17:00' },
-              friday: { start: '09:00', end: '17:00' },
-              saturday: { start: '10:00', end: '15:00' },
-              sunday: { start: '', end: '' },
+              ...settings.workingHours,
+              ...(settingsData.workingHours || {})
             },
             consultationFees: {
-              initial: 2500,
-              followUp: 1500,
+              ...settings.consultationFees,
+              ...(settingsData.consultationFees || {})
             },
-            currency: 'PKR',
-            taxRate: 5,
             notifications: {
-              appointmentReminders: true,
-              reminderHours: 24,
-              smsEnabled: true,
-              emailEnabled: true,
-              prescriptionReady: true,
-              paymentReceived: true
+              ...settings.notifications,
+              ...(settingsData.notifications || {})
             },
             backup: {
-              autoBackup: true,
-              backupFrequency: 'daily',
-              backupTime: '00:00',
-              retentionDays: 30
-            },
-            appointmentDuration: 30,
-            appointmentBuffer: 5,
-            logo: ''
-          });
+              ...settings.backup,
+              ...(settingsData.backup || {})
+            }
+          };
+
+          setSettings(updatedSettings);
+        } else {
+          throw new Error('Invalid API response format');
         }
-      } catch (error) {
-        console.error('Error in settings logic:', error);
-        toast.error('Failed to load system settings');
+      } catch (error: any) {
+        console.error('Error loading settings:', error);
+        if (error.response?.status === 403) {
+          toast.error('Access denied: Admin role required');
+        } else {
+          toast.error('Failed to load system settings');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -279,25 +199,59 @@ const SystemSettings: React.FC = () => {
     try {
       setIsSaving(true);
 
-      try {
-        // Try to update settings via API
-        await axios.put('/api/settings', settings);
-        toast.success('Settings updated successfully');
-      } catch (apiError) {
-        console.error('API error when updating settings:', apiError);
+      // Update settings via API
+      const response = await api.put('/settings', settings);
 
-        // Even if the API call fails, we'll pretend it succeeded for demo purposes
-        // In a real app, we would handle this differently
-        toast.success('Settings updated successfully (demo mode)');
-
-        // Log the settings that would have been saved
-        console.log('Settings that would be saved:', settings);
+      if (response.data.success) {
+        toast.success(response.data.message || 'Settings updated successfully');
+        // Update local state with the response data
+        setSettings(response.data.data);
+      } else {
+        throw new Error('Failed to update settings');
       }
-    } catch (error) {
-      console.error('Error in submit logic:', error);
-      toast.error('Failed to update settings');
+    } catch (error: any) {
+      console.error('Error updating settings:', error);
+      if (error.response?.status === 403) {
+        toast.error('Access denied: Admin role required');
+      } else if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Failed to update settings');
+      }
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleReset = async () => {
+    if (!window.confirm('Are you sure you want to reset all settings to default values? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setIsResetting(true);
+
+      // Reset settings via API
+      const response = await api.post('/settings/reset');
+
+      if (response.data.success) {
+        toast.success(response.data.message || 'Settings reset to default values successfully');
+        // Update local state with the response data
+        setSettings(response.data.data);
+      } else {
+        throw new Error('Failed to reset settings');
+      }
+    } catch (error: any) {
+      console.error('Error resetting settings:', error);
+      if (error.response?.status === 403) {
+        toast.error('Access denied: Admin role required');
+      } else if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Failed to reset settings');
+      }
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -329,6 +283,18 @@ const SystemSettings: React.FC = () => {
             Configure clinic information, working hours, and other system settings
           </p>
         </div>
+        <Button
+          variant="outline"
+          onClick={handleReset}
+          isLoading={isResetting}
+          icon={
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          }
+        >
+          Reset to Defaults
+        </Button>
       </div>
 
       {/* Settings Tabs */}

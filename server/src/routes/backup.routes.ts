@@ -1,5 +1,5 @@
 import express from 'express';
-import { createBackup, getBackups, downloadBackup } from '../controllers/backup.controller';
+import { createBackup, getBackups, downloadBackup, restoreBackup } from '../controllers/backup.controller';
 import { protect, authorize } from '../middlewares/auth.middleware';
 import { UserRole } from '../models/user.model';
 
@@ -13,5 +13,6 @@ router.use(authorize(UserRole.ADMIN));
 router.get('/', getBackups);
 router.get('/create', createBackup);
 router.get('/download/:backupId', downloadBackup);
+router.post('/restore/:backupId', restoreBackup);
 
 export default router;

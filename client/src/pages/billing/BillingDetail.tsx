@@ -214,37 +214,28 @@ const BillingDetail: React.FC = () => {
     try {
       setIsSubmitting(true);
 
-      // In a real implementation, we would call the API
-      // await api.post(`/api/invoices/${id}/payments`, {
-      //   amount: paymentAmount,
-      //   method: paymentMethod,
-      //   reference: paymentReference,
-      //   notes: paymentNotes
-      // });
-
-      // For now, we'll just simulate a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Update local state
-      const newPaidAmount = invoice.amountPaid + paymentAmount;
-      const newStatus = newPaidAmount >= invoice.total ? 'paid' : 'partially_paid';
-
-      setInvoice({
-        ...invoice,
-        amountPaid: newPaidAmount,
-        paymentStatus: newStatus as 'pending' | 'paid' | 'partially_paid' | 'overdue' | 'cancelled',
-        balance: invoice.total - newPaidAmount,
-        paymentMethod: paymentMethod,
-        paymentDate: new Date().toISOString(),
+      // Record payment via API
+      const response = await api.post(`/billing/${id}/payments`, {
+        amount: paymentAmount,
+        method: paymentMethod,
+        reference: paymentReference,
+        notes: paymentNotes
       });
 
-      setIsPaymentModalOpen(false);
-      setPaymentAmount(0);
-      setPaymentMethod('cash');
-      setPaymentReference('');
-      setPaymentNotes('');
+      if (response.data.success) {
+        // Update local state with response data
+        setInvoice(response.data.data);
 
-      toast.success('Payment recorded successfully');
+        setIsPaymentModalOpen(false);
+        setPaymentAmount(0);
+        setPaymentMethod('cash');
+        setPaymentReference('');
+        setPaymentNotes('');
+
+        toast.success(response.data.message || 'Payment recorded successfully');
+      } else {
+        throw new Error('Failed to record payment');
+      }
       setIsSubmitting(false);
     } catch (error) {
       console.error('Error recording payment:', error);

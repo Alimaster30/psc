@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
+import { permissionAPI } from '../../services/api';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 
@@ -32,100 +32,64 @@ const RolePermissions: React.FC = () => {
       try {
         setIsLoading(true);
         
-        // In a real implementation, we would fetch from the API
-        // const permissionsResponse = await axios.get('/api/permissions');
-        // const rolePermissionsResponse = await axios.get('/api/role-permissions');
-        // setPermissions(permissionsResponse.data.data);
-        // setRolePermissions(rolePermissionsResponse.data.data);
-        
-        // For now, we'll use mock data
-        const mockPermissions: Permission[] = [
-          // Patient module
-          { id: 'patient_view', name: 'View Patients', description: 'View patient details', module: 'Patients' },
-          { id: 'patient_create', name: 'Create Patients', description: 'Register new patients', module: 'Patients' },
-          { id: 'patient_edit', name: 'Edit Patients', description: 'Edit patient details', module: 'Patients' },
-          { id: 'patient_delete', name: 'Delete Patients', description: 'Delete patient records', module: 'Patients' },
-          { id: 'patient_medical_view', name: 'View Medical History', description: 'View patient medical history', module: 'Patients' },
-          { id: 'patient_medical_edit', name: 'Edit Medical History', description: 'Edit patient medical history', module: 'Patients' },
-          
-          // Appointment module
-          { id: 'appointment_view', name: 'View Appointments', description: 'View appointment details', module: 'Appointments' },
-          { id: 'appointment_create', name: 'Create Appointments', description: 'Schedule new appointments', module: 'Appointments' },
-          { id: 'appointment_edit', name: 'Edit Appointments', description: 'Reschedule appointments', module: 'Appointments' },
-          { id: 'appointment_delete', name: 'Cancel Appointments', description: 'Cancel appointments', module: 'Appointments' },
-          { id: 'appointment_complete', name: 'Complete Appointments', description: 'Mark appointments as completed', module: 'Appointments' },
-          
-          // Prescription module
-          { id: 'prescription_view', name: 'View Prescriptions', description: 'View prescription details', module: 'Prescriptions' },
-          { id: 'prescription_create', name: 'Create Prescriptions', description: 'Create new prescriptions', module: 'Prescriptions' },
-          { id: 'prescription_edit', name: 'Edit Prescriptions', description: 'Edit prescriptions', module: 'Prescriptions' },
-          { id: 'prescription_delete', name: 'Delete Prescriptions', description: 'Delete prescriptions', module: 'Prescriptions' },
-          
-          // Billing module
-          { id: 'billing_view', name: 'View Billing', description: 'View billing details', module: 'Billing' },
-          { id: 'billing_create', name: 'Create Billing', description: 'Create new billing records', module: 'Billing' },
-          { id: 'billing_edit', name: 'Edit Billing', description: 'Edit billing records', module: 'Billing' },
-          { id: 'billing_delete', name: 'Delete Billing', description: 'Delete billing records', module: 'Billing' },
-          { id: 'billing_payment', name: 'Record Payments', description: 'Record payments for bills', module: 'Billing' },
-          
-          // User management module
-          { id: 'user_view', name: 'View Users', description: 'View user details', module: 'Users' },
-          { id: 'user_create', name: 'Create Users', description: 'Create new user accounts', module: 'Users' },
-          { id: 'user_edit', name: 'Edit Users', description: 'Edit user details', module: 'Users' },
-          { id: 'user_delete', name: 'Delete Users', description: 'Delete user accounts', module: 'Users' },
-          
-          // Analytics module
-          { id: 'analytics_view', name: 'View Analytics', description: 'View analytics dashboard', module: 'Analytics' },
-          { id: 'analytics_export', name: 'Export Analytics', description: 'Export analytics data', module: 'Analytics' },
-          
-          // Settings module
-          { id: 'settings_view', name: 'View Settings', description: 'View system settings', module: 'Settings' },
-          { id: 'settings_edit', name: 'Edit Settings', description: 'Edit system settings', module: 'Settings' },
-          
-          // Backup module
-          { id: 'backup_create', name: 'Create Backups', description: 'Create system backups', module: 'Backup' },
-          { id: 'backup_restore', name: 'Restore Backups', description: 'Restore system from backups', module: 'Backup' },
-        ];
-        
-        const mockRolePermissions: RolePermission[] = [
-          {
-            role: 'admin',
-            permissions: mockPermissions.map(p => p.id), // Admin has all permissions
-            description: 'Full system access with all permissions'
-          },
-          {
-            role: 'dermatologist',
-            permissions: [
-              'patient_view', 'patient_medical_view', 'patient_medical_edit',
-              'appointment_view', 'appointment_complete',
-              'prescription_view', 'prescription_create', 'prescription_edit',
-              'analytics_view'
-            ],
-            description: 'Medical staff with access to patient records and prescriptions'
-          },
-          {
-            role: 'receptionist',
-            permissions: [
-              'patient_view', 'patient_create', 'patient_edit',
-              'appointment_view', 'appointment_create', 'appointment_edit', 'appointment_delete',
-              'billing_view', 'billing_create', 'billing_payment',
-              'prescription_view'
-            ],
-            description: 'Front desk staff with access to appointments and billing'
-          }
-        ];
-        
-        setPermissions(mockPermissions);
-        setRolePermissions(mockRolePermissions);
-        
-        // Extract unique modules
-        const uniqueModules = Array.from(new Set(mockPermissions.map(p => p.module)));
-        setModules(uniqueModules);
-        
-        setIsLoading(false);
-      } catch (error) {
+        // Fetch permissions from API
+        const [permissionsResponse, rolePermissionsResponse] = await Promise.all([
+          permissionAPI.getPermissions(),
+          permissionAPI.getRolePermissions()
+        ]);
+
+        if (permissionsResponse.data.success && rolePermissionsResponse.data.success) {
+          const fetchedPermissions = permissionsResponse.data.data;
+          const fetchedRolePermissions = rolePermissionsResponse.data.data;
+
+          setPermissions(fetchedPermissions);
+          setRolePermissions(fetchedRolePermissions);
+
+          // Extract unique modules
+          const uniqueModules = Array.from(new Set(fetchedPermissions.map((p: Permission) => p.module)));
+          setModules(uniqueModules);
+          setIsLoading(false);
+          return;
+        }
+
+        // If we reach here, there was an issue with the API response
+        throw new Error('Invalid API response');
+      } catch (error: any) {
         console.error('Error fetching permissions data:', error);
-        toast.error('Failed to load permissions data');
+
+        // Check if permissions need to be initialized
+        if (error.response?.status === 404 || error.response?.data?.message?.includes('not found')) {
+          try {
+            toast.loading('Initializing permissions system...');
+            await permissionAPI.initializePermissions();
+            toast.dismiss();
+            toast.success('Permissions system initialized successfully');
+
+            // Retry fetching data
+            const [permissionsResponse, rolePermissionsResponse] = await Promise.all([
+              permissionAPI.getPermissions(),
+              permissionAPI.getRolePermissions()
+            ]);
+
+            if (permissionsResponse.data.success && rolePermissionsResponse.data.success) {
+              const fetchedPermissions = permissionsResponse.data.data;
+              const fetchedRolePermissions = rolePermissionsResponse.data.data;
+
+              setPermissions(fetchedPermissions);
+              setRolePermissions(fetchedRolePermissions);
+
+              // Extract unique modules
+              const uniqueModules = Array.from(new Set(fetchedPermissions.map((p: Permission) => p.module)));
+              setModules(uniqueModules);
+            }
+          } catch (initError) {
+            console.error('Error initializing permissions:', initError);
+            toast.error('Failed to initialize permissions system');
+          }
+        } else {
+          toast.error('Failed to load permissions data');
+        }
+
         setIsLoading(false);
       }
     };
@@ -182,20 +146,15 @@ const RolePermissions: React.FC = () => {
   const handleSavePermissions = async () => {
     try {
       setIsSaving(true);
-      
-      // In a real implementation, we would call the API
-      // await axios.put('/api/role-permissions', {
-      //   rolePermissions
-      // });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
+      // Call the API to save role permissions
+      await permissionAPI.updateRolePermissions(rolePermissions);
+
       toast.success('Role permissions saved successfully');
       setIsSaving(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving permissions:', error);
-      toast.error('Failed to save permissions');
+      toast.error(error.response?.data?.message || 'Failed to save permissions');
       setIsSaving(false);
     }
   };

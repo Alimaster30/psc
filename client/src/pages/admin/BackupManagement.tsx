@@ -25,11 +25,15 @@ const BackupManagement: React.FC = () => {
     const fetchBackups = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get('/admin/backups');
+        const response = await api.get('/backups');
         setBackups(response.data.data || []);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching backups:', error);
-        toast.error('Failed to load backup data');
+        if (error.response?.status === 403) {
+          toast.error('Access denied: Admin role required');
+        } else {
+          toast.error('Failed to load backup data');
+        }
         setBackups([]);
       } finally {
         setIsLoading(false);
@@ -47,49 +51,60 @@ const BackupManagement: React.FC = () => {
       toast.loading('Initiating backup process...');
 
       // Call the API to create a backup
-      const response = await api.post('/admin/backups');
+      const response = await api.get('/backups/create');
 
       if (response.data && response.data.success) {
         // Add the new backup to the list
         const newBackup: Backup = {
-          _id: Date.now().toString(),
+          _id: response.data.data._id,
           backupId: response.data.data.backupId,
-          timestamp: new Date().toISOString(),
-          size: 'Processing...',
-          status: 'processing',
+          timestamp: response.data.data.timestamp,
+          size: response.data.data.size,
+          status: response.data.data.status,
         };
 
         setBackups([newBackup, ...backups]);
         toast.dismiss();
         toast.success('Backup process initiated successfully');
 
-        // Simulate backup completion after 5 seconds
-        setTimeout(() => {
-          setBackups(prevBackups => {
-            const updatedBackups = [...prevBackups];
-            const index = updatedBackups.findIndex(b => b.backupId === newBackup.backupId);
+        // Poll for backup completion
+        const pollBackupStatus = async () => {
+          try {
+            const statusResponse = await api.get('/backups');
+            if (statusResponse.data && statusResponse.data.success) {
+              const updatedBackups = statusResponse.data.data;
+              setBackups(updatedBackups);
 
-            if (index !== -1) {
-              updatedBackups[index] = {
-                ...updatedBackups[index],
-                status: 'completed',
-                size: '43.2 MB',
-                downloadUrl: '#'
-              };
+              const completedBackup = updatedBackups.find((b: Backup) => b.backupId === newBackup.backupId);
+              if (completedBackup && completedBackup.status === 'completed') {
+                toast.success(`Backup ${newBackup.backupId} completed successfully`);
+                return;
+              } else if (completedBackup && completedBackup.status === 'failed') {
+                toast.error(`Backup ${newBackup.backupId} failed`);
+                return;
+              }
+
+              // Continue polling if still processing
+              setTimeout(pollBackupStatus, 2000);
             }
+          } catch (error) {
+            console.error('Error polling backup status:', error);
+          }
+        };
 
-            return updatedBackups;
-          });
-
-          toast.success('Backup completed successfully');
-        }, 5000);
+        // Start polling after 2 seconds
+        setTimeout(pollBackupStatus, 2000);
       } else {
         throw new Error('Invalid response from server');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating backup:', error);
       toast.dismiss();
-      toast.error('Failed to create backup');
+      if (error.response?.status === 403) {
+        toast.error('Access denied: Admin role required');
+      } else {
+        toast.error('Failed to create backup');
+      }
     } finally {
       setIsCreatingBackup(false);
     }
@@ -101,12 +116,12 @@ const BackupManagement: React.FC = () => {
 
       try {
         // Try to call the API
-        const response = await api.get(`/admin/backups/${backupId}/download`, {
+        const response = await api.get(`/backups/download/${backupId}`, {
           responseType: 'blob' // Important for file downloads
         });
 
         // Create a blob from the response data
-        const blob = new Blob([response.data], { type: 'application/zip' });
+        const blob = new Blob([response.data], { type: 'application/json' });
 
         // Create a URL for the blob
         const url = URL.createObjectURL(blob);
@@ -114,7 +129,7 @@ const BackupManagement: React.FC = () => {
         // Create a link element to trigger the download
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `${backupId}.zip`);
+        link.setAttribute('download', `prime-skin-clinic-backup-${backupId}.json`);
         link.style.display = 'none';
         document.body.appendChild(link);
 
@@ -127,46 +142,16 @@ const BackupManagement: React.FC = () => {
 
         toast.dismiss();
         toast.success(`Backup ${backupId} downloaded successfully`);
-      } catch (apiError) {
-        console.log('API endpoint not available, creating a dummy file for download');
-
-        // Create a dummy text content for the backup file
-        const dummyContent = `Pak Skin Care Backup
-Backup ID: ${backupId}
-Created: ${new Date().toISOString()}
-Contents: This is a simulated backup file for demonstration purposes.
-
-This backup would contain:
-- Patient records
-- Appointment history
-- Prescription data
-- Billing information
-- System settings
-
-In a production environment, this would be a properly formatted database backup.`;
-
-        // Create a blob from the dummy content
-        const blob = new Blob([dummyContent], { type: 'text/plain' });
-
-        // Create a URL for the blob
-        const url = URL.createObjectURL(blob);
-
-        // Create a link element to trigger the download
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `${backupId}.txt`);
-        link.style.display = 'none';
-        document.body.appendChild(link);
-
-        // Trigger the download
-        link.click();
-
-        // Clean up
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-
+      } catch (apiError: any) {
+        console.error('Error downloading backup:', apiError);
         toast.dismiss();
-        toast.success(`Backup ${backupId} downloaded successfully`);
+        if (apiError.response?.status === 403) {
+          toast.error('Access denied: Admin role required');
+        } else if (apiError.response?.status === 404) {
+          toast.error('Backup file not found');
+        } else {
+          toast.error('Failed to download backup');
+        }
       }
     } catch (error) {
       console.error('Error downloading backup:', error);

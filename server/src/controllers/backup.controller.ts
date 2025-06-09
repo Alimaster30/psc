@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import Backup from '../models/backup.model';
 import { AppError } from '../middlewares/error.middleware';
 import { UserRole } from '../models/user.model';
+import AuditLogService from '../services/auditLog.service';
+import { AuditAction } from '../models/auditLog.model';
 import path from 'path';
 import fs from 'fs';
 
@@ -42,34 +44,71 @@ export const createBackup = async (req: Request, res: Response, next: NextFuncti
     // Log the action
     console.log(`Admin ${req.user?.email} triggered system backup ${backupId}`);
 
-    // In a real implementation, we would trigger an actual database backup process here
-    // For now, we'll simulate a backup process that completes after a short delay
+    // Trigger real database backup process
     setTimeout(async () => {
       try {
-        // Create a dummy backup file with some data
-        const dummyBackupData = {
-          timestamp: new Date(),
-          createdBy: req.user.email,
-          backupId,
-          // In a real implementation, this would contain actual database data
-          message: 'This is a simulated backup file for demonstration purposes.'
+        // Import all models for backup
+        const User = (await import('../models/user.model')).default;
+        const Patient = (await import('../models/patient.model')).default;
+        const Appointment = (await import('../models/appointment.model')).default;
+        const Prescription = (await import('../models/prescription.model')).default;
+        const Billing = (await import('../models/billing.model')).default;
+        const Service = (await import('../models/service.model')).default;
+        const Visit = (await import('../models/visit.model')).default;
+        const Settings = (await import('../models/settings.model')).default;
+        const { Permission, RolePermission } = await import('../models/permission.model');
+        const AuditLog = (await import('../models/auditLog.model')).default;
+
+        // Create comprehensive backup data
+        const backupData = {
+          metadata: {
+            timestamp: new Date(),
+            createdBy: req.user.email,
+            backupId,
+            version: '1.0',
+            description: 'Complete Prime Skin Clinic database backup'
+          },
+          data: {
+            users: await User.find({}).select('-password'),
+            patients: await Patient.find({}),
+            appointments: await Appointment.find({}),
+            prescriptions: await Prescription.find({}),
+            billings: await Billing.find({}),
+            services: await Service.find({}),
+            visits: await Visit.find({}),
+            settings: await Settings.find({}),
+            permissions: await Permission.find({}),
+            rolePermissions: await RolePermission.find({}),
+            auditLogs: await AuditLog.find({}).limit(1000).sort({ timestamp: -1 }) // Last 1000 audit logs
+          },
+          statistics: {
+            totalUsers: await User.countDocuments(),
+            totalPatients: await Patient.countDocuments(),
+            totalAppointments: await Appointment.countDocuments(),
+            totalPrescriptions: await Prescription.countDocuments(),
+            totalBillings: await Billing.countDocuments(),
+            totalServices: await Service.countDocuments(),
+            totalVisits: await Visit.countDocuments(),
+            totalAuditLogs: await AuditLog.countDocuments()
+          }
         };
 
         // Write the backup data to the file
-        fs.writeFileSync(filePath, JSON.stringify(dummyBackupData, null, 2));
+        fs.writeFileSync(filePath, JSON.stringify(backupData, null, 2));
 
         // Get the file size
         const stats = fs.statSync(filePath);
         const fileSizeInBytes = stats.size;
-        const fileSizeInKB = (fileSizeInBytes / 1024).toFixed(2);
+        const fileSizeInMB = (fileSizeInBytes / (1024 * 1024)).toFixed(2);
 
         // Update the backup record with the file size and status
         await Backup.findByIdAndUpdate(backup._id, {
-          size: `${fileSizeInKB} KB`,
+          size: `${fileSizeInMB} MB`,
           status: 'completed'
         });
 
-        console.log(`Backup ${backupId} completed successfully`);
+        console.log(`Real database backup ${backupId} completed successfully`);
+        console.log(`Backup contains ${backupData.statistics.totalPatients} patients, ${backupData.statistics.totalAppointments} appointments, and more`);
       } catch (error) {
         console.error(`Error completing backup ${backupId}:`, error);
 
@@ -78,7 +117,7 @@ export const createBackup = async (req: Request, res: Response, next: NextFuncti
           status: 'failed'
         });
       }
-    }, 5000); // Simulate a 5-second backup process
+    }, 2000); // Real backup process with 2-second delay
 
     res.status(200).json({
       success: true,
@@ -155,36 +194,192 @@ export const downloadBackup = async (req: Request, res: Response, next: NextFunc
     if (backup.filePath && fs.existsSync(backup.filePath)) {
       // Set headers for file download
       res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', `attachment; filename=${backupId}.json`);
+      res.setHeader('Content-Disposition', `attachment; filename=prime-skin-clinic-backup-${backupId}.json`);
 
       // Create a read stream from the backup file and pipe it to the response
       const fileStream = fs.createReadStream(backup.filePath);
       fileStream.pipe(res);
+
+      // Log the successful download
+      await AuditLogService.logSystemActivity(
+        AuditAction.BACKUP_DOWNLOADED,
+        req.user,
+        'Backup Management',
+        req,
+        `Downloaded backup: ${backupId}`
+      );
     } else {
-      // If the file doesn't exist, create a dummy backup file
-      const dummyContent = `Pak Skin Care Backup
-Backup ID: ${backupId}
-Created: ${backup.timestamp.toISOString()}
-Contents: This is a simulated backup file for demonstration purposes.
-
-This backup would contain:
-- Patient records
-- Appointment history
-- Prescription data
-- Billing information
-- System settings
-
-In a production environment, this would be a properly formatted database backup.`;
-
-      // Set the appropriate headers for file download
-      res.setHeader('Content-Type', 'application/octet-stream');
-      res.setHeader('Content-Disposition', `attachment; filename=${backupId}.txt`);
-
-      // Send the dummy content as the file
-      res.send(Buffer.from(dummyContent));
+      return next(new AppError('Backup file not found on disk', 404));
     }
   } catch (error) {
     console.error('Download backup error:', error);
+    next(error);
+  }
+};
+
+/**
+ * Restore from backup
+ * @route POST /api/backups/restore/:backupId
+ * @access Private (Admin only)
+ */
+export const restoreBackup = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { backupId } = req.params;
+
+    // Check if user is admin
+    if (req.user.role !== UserRole.ADMIN) {
+      return next(new AppError('Not authorized to restore backups', 403));
+    }
+
+    // Find the backup in the database
+    const backup = await Backup.findOne({ backupId });
+    if (!backup) {
+      return next(new AppError('Backup not found', 404));
+    }
+
+    // Check if the backup file exists
+    if (!backup.filePath || !fs.existsSync(backup.filePath)) {
+      return next(new AppError('Backup file not found on disk', 404));
+    }
+
+    // Read and parse the backup file
+    const backupContent = fs.readFileSync(backup.filePath, 'utf8');
+    const backupData = JSON.parse(backupContent);
+
+    // Validate backup data structure
+    if (!backupData.data || !backupData.metadata) {
+      return next(new AppError('Invalid backup file format', 400));
+    }
+
+    // Log the restore attempt
+    await AuditLogService.logSystemActivity(
+      AuditAction.BACKUP_RESTORED,
+      req.user,
+      'Backup Management',
+      req,
+      `Started restore from backup: ${backupId}`
+    );
+
+    // Import all models for restore
+    const User = (await import('../models/user.model')).default;
+    const Patient = (await import('../models/patient.model')).default;
+    const Appointment = (await import('../models/appointment.model')).default;
+    const Prescription = (await import('../models/prescription.model')).default;
+    const Billing = (await import('../models/billing.model')).default;
+    const Service = (await import('../models/service.model')).default;
+    const Visit = (await import('../models/visit.model')).default;
+    const Settings = (await import('../models/settings.model')).default;
+    const { Permission, RolePermission } = await import('../models/permission.model');
+
+    // WARNING: This is a destructive operation - clear existing data
+    console.log('WARNING: Starting destructive restore operation');
+
+    // Clear existing data (except users and audit logs for safety)
+    await Patient.deleteMany({});
+    await Appointment.deleteMany({});
+    await Prescription.deleteMany({});
+    await Billing.deleteMany({});
+    await Service.deleteMany({});
+    await Visit.deleteMany({});
+    await Settings.deleteMany({});
+    await Permission.deleteMany({});
+    await RolePermission.deleteMany({});
+
+    // Restore data from backup
+    let restoredCounts = {
+      patients: 0,
+      appointments: 0,
+      prescriptions: 0,
+      billings: 0,
+      services: 0,
+      visits: 0,
+      settings: 0,
+      permissions: 0,
+      rolePermissions: 0
+    };
+
+    // Restore each collection
+    if (backupData.data.patients && backupData.data.patients.length > 0) {
+      await Patient.insertMany(backupData.data.patients);
+      restoredCounts.patients = backupData.data.patients.length;
+    }
+
+    if (backupData.data.appointments && backupData.data.appointments.length > 0) {
+      await Appointment.insertMany(backupData.data.appointments);
+      restoredCounts.appointments = backupData.data.appointments.length;
+    }
+
+    if (backupData.data.prescriptions && backupData.data.prescriptions.length > 0) {
+      await Prescription.insertMany(backupData.data.prescriptions);
+      restoredCounts.prescriptions = backupData.data.prescriptions.length;
+    }
+
+    if (backupData.data.billings && backupData.data.billings.length > 0) {
+      await Billing.insertMany(backupData.data.billings);
+      restoredCounts.billings = backupData.data.billings.length;
+    }
+
+    if (backupData.data.services && backupData.data.services.length > 0) {
+      await Service.insertMany(backupData.data.services);
+      restoredCounts.services = backupData.data.services.length;
+    }
+
+    if (backupData.data.visits && backupData.data.visits.length > 0) {
+      await Visit.insertMany(backupData.data.visits);
+      restoredCounts.visits = backupData.data.visits.length;
+    }
+
+    if (backupData.data.settings && backupData.data.settings.length > 0) {
+      await Settings.insertMany(backupData.data.settings);
+      restoredCounts.settings = backupData.data.settings.length;
+    }
+
+    if (backupData.data.permissions && backupData.data.permissions.length > 0) {
+      await Permission.insertMany(backupData.data.permissions);
+      restoredCounts.permissions = backupData.data.permissions.length;
+    }
+
+    if (backupData.data.rolePermissions && backupData.data.rolePermissions.length > 0) {
+      await RolePermission.insertMany(backupData.data.rolePermissions);
+      restoredCounts.rolePermissions = backupData.data.rolePermissions.length;
+    }
+
+    // Log successful restore
+    await AuditLogService.logSystemActivity(
+      AuditAction.BACKUP_RESTORED,
+      req.user,
+      'Backup Management',
+      req,
+      `Successfully restored from backup: ${backupId}. Restored: ${JSON.stringify(restoredCounts)}`
+    );
+
+    console.log(`Backup ${backupId} restored successfully:`, restoredCounts);
+
+    res.status(200).json({
+      success: true,
+      message: 'Backup restored successfully',
+      data: {
+        backupId,
+        restoredCounts,
+        restoredFrom: backupData.metadata.timestamp
+      }
+    });
+  } catch (error) {
+    console.error('Restore backup error:', error);
+
+    // Log failed restore attempt
+    try {
+      await AuditLogService.logSystemActivity(
+        AuditAction.BACKUP_RESTORED,
+        req.user,
+        'Backup Management',
+        req,
+        `Failed to restore from backup: ${req.params.backupId}. Error: ${(error as Error).message}`
+      );
+    } catch (logError) {
+      console.error('Error logging failed restore:', logError);
+    }
+
     next(error);
   }
 };

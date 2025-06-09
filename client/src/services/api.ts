@@ -415,5 +415,38 @@ export const auditLogAPI = {
   },
 };
 
+// Permission API
+export const permissionAPI = {
+  getPermissions: async () => {
+    const response = await api.get('/permissions');
+    return response;
+  },
+
+  getRolePermissions: async () => {
+    const response = await api.get('/permissions/roles');
+    return response;
+  },
+
+  updateRolePermissions: async (rolePermissions: any[]) => {
+    const response = await api.put('/permissions/roles', { rolePermissions });
+    return response;
+  },
+
+  getRolePermission: async (role: string) => {
+    const response = await api.get(`/permissions/roles/${role}`);
+    return response;
+  },
+
+  checkPermission: async (permission: string) => {
+    const response = await api.get(`/permissions/check/${permission}`);
+    return response;
+  },
+
+  initializePermissions: async () => {
+    const response = await api.post('/permissions/initialize');
+    return response;
+  },
+};
+
 export default api;
 export { clearCache };

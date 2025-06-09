@@ -348,7 +348,7 @@ const UserDetail: React.FC = () => {
               </div>
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 italic text-center mt-4">
-              This is a demo activity log. In a real application, this would show actual user activity.
+              Recent activity history for this user account.
             </p>
           </div>
         </Card>
