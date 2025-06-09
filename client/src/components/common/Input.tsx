@@ -17,10 +17,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const inputType = rest.type === 'password' && showPassword ? 'text' : rest.type;
 
     // Base classes - mobile-first with proper touch targets
-    const baseClasses = 'input px-4 py-3 sm:px-3 sm:py-2 border rounded-lg sm:rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base min-h-[44px] sm:min-h-[36px] transition-colors duration-200';
+    const baseClasses = 'w-full px-4 py-3 sm:px-3 sm:py-2 border border-gray-300 rounded-lg sm:rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 text-base min-h-[44px] sm:min-h-[36px] transition-colors duration-200';
 
     // Error classes
-    const errorClasses = error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : '';
+    const errorClasses = error ? 'border-red-500 focus:ring-red-500 focus:border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600';
 
     // Width classes
     const widthClasses = fullWidth ? 'w-full' : '';

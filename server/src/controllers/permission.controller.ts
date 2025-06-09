@@ -208,10 +208,28 @@ export const initializePermissions = async (req: Request, res: Response, next: N
       return next(new AppError('Not authorized to initialize permissions', 403));
     }
 
-    // Check if permissions already exist
+    // Check if permissions already exist - allow re-initialization if incomplete
     const existingPermissions = await Permission.countDocuments();
+    const existingRolePermissions = await RolePermission.countDocuments();
+
+    // If both permissions and role permissions exist, don't re-initialize
+    if (existingPermissions > 0 && existingRolePermissions >= 3) {
+      return res.status(200).json({
+        success: true,
+        message: 'Permissions already initialized',
+        data: {
+          permissionsCount: existingPermissions,
+          rolePermissionsCount: existingRolePermissions,
+        },
+      });
+    }
+
+    // Clear existing data if incomplete
     if (existingPermissions > 0) {
-      return next(new AppError('Permissions already initialized', 400));
+      await Permission.deleteMany({});
+    }
+    if (existingRolePermissions > 0) {
+      await RolePermission.deleteMany({});
     }
 
     // Default permissions

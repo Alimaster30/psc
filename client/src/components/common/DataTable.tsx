@@ -249,19 +249,21 @@ function DataTable<T>({
                   <th
                     key={index}
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    className="px-6 py-3 text-left"
                   >
-                    {column.sortable ? (
-                      <button
-                        className="flex items-center focus:outline-none group"
-                        onClick={() => handleSort(column.key)}
-                      >
-                        <span>{column.label}</span>
-                        <div className="ml-1 flex flex-col">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        {column.label}
+                      </span>
+                      {column.sortable && (
+                        <button
+                          className="ml-2 flex flex-col focus:outline-none group"
+                          onClick={() => handleSort(column.key)}
+                        >
                           <svg
-                            className={`w-3 h-3 ${currentSortField === column.key && currentSortDirection === 'asc'
-                              ? 'text-primary-500'
-                              : 'text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300'}`}
+                            className={`w-3 h-3 transition-colors duration-150 ${currentSortField === column.key && currentSortDirection === 'asc'
+                              ? 'text-primary-500 dark:text-primary-400'
+                              : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400'}`}
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -269,20 +271,18 @@ function DataTable<T>({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"></path>
                           </svg>
                           <svg
-                            className={`w-3 h-3 -mt-1 ${currentSortField === column.key && currentSortDirection === 'desc'
-                              ? 'text-primary-500'
-                              : 'text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300'}`}
+                            className={`w-3 h-3 -mt-1 transition-colors duration-150 ${currentSortField === column.key && currentSortDirection === 'desc'
+                              ? 'text-primary-500 dark:text-primary-400'
+                              : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400'}`}
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
                           >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
                           </svg>
-                        </div>
-                      </button>
-                    ) : (
-                      column.label
-                    )}
+                        </button>
+                      )}
+                    </div>
                   </th>
                 ))}
               </tr>

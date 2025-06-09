@@ -53,6 +53,8 @@
     @apply ring-primary-500 ring-offset-gray-900;
   }
 
+
+
   .form-checkbox, .form-radio {
     @apply rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-400;
   }
