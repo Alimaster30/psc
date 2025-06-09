@@ -16,8 +16,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     // Determine the input type based on showPassword state if it's a password field
     const inputType = rest.type === 'password' && showPassword ? 'text' : rest.type;
 
-    // Base classes - improved mobile touch targets
-    const baseClasses = 'input px-3 py-2.5 sm:py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base sm:text-sm';
+    // Base classes - mobile-first with proper touch targets
+    const baseClasses = 'input px-4 py-3 sm:px-3 sm:py-2 border rounded-lg sm:rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base min-h-[44px] sm:min-h-[36px] transition-colors duration-200';
 
     // Error classes
     const errorClasses = error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : '';

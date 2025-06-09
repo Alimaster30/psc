@@ -285,37 +285,31 @@ function DataTable<T>({
       </div>
 
       {/* Mobile Card View - Visible only on mobile (< 768px) */}
-      <div
-        style={{
-          display: 'none',
-          padding: '1rem',
-          gap: '1rem'
-        }}
-        className="mobile-card-view"
-      >
+      <div className="block md:hidden space-y-4 p-4">
         {sortedData.map((item) => (
           <motion.div
             key={keyExtractor(item)}
-            className={`bg-gray-50 dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 p-4 mb-4 mobile-card ${onRowClick ? 'cursor-pointer hover:shadow-md' : ''}`}
+            className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 ${onRowClick ? 'cursor-pointer hover:shadow-md active:scale-[0.98]' : ''}`}
             onClick={() => onRowClick && onRowClick(item)}
-            whileHover={{ scale: onRowClick ? 1.02 : 1 }}
-            transition={{ duration: 0.2 }}
+            whileHover={{ scale: onRowClick ? 1.01 : 1 }}
+            whileTap={{ scale: onRowClick ? 0.98 : 1 }}
+            transition={{ duration: 0.15 }}
           >
             {columns
               .filter(column => !column.hideOnMobile)
               .map((column, index) => (
                 <div
                   key={index}
-                  className={`flex justify-between items-start py-2 ${
+                  className={`flex justify-between items-start py-3 ${
                     index < columns.filter(col => !col.hideOnMobile).length - 1
                       ? 'border-b border-gray-100 dark:border-gray-600'
                       : ''
                   }`}
                 >
-                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400 flex-shrink-0 mr-4">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400 flex-shrink-0 mr-4 min-w-[80px]">
                     {column.mobileLabel || column.label}:
                   </span>
-                  <span className="text-sm text-gray-900 dark:text-gray-100 text-right flex-1">
+                  <span className="text-base text-gray-900 dark:text-gray-100 text-right flex-1 font-medium">
                     {column.render(item)}
                   </span>
                 </div>

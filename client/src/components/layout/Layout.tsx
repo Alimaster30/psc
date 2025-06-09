@@ -207,39 +207,40 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-30 w-64 bg-white dark:bg-gray-800 shadow-lg transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out`}>
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
-          <Link to="/" className="flex items-center justify-center w-full" onClick={closeSidebar}>
+      <div className={`fixed inset-y-0 left-0 z-30 w-72 sm:w-64 bg-white dark:bg-gray-800 shadow-lg transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out`}>
+        <div className="flex items-center justify-between h-16 px-4 sm:px-6 border-b border-gray-200 dark:border-gray-700">
+          <Link to="/" className="flex items-center justify-center flex-1" onClick={closeSidebar}>
             <img
               src="/logo.png"
               alt="Prime Skin Clinic"
-              className="w-12 h-12 object-contain"
+              className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
             />
           </Link>
           <button
-            className="md:hidden text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="md:hidden text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 -mr-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
             onClick={closeSidebar}
+            aria-label="Close sidebar"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
         </div>
-        <nav className="mt-4 px-2 overflow-y-auto h-[calc(100vh-4rem)]">
+        <nav className="mt-4 px-2 sm:px-3 overflow-y-auto h-[calc(100vh-4rem)]">
           <div className="space-y-1">
             {getNavigationItems().map((item, index) => (
               <Link
                 key={index}
                 to={item.path}
-                className={`flex items-center px-4 py-3 text-sm font-medium rounded-md transition-colors duration-200 ${
+                className={`flex items-center px-3 sm:px-4 py-3 sm:py-2.5 text-base sm:text-sm font-medium rounded-md transition-colors duration-200 min-h-[48px] ${
                   isActive(item.path)
                     ? 'bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
                 onClick={closeSidebar}
               >
-                <span className="mr-3">{getIcon(item.icon)}</span>
-                {item.name}
+                <span className="mr-3 text-xl sm:text-lg flex-shrink-0">{getIcon(item.icon)}</span>
+                <span className="truncate">{item.name}</span>
               </Link>
             ))}
           </div>
@@ -280,8 +281,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex items-center justify-between h-16 px-4 md:px-6">
             <div className="flex items-center">
               <button
-                className="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 md:hidden"
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 md:hidden p-2 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md"
                 onClick={toggleSidebar}
+                aria-label="Open sidebar"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>

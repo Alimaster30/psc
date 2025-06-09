@@ -43,12 +43,12 @@ const Button: React.FC<ButtonProps> = ({
     info: 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-400 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-300 dark:focus:ring-offset-gray-900',
   };
 
-  // Size classes
+  // Size classes - Mobile-first with proper touch targets
   const sizeClasses = {
-    xs: 'px-2 py-1 text-xs',
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg',
+    xs: 'px-2 py-2 text-xs min-h-[36px]',
+    sm: 'px-3 py-2.5 text-sm min-h-[40px]',
+    md: 'px-4 py-3 text-base min-h-[44px] sm:py-2 sm:min-h-[36px]',
+    lg: 'px-6 py-4 text-lg min-h-[48px] sm:py-3 sm:min-h-[44px]',
   };
 
   // Width classes
