@@ -44,6 +44,7 @@ import EditPrescription from './pages/prescriptions/EditPrescription';
 import CreateBilling from './pages/billing/CreateBilling';
 import EditBilling from './pages/billing/EditBilling';
 import ReceiptPrinting from './pages/billing/ReceiptPrinting';
+import ReceiptsList from './pages/billing/ReceiptsList';
 import BillingList from './pages/billing/BillingList';
 import BillingDetail from './pages/billing/BillingDetail';
 import InvoiceGenerator from './pages/billing/InvoiceGenerator';
@@ -342,10 +343,7 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute requiredRoles={['admin', 'receptionist']}>
               <Layout>
-                <div>
-                  <h1 className="text-2xl font-bold mb-4">Receipts</h1>
-                  <p>Select a billing record to print its receipt.</p>
-                </div>
+                <ReceiptsList />
               </Layout>
             </ProtectedRoute>
           }

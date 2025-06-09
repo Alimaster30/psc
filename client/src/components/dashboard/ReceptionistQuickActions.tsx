@@ -82,7 +82,7 @@ const ReceptionistQuickActions: React.FC = () => {
         <motion.div
           variants={itemVariants}
           className="flex flex-col items-center justify-center cursor-pointer group"
-          onClick={() => navigate('/billing/receipt')}
+          onClick={() => navigate('/receipts')}
         >
           <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-600/30 dark:to-purple-800/30 backdrop-blur-sm rounded-xl flex items-center justify-center mb-3 group-hover:from-purple-200 group-hover:to-purple-300 dark:group-hover:from-purple-600/40 dark:group-hover:to-purple-800/40 transition-all duration-300 shadow-md border border-purple-300/50 dark:border-purple-700/20 group-hover:shadow-purple-300/30 dark:group-hover:shadow-purple-700/20">
             <svg className="w-8 h-8 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
