@@ -6,7 +6,7 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import QuickActionButton from '../../components/common/QuickActionButton';
 import Breadcrumb from '../../components/common/Breadcrumb';
-import BeforeAfterComparison from '../../components/patients/BeforeAfterComparison';
+
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
@@ -408,23 +408,7 @@ const PatientDetail: React.FC = () => {
               </div>
             </button>
           )}
-          {(user?.role === 'admin' || user?.role === 'dermatologist') && (
-            <button
-              className={`py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
-                activeTab === 'images'
-                  ? 'border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600'
-              }`}
-              onClick={() => setActiveTab('images')}
-            >
-              <div className="flex items-center">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                Images
-              </div>
-            </button>
-          )}
+
         </nav>
       </div>
 
@@ -566,29 +550,7 @@ const PatientDetail: React.FC = () => {
         </Card>
       )}
 
-      {activeTab === 'images' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Patient Images</h3>
-            {(user?.role === 'admin' || user?.role === 'dermatologist') && (
-              <Button
-                variant="primary"
-                onClick={() => navigate(`/patients/${patient._id}/upload-image`)}
-                icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                  </svg>
-                }
-              >
-                Upload New Image
-              </Button>
-            )}
-          </div>
 
-          {/* Before/After Comparison */}
-          <BeforeAfterComparison patientId={patient._id} />
-        </div>
-      )}
 
       {activeTab === 'prescriptions' && (
         <Card>

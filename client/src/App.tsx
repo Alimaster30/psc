@@ -29,8 +29,6 @@ import UserSettings from './pages/UserSettings';
 
 // Patient Pages
 import PatientRegistration from './pages/patients/PatientRegistration';
-import PatientImageUpload from './pages/patients/PatientImageUpload';
-import PatientImageSelector from './pages/patients/PatientImageSelector';
 import PatientList from './pages/patients/PatientList';
 import PatientDetail from './pages/patients/PatientDetail';
 import PatientForm from './pages/patients/PatientForm';
@@ -303,16 +301,7 @@ const AppRoutes: React.FC = () => {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/patients/:patientId/upload-image"
-          element={
-            <ProtectedRoute requiredRoles={['admin', 'dermatologist']}>
-              <Layout>
-                <PatientImageUpload />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+
 
         {/* Prescription Routes */}
         <Route
@@ -558,16 +547,7 @@ const AppRoutes: React.FC = () => {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/patient-images"
-          element={
-            <ProtectedRoute requiredRoles={['admin', 'dermatologist']}>
-              <Layout>
-                <PatientImageSelector />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+
         <Route
           path="/audit-logs"
           element={

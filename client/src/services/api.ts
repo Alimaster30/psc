@@ -256,42 +256,7 @@ export const patientAPI = {
   },
 };
 
-// Patient Image API
-export const patientImageAPI = {
-  getPatientImages: async (params?: any) => {
-    const response = await api.get('/patient-images', { params });
-    return response;
-  },
 
-  getPatientImage: async (id: string) => {
-    const response = await api.get(`/patient-images/${id}`);
-    return response;
-  },
-
-  uploadPatientImage: async (formData: FormData) => {
-    const response = await api.post('/patient-images', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response;
-  },
-
-  updatePatientImage: async (id: string, imageData: any) => {
-    const response = await api.put(`/patient-images/${id}`, imageData);
-    return response;
-  },
-
-  deletePatientImage: async (id: string) => {
-    const response = await api.delete(`/patient-images/${id}`);
-    return response;
-  },
-
-  getBeforeAfterPairs: async (patientId: string) => {
-    const response = await api.get(`/patient-images/patient/${patientId}/before-after`);
-    return response;
-  },
-};
 
 // Appointment API
 export const appointmentAPI = {

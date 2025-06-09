@@ -84,7 +84,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         { name: 'My Patients', path: '/patients', icon: 'users' },
         { name: 'My Appointments', path: '/appointments', icon: 'calendar' },
         { name: 'Prescriptions', path: '/prescriptions', icon: 'prescription' },
-        { name: 'Patient Images', path: '/patient-images', icon: 'image' },
         { name: 'My Account', path: '/settings', icon: 'settings' },
       ];
     }
