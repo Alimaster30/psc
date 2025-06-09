@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import User, { UserRole } from '../models/user.model';
 import { generateToken } from '../utils/jwt';
 import { AppError } from '../middlewares/error.middleware';
+import AuditLogService from '../services/auditLog.service';
+import { AuditAction } from '../models/auditLog.model';
 
 /**
  * Register a new user
@@ -65,11 +67,15 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const user = await User.findOne({ email });
 
     if (!user) {
+      // Log failed login attempt
+      await AuditLogService.logAuth(AuditAction.LOGIN_FAILED, email, false, req, 'User not found');
       return next(new AppError('Invalid credentials', 401));
     }
 
     // Check if user is active
     if (!user.isActive) {
+      // Log failed login attempt
+      await AuditLogService.logAuth(AuditAction.LOGIN_FAILED, email, false, req, 'User account is deactivated');
       return next(new AppError('User account is deactivated', 401));
     }
 
@@ -77,8 +83,13 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
+      // Log failed login attempt
+      await AuditLogService.logAuth(AuditAction.LOGIN_FAILED, email, false, req, 'Invalid password');
       return next(new AppError('Invalid credentials', 401));
     }
+
+    // Log successful login
+    await AuditLogService.logAuth(AuditAction.LOGIN, email, true, req);
 
     // Generate token
     const token = generateToken({ id: user._id });
@@ -180,6 +191,9 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
     // Update password
     user.password = newPassword;
     await user.save();
+
+    // Log password change
+    await AuditLogService.logAuth(AuditAction.PASSWORD_CHANGED, user.email, true, req);
 
     res.status(200).json({
       success: true,

@@ -389,5 +389,31 @@ export const analyticsAPI = {
   },
 };
 
+// Audit Log API
+export const auditLogAPI = {
+  getAuditLogs: async (params?: any) => {
+    const response = await api.get('/audit-logs', { params });
+    return response;
+  },
+
+  getAuditLogStats: async (period?: string) => {
+    const response = await api.get('/audit-logs/stats', { params: { period } });
+    return response;
+  },
+
+  getAuditLog: async (id: string) => {
+    const response = await api.get(`/audit-logs/${id}`);
+    return response;
+  },
+
+  exportAuditLogs: async (startDate?: string, endDate?: string) => {
+    const response = await api.get('/audit-logs/export', {
+      params: { startDate, endDate },
+      responseType: 'blob',
+    });
+    return response;
+  },
+};
+
 export default api;
 export { clearCache };

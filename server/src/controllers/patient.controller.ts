@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import Patient, { IMedicalHistory } from '../models/patient.model';
 import { AppError } from '../middlewares/error.middleware';
+import AuditLogService from '../services/auditLog.service';
+import { AuditAction } from '../models/auditLog.model';
 
 /**
  * Get all patients
@@ -44,6 +46,9 @@ export const getPatient = async (req: Request, res: Response, next: NextFunction
     }
 
     console.log('Patient found:', patient.firstName, patient.lastName);
+
+    // Log patient data access
+    await AuditLogService.logPatientActivity(AuditAction.PATIENT_VIEWED, req.user, patient, req);
 
     // Get decrypted medical history and allergies
     const medicalHistory = patient.getMedicalHistory();
@@ -119,6 +124,9 @@ export const createPatient = async (req: Request, res: Response, next: NextFunct
 
     await patient.save();
 
+    // Log patient creation
+    await AuditLogService.logPatientActivity(AuditAction.PATIENT_CREATED, req.user, patient, req);
+
     res.status(201).json({
       success: true,
       data: patient,
@@ -178,6 +186,9 @@ export const updatePatient = async (req: Request, res: Response, next: NextFunct
     }
 
     await patient.save();
+
+    // Log patient update
+    await AuditLogService.logPatientActivity(AuditAction.PATIENT_UPDATED, req.user, patient, req);
 
     // Get decrypted medical history and allergies for response
     const updatedMedicalHistory = patient.getMedicalHistory();

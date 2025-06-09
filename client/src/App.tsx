@@ -25,6 +25,7 @@ import UserForm from './pages/admin/UserForm';
 import SystemSettings from './pages/admin/SystemSettings';
 import BackupManagement from './pages/admin/BackupManagement';
 import RolePermissions from './pages/admin/RolePermissions';
+import AuditLogs from './pages/admin/AuditLogs';
 import UserSettings from './pages/UserSettings';
 
 // Patient Pages
@@ -553,10 +554,7 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute requiredRoles={['admin']}>
               <Layout>
-                <div>
-                  <h1 className="text-2xl font-bold mb-4">Audit Logs</h1>
-                  <p>System audit logs will be displayed here.</p>
-                </div>
+                <AuditLogs />
               </Layout>
             </ProtectedRoute>
           }
