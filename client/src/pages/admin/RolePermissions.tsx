@@ -46,7 +46,7 @@ const RolePermissions: React.FC = () => {
           setRolePermissions(fetchedRolePermissions);
 
           // Extract unique modules
-          const uniqueModules = Array.from(new Set(fetchedPermissions.map((p: Permission) => p.module)));
+          const uniqueModules = Array.from(new Set(fetchedPermissions.map((p: Permission) => p.module))) as string[];
           setModules(uniqueModules);
           setIsLoading(false);
           return;
@@ -79,7 +79,7 @@ const RolePermissions: React.FC = () => {
               setRolePermissions(fetchedRolePermissions);
 
               // Extract unique modules
-              const uniqueModules = Array.from(new Set(fetchedPermissions.map((p: Permission) => p.module)));
+              const uniqueModules = Array.from(new Set(fetchedPermissions.map((p: Permission) => p.module))) as string[];
               setModules(uniqueModules);
             }
           } catch (initError) {

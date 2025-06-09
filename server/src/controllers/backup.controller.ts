@@ -1,7 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import Backup from '../models/backup.model';
 import { AppError } from '../middlewares/error.middleware';
-import { UserRole } from '../models/user.model';
+import User, { UserRole } from '../models/user.model';
+import Patient from '../models/patient.model';
+import Appointment from '../models/appointment.model';
+import Prescription from '../models/prescription.model';
+import Billing from '../models/billing.model';
+import Service from '../models/service.model';
+import Visit from '../models/visit.model';
+import Settings from '../models/settings.model';
+import { Permission, RolePermission } from '../models/permission.model';
+import AuditLog from '../models/auditLog.model';
 import AuditLogService from '../services/auditLog.service';
 import { AuditAction } from '../models/auditLog.model';
 import path from 'path';
@@ -47,17 +56,7 @@ export const createBackup = async (req: Request, res: Response, next: NextFuncti
     // Trigger real database backup process
     setTimeout(async () => {
       try {
-        // Import all models for backup
-        const User = (await import('../models/user.model')).default;
-        const Patient = (await import('../models/patient.model')).default;
-        const Appointment = (await import('../models/appointment.model')).default;
-        const Prescription = (await import('../models/prescription.model')).default;
-        const Billing = (await import('../models/billing.model')).default;
-        const Service = (await import('../models/service.model')).default;
-        const Visit = (await import('../models/visit.model')).default;
-        const Settings = (await import('../models/settings.model')).default;
-        const { Permission, RolePermission } = await import('../models/permission.model');
-        const AuditLog = (await import('../models/auditLog.model')).default;
+        // Use imported models for backup
 
         // Create comprehensive backup data
         const backupData = {
@@ -260,16 +259,7 @@ export const restoreBackup = async (req: Request, res: Response, next: NextFunct
       `Started restore from backup: ${backupId}`
     );
 
-    // Import all models for restore
-    const User = (await import('../models/user.model')).default;
-    const Patient = (await import('../models/patient.model')).default;
-    const Appointment = (await import('../models/appointment.model')).default;
-    const Prescription = (await import('../models/prescription.model')).default;
-    const Billing = (await import('../models/billing.model')).default;
-    const Service = (await import('../models/service.model')).default;
-    const Visit = (await import('../models/visit.model')).default;
-    const Settings = (await import('../models/settings.model')).default;
-    const { Permission, RolePermission } = await import('../models/permission.model');
+    // Use imported models for restore
 
     // WARNING: This is a destructive operation - clear existing data
     console.log('WARNING: Starting destructive restore operation');
