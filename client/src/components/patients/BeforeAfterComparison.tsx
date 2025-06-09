@@ -31,9 +31,36 @@ const BeforeAfterComparison: React.FC<BeforeAfterComparisonProps> = ({ patientId
 
   // Get the API base URL for image display
   const getImageUrl = (imageUrl: string) => {
+    // In development, use the proxy directly
+    if (import.meta.env.MODE === 'development') {
+      // Ensure the URL starts with / for proper proxy handling
+      const fullUrl = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+
+      // Debug logging
+      console.log('🖼️ Image URL Debug (Development):', {
+        originalImageUrl: imageUrl,
+        fullUrl,
+        environment: import.meta.env.MODE
+      });
+
+      return fullUrl;
+    }
+
+    // In production, construct the full URL
     const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://prime-skin-clinic-api.onrender.com/api';
     const baseUrl = apiBaseUrl.replace('/api', '');
-    return `${baseUrl}${imageUrl}`;
+    const fullUrl = `${baseUrl}${imageUrl}`;
+
+    // Debug logging
+    console.log('🖼️ Image URL Debug (Production):', {
+      originalImageUrl: imageUrl,
+      apiBaseUrl,
+      baseUrl,
+      fullUrl,
+      environment: import.meta.env.MODE
+    });
+
+    return fullUrl;
   };
 
   useEffect(() => {
@@ -43,15 +70,19 @@ const BeforeAfterComparison: React.FC<BeforeAfterComparisonProps> = ({ patientId
 
         try {
           // Fetch from API
+          console.log('🚀 Fetching before/after pairs for patient:', patientId);
           const response = await api.get(`/patient-images/patient/${patientId}/before-after`);
+          console.log('🔍 Before/After API Response:', response.data);
 
           if (response.data && response.data.data) {
+            console.log('📊 Image Pairs:', response.data.data);
             setImagePairs(response.data.data);
 
             // Set default selections if pairs exist
             if (response.data.data.length > 0) {
               setSelectedPair(0);
               const firstPair = response.data.data[0];
+              console.log('🎯 First Pair Details:', firstPair);
               if (firstPair.after && firstPair.after.length > 0) {
                 setSelectedAfterImage(firstPair.after[0]._id);
               }

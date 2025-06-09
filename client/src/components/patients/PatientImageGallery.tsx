@@ -34,9 +34,36 @@ const PatientImageGallery: React.FC<PatientImageGalleryProps> = ({ patientId }) 
 
   // Get the API base URL for image display
   const getImageUrl = (imageUrl: string) => {
+    // In development, use the proxy directly
+    if (import.meta.env.MODE === 'development') {
+      // Ensure the URL starts with / for proper proxy handling
+      const fullUrl = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+
+      // Debug logging
+      console.log('🖼️ Gallery Image URL Debug (Development):', {
+        originalImageUrl: imageUrl,
+        fullUrl,
+        environment: import.meta.env.MODE
+      });
+
+      return fullUrl;
+    }
+
+    // In production, construct the full URL
     const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://prime-skin-clinic-api.onrender.com/api';
     const baseUrl = apiBaseUrl.replace('/api', '');
-    return `${baseUrl}${imageUrl}`;
+    const fullUrl = `${baseUrl}${imageUrl}`;
+
+    // Debug logging
+    console.log('🖼️ Gallery Image URL Debug (Production):', {
+      originalImageUrl: imageUrl,
+      apiBaseUrl,
+      baseUrl,
+      fullUrl,
+      environment: import.meta.env.MODE
+    });
+
+    return fullUrl;
   };
 
   useEffect(() => {

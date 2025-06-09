@@ -298,24 +298,47 @@ export const deletePatientImage = async (req: Request, res: Response) => {
 export const getBeforeAfterPairs = async (req: Request, res: Response) => {
   try {
     const { patientId } = req.params;
-    
-    // Find all "before" images for this patient
-    const beforeImages = await PatientImage.find({
+
+    // Find all images for this patient
+    const allImages = await PatientImage.find({
       patient: patientId,
-      isBefore: true,
-    }).populate({
-      path: 'relatedImages',
-      model: 'PatientImage'
+    }).sort({ uploadedAt: 1 });
+
+    console.log('🔍 All images for patient:', allImages.length);
+
+    // Group images by category
+    const imagesByCategory: Record<string, { before: any[], after: any[] }> = {};
+
+    allImages.forEach(image => {
+      if (!imagesByCategory[image.category]) {
+        imagesByCategory[image.category] = { before: [], after: [] };
+      }
+
+      if (image.isBefore) {
+        imagesByCategory[image.category].before.push(image);
+      } else {
+        imagesByCategory[image.category].after.push(image);
+      }
     });
 
-    // Create pairs
-    const pairs = beforeImages.map(beforeImage => {
-      const afterImages = beforeImage.relatedImages || [];
-      return {
-        before: beforeImage,
-        after: afterImages.length > 0 ? afterImages : null,
-      };
+    console.log('📊 Images by category:', Object.keys(imagesByCategory));
+
+    // Create pairs from categories that have both before and after images
+    const pairs: any[] = [];
+
+    Object.entries(imagesByCategory).forEach(([category, images]) => {
+      if (images.before.length > 0) {
+        // For each before image, create a pair
+        images.before.forEach(beforeImage => {
+          pairs.push({
+            before: beforeImage,
+            after: images.after.length > 0 ? images.after : null,
+          });
+        });
+      }
     });
+
+    console.log('🎯 Created pairs:', pairs.length);
 
     res.status(200).json({
       success: true,

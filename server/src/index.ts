@@ -92,6 +92,72 @@ app.get('/api/health', (req: Request, res: Response) => {
   });
 });
 
+// Test endpoint to check uploads directory
+app.get('/api/test-uploads', (req: Request, res: Response) => {
+  const fs = require('fs');
+  const path = require('path');
+
+  const uploadsDir = path.join(__dirname, '../uploads');
+  const patientImagesDir = path.join(uploadsDir, 'patient-images');
+
+  try {
+    const uploadsExists = fs.existsSync(uploadsDir);
+    const patientImagesExists = fs.existsSync(patientImagesDir);
+
+    let files = [];
+    if (patientImagesExists) {
+      files = fs.readdirSync(patientImagesDir);
+    }
+
+    res.json({
+      uploadsDir,
+      patientImagesDir,
+      uploadsExists,
+      patientImagesExists,
+      files,
+      sampleImageUrl: files.length > 0 ? `/uploads/patient-images/${files[0]}` : null
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Test HTML page to debug image loading
+app.get('/test-images', (req: Request, res: Response) => {
+  const fs = require('fs');
+  const path = require('path');
+
+  const patientImagesDir = path.join(__dirname, '../uploads/patient-images');
+  let files = [];
+
+  if (fs.existsSync(patientImagesDir)) {
+    files = fs.readdirSync(patientImagesDir);
+  }
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Image Test</title>
+    </head>
+    <body>
+      <h1>Image Loading Test</h1>
+      ${files.map((file: string) => `
+        <div style="margin: 20px; border: 1px solid #ccc; padding: 10px;">
+          <h3>${file}</h3>
+          <p>URL: /uploads/patient-images/${file}</p>
+          <img src="/uploads/patient-images/${file}" style="max-width: 300px;"
+               onload="console.log('✅ Image loaded:', '${file}')"
+               onerror="console.error('❌ Image failed:', '${file}')">
+        </div>
+      `).join('')}
+    </body>
+    </html>
+  `;
+
+  res.send(html);
+});
+
 
 
 // Apply routes
