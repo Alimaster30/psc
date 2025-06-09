@@ -291,9 +291,10 @@ function DataTable<T>({
               {sortedData.map((item) => (
                 <motion.tr
                   key={keyExtractor(item)}
-                  className={onRowClick ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}
+                  className={onRowClick ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150' : 'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150'}
                   onClick={() => onRowClick && onRowClick(item)}
-                  whileHover={{ backgroundColor: onRowClick ? 'rgba(0, 0, 0, 0.05)' : 'transparent' }}
+                  whileHover={{ scale: onRowClick ? 1.005 : 1 }}
+                  transition={{ duration: 0.15 }}
                 >
                   {columns.map((column, index) => (
                     <td key={index} className="px-6 py-4 whitespace-nowrap">
