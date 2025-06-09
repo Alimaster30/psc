@@ -26,10 +26,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const widthClasses = fullWidth ? 'w-full' : '';
 
     // Icon classes
-    const iconClasses = icon ? 'pl-10' : '';
+    const iconClasses = icon ? 'pl-12' : '';
 
     // Password toggle classes
-    const passwordToggleClasses = showPasswordToggle && rest.type === 'password' ? 'pr-10' : '';
+    const passwordToggleClasses = showPasswordToggle && rest.type === 'password' ? 'pr-12' : '';
 
     // Combine all classes
     const inputClasses = `${baseClasses} ${errorClasses} ${widthClasses} ${iconClasses} ${passwordToggleClasses} ${className}`;
@@ -48,7 +48,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         )}
         <div className="relative">
           {icon && (
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 dark:text-gray-400">
               {icon}
             </div>
           )}
@@ -62,7 +62,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {showPasswordToggle && rest.type === 'password' && (
             <button
               type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 focus:outline-none"
               onClick={togglePasswordVisibility}
               tabIndex={-1}
             >
