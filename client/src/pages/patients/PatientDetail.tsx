@@ -21,11 +21,11 @@ interface Patient {
   address: string;
   medicalHistory: string;
   allergies: string[];
-  bloodGroup: string;
-  emergencyContact: {
-    name: string;
-    relationship: string;
-    phoneNumber: string;
+  bloodGroup?: string;
+  emergencyContact?: {
+    name?: string;
+    relationship?: string;
+    phoneNumber?: string;
   };
   createdAt: string;
 }
@@ -461,10 +461,16 @@ const PatientDetail: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Emergency Contact</p>
-                  <p className="text-gray-900 dark:text-white">
-                    {patient.emergencyContact.name} ({patient.emergencyContact.relationship})
-                  </p>
-                  <p className="text-gray-900 dark:text-white">{patient.emergencyContact.phoneNumber}</p>
+                  {patient.emergencyContact?.name ? (
+                    <>
+                      <p className="text-gray-900 dark:text-white">
+                        {patient.emergencyContact.name} ({patient.emergencyContact.relationship})
+                      </p>
+                      <p className="text-gray-900 dark:text-white">{patient.emergencyContact.phoneNumber}</p>
+                    </>
+                  ) : (
+                    <p className="text-gray-500 dark:text-gray-400 italic">Not provided</p>
+                  )}
                 </div>
               </div>
             </div>

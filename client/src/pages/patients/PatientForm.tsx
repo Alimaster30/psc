@@ -458,7 +458,7 @@ const PatientForm: React.FC = () => {
 
             {/* Emergency Contact */}
             <div className="space-y-6 md:col-span-2">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Emergency Contact</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Emergency Contact (Optional)</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>

@@ -16,10 +16,10 @@ export interface IPatient extends Document {
   dateOfBirth: Date;
   gender: 'male' | 'female' | 'other';
   address: string;
-  emergencyContact: {
-    name: string;
-    relationship: string;
-    phoneNumber: string;
+  emergencyContact?: {
+    name?: string;
+    relationship?: string;
+    phoneNumber?: string;
   };
   medicalHistory: string; // Encrypted medical history
   allergies: string; // Encrypted allergies
@@ -75,15 +75,15 @@ const patientSchema = new Schema<IPatient>(
     emergencyContact: {
       name: {
         type: String,
-        required: [true, 'Emergency contact name is required'],
+        required: false,
       },
       relationship: {
         type: String,
-        required: [true, 'Emergency contact relationship is required'],
+        required: false,
       },
       phoneNumber: {
         type: String,
-        required: [true, 'Emergency contact phone number is required'],
+        required: false,
       },
     },
     medicalHistory: {

@@ -23,9 +23,10 @@ const patientValidation = [
   body('dateOfBirth').isISO8601().toDate().withMessage('Please provide a valid date of birth'),
   body('gender').isIn(['male', 'female', 'other']).withMessage('Gender must be male, female, or other'),
   body('address').notEmpty().withMessage('Address is required'),
-  body('emergencyContact.name').notEmpty().withMessage('Emergency contact name is required'),
-  body('emergencyContact.relationship').notEmpty().withMessage('Emergency contact relationship is required'),
-  body('emergencyContact.phoneNumber').notEmpty().withMessage('Emergency contact phone number is required'),
+  // Emergency contact fields are now optional
+  body('emergencyContact.name').optional(),
+  body('emergencyContact.relationship').optional(),
+  body('emergencyContact.phoneNumber').optional(),
 ];
 
 // Medical history validation

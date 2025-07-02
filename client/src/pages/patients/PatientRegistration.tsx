@@ -18,12 +18,12 @@ interface FormData {
   dateOfBirth: string;
   gender: 'male' | 'female' | 'other';
   address: string;
-  emergencyContact: {
-    name: string;
-    relationship: string;
-    phoneNumber: string;
+  emergencyContact?: {
+    name?: string;
+    relationship?: string;
+    phoneNumber?: string;
   };
-  bloodType: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-' | '';
+  bloodType?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-' | '';
 }
 
 const PatientRegistration: React.FC = () => {
@@ -161,14 +161,9 @@ const PatientRegistration: React.FC = () => {
       if (!formData.address.trim()) stepErrors.address = 'Address is required';
     }
 
-    // Step 2: Emergency Contact
+    // Step 2: Emergency Contact (now optional)
     else if (step === 2) {
-      if (!formData.emergencyContact.name.trim())
-        stepErrors['emergencyContact.name'] = 'Emergency contact name is required';
-      if (!formData.emergencyContact.relationship.trim())
-        stepErrors['emergencyContact.relationship'] = 'Relationship is required';
-      if (!formData.emergencyContact.phoneNumber.trim())
-        stepErrors['emergencyContact.phoneNumber'] = 'Emergency contact phone is required';
+      // Emergency contact fields are now optional - no validation required
     }
 
     return stepErrors;
@@ -405,12 +400,12 @@ const PatientRegistration: React.FC = () => {
   // Step 3: Emergency Contact
   const renderEmergencyContactStep = () => (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Emergency Contact</h3>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Emergency Contact (Optional)</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Name */}
         <div>
           <label htmlFor="emergencyContact.name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Contact Name <span className="text-red-600">*</span>
+            Contact Name
           </label>
           <input
             type="text"
@@ -428,7 +423,7 @@ const PatientRegistration: React.FC = () => {
         {/* Relationship */}
         <div>
           <label htmlFor="emergencyContact.relationship" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Relationship <span className="text-red-600">*</span>
+            Relationship
           </label>
           <input
             type="text"
@@ -446,7 +441,7 @@ const PatientRegistration: React.FC = () => {
         {/* Phone Number */}
         <div>
           <label htmlFor="emergencyContact.phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Phone Number <span className="text-red-600">*</span>
+            Phone Number
           </label>
           <input
             type="tel"
